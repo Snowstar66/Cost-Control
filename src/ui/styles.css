@@ -5827,6 +5827,7 @@ textarea {
     justify-content: flex-start;
   }
 
+  .purchaseToolbar .fileButton,
   .purchaseToolbar .purchaseManualAdd {
     display: none;
   }
