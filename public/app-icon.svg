@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Mina Utgifter">
+  <rect width="512" height="512" rx="108" fill="#0f766e"/>
+  <path d="M142 162h218c33 0 60 27 60 60v148c0 33-27 60-60 60H142c-33 0-60-27-60-60V222c0-33 27-60 60-60Z" fill="#f8fafc"/>
+  <path d="M151 124h188c22 0 40 18 40 40v20H138c-21 0-38 17-38 38v-45c0-29 23-53 51-53Z" fill="#d8f2e7"/>
+  <path d="M82 242h338v128c0 33-27 60-60 60H142c-33 0-60-27-60-60V242Z" fill="#ffffff"/>
+  <path d="M314 254h106v95H314c-26 0-47-21-47-47v-1c0-26 21-47 47-47Z" fill="#0f766e"/>
+  <circle cx="316" cy="302" r="18" fill="#f8fafc"/>
+  <path d="M142 196h216c15 0 28 12 28 28v18H126v-30c0-9 7-16 16-16Z" fill="#114d46" opacity=".16"/>
+</svg>
