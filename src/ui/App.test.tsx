@@ -279,6 +279,22 @@ describe("App", () => {
     expect(saved.contexts.map((context) => context.name)).toContain("Semester");
   });
 
+  it("sparar ikon och färg på ny leverantör", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithCarWash()));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Register/i }));
+    const supplierForm = screen.getByText("Leverantörer").closest("form")!;
+    fireEvent.change(within(supplierForm).getByPlaceholderText("Namn"), { target: { value: "Spotify" } });
+    fireEvent.change(within(supplierForm).getByLabelText("Ikon"), { target: { value: "music" } });
+    fireEvent.change(within(supplierForm).getByLabelText("Ikonfärg"), { target: { value: "#6b5ca5" } });
+    fireEvent.click(within(supplierForm).getByRole("button", { name: /Lägg till leverantör/i }));
+
+    const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
+    expect(saved.suppliers.at(-1)).toMatchObject({ name: "Spotify", icon: "music", color: "#6b5ca5" });
+    expect(within(supplierForm).getAllByText("Spotify").length).toBeGreaterThan(0);
+  });
+
   it("sorterar kassaboken nar ett radarkort valjs", () => {
     const state = stateWithPurchaseCategoryRows();
     localStorage.setItem(storageKey, JSON.stringify({

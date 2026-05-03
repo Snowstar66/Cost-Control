@@ -110,6 +110,23 @@ const iconMap = {
   music: Music,
   zap: Zap
 };
+const iconOptions: Array<{ value: keyof typeof iconMap; label: string }> = [
+  { value: "tag", label: "Etikett" },
+  { value: "home", label: "Hem" },
+  { value: "car", label: "Bil" },
+  { value: "wifi", label: "Uppkoppling" },
+  { value: "heart", label: "Hälsa/skydd" },
+  { value: "sparkles", label: "Lyx" },
+  { value: "wrench", label: "Verktyg" },
+  { value: "book", label: "Bok" },
+  { value: "newspaper", label: "Nyheter" },
+  { value: "cloud", label: "Moln" },
+  { value: "shield", label: "Försäkring" },
+  { value: "phone", label: "Telefon" },
+  { value: "play", label: "Streaming" },
+  { value: "music", label: "Musik" },
+  { value: "zap", label: "El" }
+];
 const allowedFileTypes = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
 const maxFileSize = 10 * 1024 * 1024;
 const overviewNecessityOrder: NecessityLevel[] = ["luxury", "necessary", "comfortable", "unnecessary"];
@@ -1879,13 +1896,14 @@ function Registers({ people, suppliers, categories, attachments, showLists, setS
         fields={[
           { key: "name", placeholder: "Namn", value: editingSupplier?.name ?? "" },
           { key: "serviceType", placeholder: "Typ", value: editingSupplier?.serviceType ?? "" },
-          { key: "website", placeholder: "Webb", value: editingSupplier?.website ?? "" },
+          { key: "icon", placeholder: "Ikon", value: editingSupplier?.icon ?? "tag", options: iconOptions },
+          { key: "color", placeholder: "Ikonfärg", value: editingSupplier?.color ?? "#4fc4bd", type: "color" },
           { key: "cancellationInstructions", placeholder: "Uppsägning", value: editingSupplier?.cancellationInstructions ?? "" }
         ]}
         submitLabel={editingSupplier ? "Spara leverantör" : "Lägg till leverantör"}
         onCancel={editingSupplier ? () => setEditingSupplier(undefined) : undefined}
         onSubmit={(values) => {
-          setState((current) => upsertSupplier(current, { id: editingSupplier?.id, name: values.name, serviceType: values.serviceType, website: values.website, cancellationInstructions: values.cancellationInstructions, icon: editingSupplier?.icon ?? "tag", color: editingSupplier?.color }));
+          setState((current) => upsertSupplier(current, { id: editingSupplier?.id, name: values.name, serviceType: values.serviceType, cancellationInstructions: values.cancellationInstructions, icon: values.icon || "tag", color: values.color || "#4fc4bd", website: editingSupplier?.website }));
           setEditingSupplier(undefined);
         }}
       >
@@ -2160,7 +2178,7 @@ function HelpMini({ icon: Icon, title, text }: { icon: typeof Wallet; title: str
   );
 }
 
-function RegisterForm({ title, fields, submitLabel, onSubmit, onCancel, children, className = "" }: { title: string; fields: Array<{ key: string; placeholder: string; value: string }>; submitLabel: string; onSubmit: (values: Record<string, string>) => void; onCancel?: () => void; children?: ReactNode; className?: string }) {
+function RegisterForm({ title, fields, submitLabel, onSubmit, onCancel, children, className = "" }: { title: string; fields: Array<{ key: string; placeholder: string; value: string; type?: "text" | "color"; options?: Array<{ value: string; label: string }> }>; submitLabel: string; onSubmit: (values: Record<string, string>) => void; onCancel?: () => void; children?: ReactNode; className?: string }) {
   const [values, setValues] = useState<Record<string, string>>(() => Object.fromEntries(fields.map((field) => [field.key, field.value])));
   const signature = fields.map((field) => `${field.key}:${field.value}`).join("|");
   useEffect(() => {
@@ -2179,9 +2197,27 @@ function RegisterForm({ title, fields, submitLabel, onSubmit, onCancel, children
         <h2>{title}</h2>
       </div>
       <div className="registerFields">
-        {fields.map((field) => (
-          <input key={field.key} value={values[field.key] ?? ""} onChange={(event) => setValues({ ...values, [field.key]: event.target.value })} placeholder={field.placeholder} />
-        ))}
+        {fields.map((field) =>
+          field.options ? (
+            <label key={field.key} className="registerSelectField">
+              <span>{field.placeholder}</span>
+              <select value={values[field.key] ?? ""} onChange={(event) => setValues({ ...values, [field.key]: event.target.value })}>
+                {field.options.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : field.type === "color" ? (
+            <label key={field.key} className="registerColorField">
+              <span>{field.placeholder}</span>
+              <input type="color" value={values[field.key] || "#4fc4bd"} onChange={(event) => setValues({ ...values, [field.key]: event.target.value })} />
+            </label>
+          ) : (
+            <input key={field.key} value={values[field.key] ?? ""} onChange={(event) => setValues({ ...values, [field.key]: event.target.value })} placeholder={field.placeholder} />
+          )
+        )}
       </div>
       <div className="formActions">
         {onCancel && (
