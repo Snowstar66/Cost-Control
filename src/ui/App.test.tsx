@@ -101,6 +101,24 @@ function stateWithPurchaseCategoryRows(): AppState {
   };
 }
 
+function stateWithoutContext(): AppState {
+  return {
+    ...stateWithCarWash(),
+    activeContextId: "",
+    contexts: [],
+    people: [],
+    suppliers: [],
+    categories: [],
+    expenses: [],
+    costPeriods: [],
+    attachments: [],
+    reminders: [],
+    transactions: [],
+    merchantRules: [],
+    onboardingComplete: false
+  };
+}
+
 describe("App", () => {
   beforeEach(() => {
     localStorage.clear();
@@ -118,6 +136,20 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: /Ny utgift/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Ny utgift/i }));
     expect(screen.getByRole("form", { name: /L.gg till utgift/i })).toBeInTheDocument();
+  });
+
+  it("fragar om ny kontext nar ingen kontext finns", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithoutContext()));
+    render(<App />);
+
+    expect(screen.getByRole("heading", { name: /Vill du starta en ny kontext/i })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/Namn på ny kontext/i), { target: { value: "Tom start" } });
+    fireEvent.click(screen.getByRole("button", { name: /Starta ny kontext/i }));
+
+    const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
+    expect(saved.contexts).toHaveLength(1);
+    expect(saved.contexts[0].name).toBe("Tom start");
+    expect(saved.activeContextId).toBe(saved.contexts[0].id);
   });
 
   it("visar hjalpvyn fran navigationen", () => {

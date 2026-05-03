@@ -87,7 +87,7 @@ import {
   simulatedRemovalMonth,
 } from "../domain/calculations";
 import { toIsoDate, toMonthKey } from "../domain/date";
-import type { Attachment, Category, Expense, ExpenseCostPeriod, NecessityLevel, Person, PurchaseFlag, PurchaseTransaction, Recurrence, Supplier, TimelineMonth } from "../domain/types";
+import type { Attachment, Category, Context, Expense, ExpenseCostPeriod, NecessityLevel, Person, PurchaseFlag, PurchaseTransaction, Recurrence, Supplier, TimelineMonth } from "../domain/types";
 import { necessityLabels, recurrenceLabels } from "../domain/types";
 import { parseBankStatementFile, type BankStatementImportResult } from "../storage/bankStatementImport";
 import { parseDataFile } from "../storage/dataFile";
@@ -139,6 +139,17 @@ const categoryColorOptions = [
   { value: "#a9b2c4", label: "Grå" },
   { value: "#b75159", label: "Röd" }
 ];
+
+const emptyContextFallback: Context = {
+  id: "__empty-context__",
+  name: "Ingen kontext",
+  currency: "SEK",
+  monthsBack: 3,
+  monthsForward: 9,
+  plan: "free",
+  createdAt: "",
+  updatedAt: ""
+};
 const allowedFileTypes = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
 const maxFileSize = 10 * 1024 * 1024;
 const overviewNecessityOrder: NecessityLevel[] = ["luxury", "necessary", "comfortable", "unnecessary"];
@@ -242,7 +253,7 @@ export function App() {
   const {
     state,
     setState,
-    context,
+    context: currentContext,
     reset,
     dataFile,
     connectDataFile,
@@ -255,6 +266,8 @@ export function App() {
     pushCloudStateNow,
     disconnectCloudSync
   } = useAppState();
+  const hasContexts = state.contexts.length > 0;
+  const context = hasContexts ? currentContext : emptyContextFallback;
   const [activeView, setActiveView] = useState<"overview" | "purchases" | "statistics" | "registers" | "admin" | "help">("overview");
   const activeViewLabel = activeView === "overview" ? "Översikt" : activeView === "purchases" ? "Inköp" : activeView === "statistics" ? "Statistik" : activeView === "registers" ? "Register" : activeView === "admin" ? "Data" : "Hjälp";
   const [selectedExpenseId, setSelectedExpenseId] = useState<string | undefined>();
@@ -419,6 +432,14 @@ export function App() {
       setImportErrors(["Filen kunde inte läsas som JSON. ZIP-import stöds via context.json som du kan exportera separat."]);
     }
   };
+
+  if (!hasContexts) {
+    return (
+      <EmptyContextStart
+        onCreate={(name) => setState((current) => addContext(current, name.trim() || "Min ekonomi", "SEK"))}
+      />
+    );
+  }
 
   return (
     <div className={`shell ${sidebarCollapsed ? "sidebarCollapsed" : ""}`}>
@@ -760,6 +781,31 @@ function QuickAddMenu({
         </div>
       )}
     </div>
+  );
+}
+
+function EmptyContextStart({ onCreate }: { onCreate: (name: string) => void }) {
+  const [name, setName] = useState("Min ekonomi");
+  return (
+    <main className="emptyContextPage">
+      <section className="emptyContextPanel" aria-labelledby="empty-context-title">
+        <div className="brandMark">
+          <Wallet size={26} />
+        </div>
+        <div>
+          <p className="eyebrow">Ingen kontext hittades</p>
+          <h1 id="empty-context-title">Vill du starta en ny kontext?</h1>
+          <p className="note">Skapa en arbetsyta för dina utgifter och börja med en tom lista.</p>
+        </div>
+        <label>
+          <span>Namn på ny kontext</span>
+          <input value={name} onChange={(event) => setName(event.target.value)} />
+        </label>
+        <button className="primary" onClick={() => onCreate(name)}>
+          <Plus size={18} /> Starta ny kontext
+        </button>
+      </section>
+    </main>
   );
 }
 
