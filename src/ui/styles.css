@@ -3307,11 +3307,13 @@ body {
 .necessitySummaryGrid {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(5, minmax(140px, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
+  align-items: stretch;
 }
 
 .necessitySummary {
+  min-width: 0;
   min-height: 64px;
   padding: 9px 11px;
   justify-content: flex-start;
@@ -3974,7 +3976,8 @@ body {
   }
 
   .necessitySummaryGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .overviewGrid .metric {
@@ -5365,8 +5368,8 @@ textarea {
   }
 
   .necessitySummaryGrid {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 5px;
   }
 
   .overviewGrid .actionPanel {
@@ -5909,10 +5912,14 @@ textarea {
     min-height: 34px;
   }
 
-  .necessitySummaryGrid,
   .financeKpis,
   .budgetOutcomeSummary {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .necessitySummaryGrid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 5px;
   }
 
@@ -6785,13 +6792,13 @@ textarea {
   }
 
   .necessitySummaryGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 4px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 3px;
   }
 
   .necessitySummary {
     min-height: 42px;
-    padding: 5px;
+    padding: 5px 3px;
   }
 
   .necessitySummary strong {
