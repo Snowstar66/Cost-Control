@@ -919,6 +919,44 @@ button.radarCard.green.active {
   font-weight: 680;
 }
 
+.purchaseAdvancedFields {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #e9edf2;
+}
+
+.purchaseAdvancedFields summary {
+  width: max-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.purchaseAdvancedFields summary::-webkit-details-marker {
+  display: none;
+}
+
+.purchaseAdvancedFields summary svg {
+  transition: transform 140ms ease;
+}
+
+.purchaseAdvancedFields[open] summary svg {
+  transform: rotate(180deg);
+}
+
+.purchaseAdvancedFields > .formSection {
+  margin-top: 10px;
+}
+
+.purchaseAdvancedFields > label {
+  margin-top: 10px;
+}
+
 .importPreviewList {
   display: grid;
   gap: 6px;
@@ -2113,6 +2151,15 @@ button.radarCard.green.active {
 
 .toolbar select {
   width: auto;
+}
+
+.desktopToolbarControls {
+  display: contents;
+}
+
+.mobileFilterButton,
+.mobileFilterOverlay {
+  display: none;
 }
 
 .historyControl {
@@ -6108,5 +6155,231 @@ textarea {
 
   .decisionCard strong {
     white-space: normal;
+  }
+}
+
+@media (max-width: 720px) {
+  .compactHeader {
+    min-height: 0;
+  }
+
+  .overviewGrid {
+    gap: 6px;
+  }
+
+  .overviewGrid .panel.wide {
+    padding: 6px;
+  }
+
+  .toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 38px;
+    gap: 5px;
+    margin-bottom: 6px;
+  }
+
+  .toolbar .searchBox {
+    grid-column: auto;
+    min-height: 34px;
+    width: 100%;
+  }
+
+  .toolbar .searchBox input {
+    min-height: 32px;
+  }
+
+  .desktopToolbarControls {
+    display: none;
+  }
+
+  .mobileFilterButton {
+    position: relative;
+    width: 38px;
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: 10px;
+    background: #fff;
+  }
+
+  .mobileFilterBadge {
+    position: absolute;
+    right: 4px;
+    top: 4px;
+    min-width: 14px;
+    height: 14px;
+    padding: 0 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #1f4a8a;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 750;
+    line-height: 1;
+  }
+
+  .mobileFilterOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 12px 10px calc(76px + env(safe-area-inset-bottom));
+    background: rgba(15, 23, 42, 0.22);
+    backdrop-filter: blur(8px);
+  }
+
+  .mobileFilterSheet {
+    width: min(100%, 420px);
+    display: grid;
+    gap: 8px;
+    padding: 8px 10px 10px;
+    border: 1px solid rgba(203, 213, 225, 0.9);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.18);
+  }
+
+  .mobileFilterHandle {
+    width: 38px;
+    height: 4px;
+    justify-self: center;
+    border-radius: 999px;
+    background: #cbd5e1;
+  }
+
+  .mobileFilterHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 34px;
+  }
+
+  .mobileFilterHeader strong {
+    font-size: 13px;
+  }
+
+  .mobileFilterControls {
+    display: grid;
+    gap: 7px;
+  }
+
+  .mobileFilterControls .historyControl,
+  .mobileFilterControls select,
+  .mobileFilterControls button {
+    width: 100%;
+    min-height: 38px;
+    font-size: 12px;
+  }
+
+  .mobileFilterControls .historyControl {
+    justify-content: space-between;
+  }
+
+  .mobileFilterControls .historyControl input {
+    width: 72px;
+    min-height: 30px;
+  }
+
+  .necessitySummaryGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .necessitySummary {
+    min-height: 42px;
+    padding: 5px;
+  }
+
+  .necessitySummary strong {
+    font-size: 12px;
+  }
+
+  .necessitySummary small {
+    display: none;
+  }
+
+  .mobileExpenseCard {
+    min-height: 46px;
+    padding: 6px;
+    gap: 5px 7px;
+  }
+
+  .mobileExpenseMain strong {
+    font-size: 12.5px;
+  }
+
+  .mobileExpenseMain small {
+    font-size: 10px;
+  }
+
+  .mobileExpenseAmount {
+    font-size: 11.5px;
+  }
+
+  .purchaseAggregateMobile {
+    grid-template-columns: 4px minmax(0, 1fr) auto 18px;
+  }
+
+  .mobileRowChevron {
+    align-self: center;
+    color: var(--muted);
+    transition: transform 140ms ease;
+  }
+
+  .purchaseAggregateMobile.expanded .mobileRowChevron {
+    transform: rotate(180deg);
+  }
+
+  .mobilePurchaseDetails {
+    display: grid;
+    gap: 4px;
+    margin-top: -3px;
+    padding: 0 6px 4px 17px;
+  }
+
+  .mobilePurchaseDetails button {
+    min-height: 38px;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 8px;
+    border-color: #e5e9ef;
+    border-radius: 8px;
+    background: #fff;
+    text-align: left;
+  }
+
+  .mobilePurchaseDetails span,
+  .mobilePurchaseDetails strong,
+  .mobilePurchaseDetails small {
+    display: block;
+    min-width: 0;
+  }
+
+  .mobilePurchaseDetails strong {
+    overflow: hidden;
+    font-size: 11.5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobilePurchaseDetails small {
+    color: var(--muted);
+    font-size: 10px;
+  }
+
+  .mobilePurchaseDetails b {
+    flex: 0 0 auto;
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+
+  .purchaseOptionalField {
+    display: none !important;
   }
 }

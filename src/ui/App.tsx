@@ -33,6 +33,7 @@
   Search,
   ShieldCheck,
   ShoppingBag,
+  SlidersHorizontal,
   Sparkles,
   Store,
   Tag,
@@ -1262,8 +1263,8 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, currency,
             <input type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} autoFocus />
           </label>
           <label>
-            <span>Bokfört</span>
-            <input type="date" value={form.bookedDate} onChange={(event) => setForm({ ...form, bookedDate: event.target.value })} />
+            <span>Belopp</span>
+            <input type="number" min="0" step="0.01" value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} placeholder="0" />
           </label>
         </div>
         <div className="formSection split">
@@ -1271,37 +1272,8 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, currency,
             <span>Handlare</span>
             <input value={form.merchantRaw} onChange={(event) => setForm({ ...form, merchantRaw: event.target.value })} placeholder="ICA, Apple, OKQ8..." />
           </label>
-          <label>
-            <span>Belopp</span>
-            <input type="number" min="0" step="0.01" value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} placeholder="0" />
-          </label>
-        </div>
-        <div className="formSection three">
           <CategoryField categories={categories} value={form.categoryId} onChange={(categoryId) => setForm({ ...form, categoryId })} />
-          <label>
-            <span>Leverantör</span>
-            <select value={form.supplierId} onChange={(event) => setForm({ ...form, supplierId: event.target.value })}>
-              <option value="">Ingen koppling</option>
-              {suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}
-            </select>
-          </label>
-          <label>
-            <span>Typ</span>
-            <select value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value as PurchaseTransaction["type"] })}>
-              <option value="one-off">Enskilt köp</option>
-              <option value="recurring-payment">Återkommande betalning</option>
-              <option value="transfer">Överföring</option>
-              <option value="ignored">Ignorera</option>
-            </select>
-          </label>
         </div>
-        <label>
-          <span>Koppla till återkommande utgift</span>
-          <select value={form.recurringExpenseId} onChange={(event) => setForm({ ...form, recurringExpenseId: event.target.value })}>
-            <option value="">Ingen koppling</option>
-            {expenses.map((expense) => <option key={expense.id} value={expense.id}>{expense.name}</option>)}
-          </select>
-        </label>
         {transaction && (
           <label className="inlineCheck purchaseApplyRule">
             <input type="checkbox" checked={form.applyCategoryToSameMerchant} onChange={(event) => setForm({ ...form, applyCategoryToSameMerchant: event.target.checked })} />
@@ -1327,6 +1299,41 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, currency,
             })}
           </div>
         </div>
+        <details className="purchaseAdvancedFields">
+          <summary>
+            <span>Avancerat</span>
+            <ChevronDown size={16} />
+          </summary>
+          <div className="formSection three">
+            <label>
+              <span>Bokfört</span>
+              <input type="date" value={form.bookedDate} onChange={(event) => setForm({ ...form, bookedDate: event.target.value })} />
+            </label>
+            <label>
+              <span>Leverantör</span>
+              <select value={form.supplierId} onChange={(event) => setForm({ ...form, supplierId: event.target.value })}>
+                <option value="">Ingen koppling</option>
+                {suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}
+              </select>
+            </label>
+            <label>
+              <span>Typ</span>
+              <select value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value as PurchaseTransaction["type"] })}>
+                <option value="one-off">Enskilt köp</option>
+                <option value="recurring-payment">Återkommande betalning</option>
+                <option value="transfer">Överföring</option>
+                <option value="ignored">Ignorera</option>
+              </select>
+            </label>
+          </div>
+          <label>
+            <span>Koppla till återkommande utgift</span>
+            <select value={form.recurringExpenseId} onChange={(event) => setForm({ ...form, recurringExpenseId: event.target.value })}>
+              <option value="">Ingen koppling</option>
+              {expenses.map((expense) => <option key={expense.id} value={expense.id}>{expense.name}</option>)}
+            </select>
+          </label>
+        </details>
         <div className="modalActions">
           <button type="button" className="ghostBtn" onClick={onClose}>Avbryt</button>
           <button className="primary">{transaction ? <Pencil size={17} /> : <Plus size={17} />} {transaction ? "Uppdatera" : "Spara"}</button>
@@ -1428,12 +1435,14 @@ function ExpenseComposer({ categories, people, suppliers, onSave, compact = fals
 }
 
 function TimelineToolbar({ context, state, setState, categories, people }: { context: ReturnType<typeof useAppState>["context"]; state: ReturnType<typeof useAppState>["state"]; setState: ReturnType<typeof useAppState>["setState"]; categories: Category[]; people: Array<{ id: string; firstName: string; lastName: string }> }) {
-  return (
-    <div className="toolbar">
-      <label className="searchBox">
-        <Search size={17} />
-        <input value={state.filters.search} onChange={(event) => setState((current) => ({ ...current, filters: { ...current.filters, search: event.target.value } }))} placeholder="Sök utgift" />
-      </label>
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const activeMobileFilterCount =
+    state.filters.categoryIds.length +
+    state.filters.payerIds.length +
+    state.filters.necessityLevels.length +
+    (state.hidePastMonths ? 1 : 0);
+  const filterControls = (variant: "desktop" | "mobile") => (
+    <>
       <label className="historyControl">
         <span>Historik</span>
         <input
@@ -1452,10 +1461,10 @@ function TimelineToolbar({ context, state, setState, categories, people }: { con
         />
         <small>mån bakåt</small>
       </label>
-      <button className={state.hidePastMonths ? "selected" : ""} onClick={() => setState((current) => ({ ...current, hidePastMonths: !current.hidePastMonths }))}>
+      <button type="button" className={state.hidePastMonths ? "selected" : ""} onClick={() => setState((current) => ({ ...current, hidePastMonths: !current.hidePastMonths }))}>
         <CalendarDays size={17} /> {state.hidePastMonths ? "Visa historik" : "Göm historik"}
       </button>
-      <select onChange={(event) => setState((current) => ({ ...current, filters: { ...current.filters, categoryIds: event.target.value ? [event.target.value] : [] } }))}>
+      <select value={state.filters.categoryIds[0] ?? ""} onChange={(event) => setState((current) => ({ ...current, filters: { ...current.filters, categoryIds: event.target.value ? [event.target.value] : [] } }))}>
         <option value="">Alla kategorier</option>
         {categories.map((category) => (
           <option key={category.id} value={category.id}>
@@ -1463,7 +1472,7 @@ function TimelineToolbar({ context, state, setState, categories, people }: { con
           </option>
         ))}
       </select>
-      <select onChange={(event) => setState((current) => ({ ...current, filters: { ...current.filters, payerIds: event.target.value ? [event.target.value] : [] } }))}>
+      <select value={state.filters.payerIds[0] ?? ""} onChange={(event) => setState((current) => ({ ...current, filters: { ...current.filters, payerIds: event.target.value ? [event.target.value] : [] } }))}>
         <option value="">Alla betalare</option>
         {people.map((person) => (
           <option key={person.id} value={person.id}>
@@ -1471,9 +1480,44 @@ function TimelineToolbar({ context, state, setState, categories, people }: { con
           </option>
         ))}
       </select>
-      <button className="ghostBtn" onClick={() => setState((current) => ({ ...current, filters: { ...current.filters, categoryIds: [], payerIds: [], necessityLevels: [], search: "" } }))}>
+      <button
+        type="button"
+        className="ghostBtn"
+        onClick={() => {
+          setState((current) => ({ ...current, filters: { ...current.filters, categoryIds: [], payerIds: [], necessityLevels: [], search: "" } }));
+          if (variant === "mobile") setMobileFiltersOpen(false);
+        }}
+      >
         <RefreshCcw size={16} /> Återställ
       </button>
+    </>
+  );
+
+  return (
+    <div className="toolbar">
+      <label className="searchBox">
+        <Search size={17} />
+        <input value={state.filters.search} onChange={(event) => setState((current) => ({ ...current, filters: { ...current.filters, search: event.target.value } }))} placeholder="Sök utgift" />
+      </label>
+      <div className="desktopToolbarControls">{filterControls("desktop")}</div>
+      <button type="button" className="mobileFilterButton" onClick={() => setMobileFiltersOpen(true)} aria-label="Visa filter">
+        <SlidersHorizontal size={17} />
+        {activeMobileFilterCount > 0 && <span className="mobileFilterBadge">{activeMobileFilterCount}</span>}
+      </button>
+      {mobileFiltersOpen && (
+        <div className="mobileFilterOverlay" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setMobileFiltersOpen(false)}>
+          <div className="mobileFilterSheet" role="dialog" aria-modal="true" aria-label="Filter för översikt">
+            <span className="mobileFilterHandle" aria-hidden="true" />
+            <div className="mobileFilterHeader">
+              <strong>Filter</strong>
+              <button type="button" className="iconBtn" onClick={() => setMobileFiltersOpen(false)} title="Stäng filter">
+                <X size={17} />
+              </button>
+            </div>
+            <div className="mobileFilterControls">{filterControls("mobile")}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1494,12 +1538,18 @@ function Timeline(props: {
 }) {
   const purchaseRows = props.purchaseRows ?? [];
   const [expandedPurchaseKey, setExpandedPurchaseKey] = useState<string | undefined>();
+  const [expandedMobilePurchaseKey, setExpandedMobilePurchaseKey] = useState<string | undefined>();
   const placeholderRows = Array.from({ length: purchaseRows.length > 0 ? 0 : Math.max(0, (props.minRows ?? 0) - props.expenses.length) });
   const mobileMonths = props.months.slice(0, 4);
   const togglePurchaseMonth = (rowKey: string, monthKey: string) => {
     const key = `${rowKey}:${monthKey}`;
     setExpandedPurchaseKey((current) => (current === key ? undefined : key));
   };
+  const mobilePurchaseTransactions = (row: PurchaseCategoryRow) =>
+    Object.values(row.transactionsByMonth)
+      .flat()
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, 6);
   return (
     <>
       <div className="timelineWrap">
@@ -1656,23 +1706,49 @@ function Timeline(props: {
         {purchaseRows.map((row) => {
           const focusMonth = props.months.find((month) => month.isCurrentMonth) ?? props.months[0];
           const focusValue = focusMonth ? row.totals[focusMonth.key] ?? 0 : 0;
+          const firstMonthValue = props.months[0] ? row.totals[props.months[0].key] ?? 0 : 0;
+          const expanded = expandedMobilePurchaseKey === row.key;
+          const transactions = mobilePurchaseTransactions(row);
           return (
-            <div className="mobileExpenseCard purchaseAggregateMobile" key={`mobile-${row.key}`}>
-              <span className="mobileAccent" style={{ background: row.color }} />
-              <span className="mobileExpenseMain">
-                <strong>{row.label}</strong>
-                <small>Enskilda köp · {row.count} köp</small>
-              </span>
-              <span className="mobileExpenseAmount">{focusValue > 0 ? formatMoney(focusValue, props.contextCurrency) : "-"}</span>
-              <span className="mobileMonthStrip">
-                {mobileMonths.map((month) => (
-                  <span className="purchaseAggregate" key={`${row.key}-mobile-${month.key}`}>
-                    <small>{month.label.split(" ")[0]}</small>
-                    <strong>{(row.totals[month.key] ?? 0) > 0 ? formatMoney(row.totals[month.key] ?? 0, props.contextCurrency) : "-"}</strong>
-                  </span>
-                ))}
-              </span>
-            </div>
+            <Fragment key={`mobile-${row.key}`}>
+              <button
+                type="button"
+                className={`mobileExpenseCard purchaseAggregateMobile ${expanded ? "expanded" : ""}`}
+                onClick={() => setExpandedMobilePurchaseKey((current) => (current === row.key ? undefined : row.key))}
+                aria-expanded={expanded}
+                aria-label={`${row.label}. ${row.count} enskilda köp. Visa köp i kategorin.`}
+              >
+                <span className="mobileAccent" style={{ background: row.color }} />
+                <span className="mobileExpenseMain">
+                  <strong>{row.label}</strong>
+                  <small>Enskilda köp · {row.count} köp</small>
+                </span>
+                <span className="mobileExpenseAmount">{formatMoney(focusValue > 0 ? focusValue : firstMonthValue, props.contextCurrency)}</span>
+                <ChevronDown className="mobileRowChevron" size={15} />
+                <span className="mobileMonthStrip">
+                  {mobileMonths.map((month) => (
+                    <span className="purchaseAggregate" key={`${row.key}-mobile-${month.key}`}>
+                      <small>{month.label.split(" ")[0]}</small>
+                      <strong>{(row.totals[month.key] ?? 0) > 0 ? formatMoney(row.totals[month.key] ?? 0, props.contextCurrency) : "-"}</strong>
+                    </span>
+                  ))}
+                </span>
+              </button>
+              {expanded && (
+                <div className="mobilePurchaseDetails">
+                  {transactions.length === 0 && <p className="note">Inga köp att visa i kategorin.</p>}
+                  {transactions.map((transaction) => (
+                    <button type="button" key={transaction.id} onClick={() => props.onSelectPurchase?.(transaction.id)}>
+                      <span>
+                        <strong>{transaction.merchantRaw}</strong>
+                        <small>{transaction.date}</small>
+                      </span>
+                      <b>{formatMoney(transaction.amount, transaction.currency)}</b>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </Fragment>
           );
         })}
         <div className="mobileTotals">
