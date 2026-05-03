@@ -3071,7 +3071,19 @@ function Statistics({ state, setState, expenses, allExpenses, categories, people
         </div>
       )}
       <DecisionInsightsPanel insights={decisionInsights} />
-      <BudgetOutcomePanel rows={budgetOutcomeRows} budgetContributors={budgetContributors} monthlyBudget={monthlyBudget} currency={currency} />
+      <BudgetOutcomePanel
+        rows={budgetOutcomeRows}
+        budgetContributors={budgetContributors}
+        monthlyBudget={monthlyBudget}
+        currency={currency}
+        startMonth={state.filters.budgetOutcomeStartMonth}
+        onStartMonthChange={(monthKey) =>
+          setState((current) => ({
+            ...current,
+            filters: { ...current.filters, budgetOutcomeStartMonth: monthKey || undefined }
+          }))
+        }
+      />
 
       <div className="panel recurringAnalyticsPanel">
         <div className="panelHeader">
@@ -3395,8 +3407,26 @@ function DecisionInsightsPanel({ insights }: { insights: DecisionInsight[] }) {
   );
 }
 
-function BudgetOutcomePanel({ rows, budgetContributors, monthlyBudget, currency }: { rows: BudgetOutcomeRow[]; budgetContributors: BudgetContributor[]; monthlyBudget: number; currency: string }) {
-  const actualRows = rows.filter((row) => !row.isFuture);
+function BudgetOutcomePanel({
+  rows,
+  budgetContributors,
+  monthlyBudget,
+  currency,
+  startMonth,
+  onStartMonthChange
+}: {
+  rows: BudgetOutcomeRow[];
+  budgetContributors: BudgetContributor[];
+  monthlyBudget: number;
+  currency: string;
+  startMonth?: string;
+  onStartMonthChange: (monthKey: string) => void;
+}) {
+  const availableActualRows = rows.filter((row) => !row.isFuture);
+  const startOptions = availableActualRows.length > 0 ? availableActualRows : rows;
+  const defaultStartMonth = availableActualRows[0]?.month.key ?? rows[0]?.month.key ?? "";
+  const selectedStartMonth = startMonth && availableActualRows.some((row) => row.month.key === startMonth) ? startMonth : defaultStartMonth;
+  const actualRows = availableActualRows.filter((row) => !selectedStartMonth || row.month.key >= selectedStartMonth);
   const summaryRows = actualRows.length > 0 ? actualRows : rows;
   const totalBudget = summaryRows.reduce((sum, row) => sum + row.budget, 0);
   const totalSpend = summaryRows.reduce((sum, row) => sum + row.total, 0);
@@ -3407,6 +3437,8 @@ function BudgetOutcomePanel({ rows, budgetContributors, monthlyBudget, currency 
   const budgetMarker = monthlyBudget > 0 ? Math.min(100, (monthlyBudget / maxValue) * 100) : 0;
   const futureCount = rows.filter((row) => row.isFuture).length;
   const signedMoney = (value: number) => `${value >= 0 ? "+" : ""}${formatMoney(value, currency)}`;
+  const periodStartLabel = summaryRows[0]?.month.label ?? "-";
+  const periodEndLabel = summaryRows[summaryRows.length - 1]?.month.label ?? "-";
   return (
     <div className="panel budgetOutcomePanel">
       <div className="panelHeader">
@@ -3430,6 +3462,21 @@ function BudgetOutcomePanel({ rows, budgetContributors, monthlyBudget, currency 
           <small>Bästa månad hittills</small>
           <strong>{bestMonth ? `${bestMonth.month.label}: ${signedMoney(bestMonth.outcome)}` : "-"}</strong>
         </span>
+      </div>
+      <div className="budgetOutcomeControls">
+        <label>
+          <span>Startmånad för utfall</span>
+          <select value={selectedStartMonth} onChange={(event) => onStartMonthChange(event.target.value)}>
+            {startOptions.map((row) => (
+              <option key={row.month.key} value={row.month.key}>
+                {row.month.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <p>
+          Räknar <strong>{periodStartLabel}</strong> till <strong>{periodEndLabel}</strong>. Framtida månader visas bara som budget/prognos under månadslistan.
+        </p>
       </div>
       <div className="budgetContributors">
         <strong>Budget består av</strong>

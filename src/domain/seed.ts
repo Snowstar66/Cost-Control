@@ -141,7 +141,8 @@ export function createInitialState(): AppState {
       payerIds: [],
       necessityLevels: [],
       search: "",
-      simulationExcludedExpenseIds: []
+      simulationExcludedExpenseIds: [],
+      budgetOutcomeStartMonth: undefined
     }
   };
 }
@@ -170,7 +171,22 @@ export function enrichStateWithBaselineData(state: AppState): AppState {
     categories = [...categories, ...missingCategories];
   }
 
-  return { ...state, suppliers, categories, transactions: state.transactions ?? [], merchantRules: state.merchantRules ?? [], purchasesEnabled: state.purchasesEnabled ?? true };
+  return {
+    ...state,
+    suppliers,
+    categories,
+    transactions: state.transactions ?? [],
+    merchantRules: state.merchantRules ?? [],
+    purchasesEnabled: state.purchasesEnabled ?? true,
+    filters: {
+      categoryIds: state.filters?.categoryIds ?? [],
+      payerIds: state.filters?.payerIds ?? [],
+      necessityLevels: state.filters?.necessityLevels ?? [],
+      search: state.filters?.search ?? "",
+      simulationExcludedExpenseIds: state.filters?.simulationExcludedExpenseIds ?? [],
+      budgetOutcomeStartMonth: state.filters?.budgetOutcomeStartMonth
+    }
+  };
 }
 
 export function cloneContextTemplate(state: AppState, sourceContextId: string, name: string): AppState {

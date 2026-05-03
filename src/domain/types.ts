@@ -159,6 +159,7 @@ export type AppState = {
     necessityLevels: NecessityLevel[];
     search: string;
     simulationExcludedExpenseIds: string[];
+    budgetOutcomeStartMonth?: string;
   };
 };
 
