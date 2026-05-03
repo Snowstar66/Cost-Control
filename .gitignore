@@ -1,0 +1,14 @@
+node_modules
+.pnpm-store
+dist
+.vite
+*.local
+coverage
+playwright-report
+dev-server*.log
+.agents
+_bmad
+_bmad-output
+.venv
+_bmad/config.user.toml
+_bmad/custom/*.user.toml

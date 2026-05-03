@@ -1,0 +1,1067 @@
+{
+  "profile": "discovery_loop_accelerated",
+  "intent": "Accelerated governed discovery loop handoff",
+  "guidance": [
+    "Run a discovery loop from the Framing source of truth: inspect Outcome, Epics, Story Ideas, Journey Context, constraints, AI level and approval context before producing downstream artifacts.",
+    "Do not ask for confirmation at every refinement step. Make reasonable documented assumptions, batch open questions, and continue until a meaningful refinement package exists.",
+    "Use available specialist agents or BMAD-style roles when helpful, for example analyst, product, UX, architect, dev and QA perspectives, but keep one consolidated source-of-truth output.",
+    "Escalate to the human only for governance-sensitive decisions, missing critical facts, material scope changes, high-risk data/security/privacy issues, or approval/sign-off boundaries.",
+    "Return discovery outputs as traceable proposals linked back to Outcome -> Epic -> Story Idea -> Journey where applicable, plus assumptions, risks, suggested next experiments and validation checks."
+  ],
+  "source_of_truth": {
+    "kind": "framing_brief",
+    "version": 6,
+    "handshake": {
+      "outcome_key": "OUT-001",
+      "outcome_title": "Cost Control",
+      "problem_statement": "Package Type: AAS Framing Import Package\r\nProduct: Utgiftskoll\r\nVersion: 0.2-import\r\nLanguage: sv-SE\r\nPhase: Framing\r\nTarget Next Phase: Design\r\nDomain: Application Development\r\nAI Acceleration Level: 1\r\nRisk Profile: medium\r\nHuman Mandate: Människa ansvarar för prioritering, riskacceptans, AI-nivå, releasebeslut och beslut om hantering av verkliga användardata.\r\n\r\nProblem Statement ID: PS-001\r\nProblem Statement: Privatpersoner, familjer och mindre grupper saknar ofta en lågtröskelöversikt över återkommande kostnader, abonnemang, bindningstider, uppsägningstider och framtida ekonomiska åtaganden. Kalkylblad blir lätt manuella och sköra, medan breda budgetappar med bankkoppling kan skapa hög tröskel och integritetsoro. Det behövs en enkel lokal-first app som fokuserar på återkommande och tidsbundna kostnader, tidslinje, uppsägningslogik och kontextseparerad datalagring.\r\nBaseline: Ingen befintlig app eller strukturerad datahantering finns. Baseline ska etableras genom första användartest, manuell jämförelse mot testfall och import/export-testsvit.\r\nImpact Areas\r\n- Överblick över kommande 9-12 månaders kostnader.\r\n- Minskad risk att missa uppsägningsmöjligheter.\r\n- Portabel lokal hantering av privat ekonomidata.\r\n- Lägre tröskel för manuell registrering av återkommande kostnader.\r\nBaseline Sources\r\n- Första användartest | Tidtagning och enkät | Mäter tid till första fem registrerade kostnader och upplevd kontroll före/efter.\r\n- Beräknings- och importtestsvit | Automatiserade tester | Verifierar månadsberäkning, uppsägningstid, kontextisolering och export/import.",
+      "outcome_statement": "Användaren ska kunna förstå, registrera, följa och flytta sina privata återkommande och tidsbundna kostnader i en vald lokal kontext, med tydlig överblick över nuläge, historik, kommande månader, uppsägningsmöjligheter och dataseparering.\r\n\r\n3 months back, 9 months forward Target Effects Ökad kontroll över återkommande privata kostnader. Minskad risk att missa uppsägning eller kostnadsbortfall. Säker och portabel lokal hantering av privat ekonomidata. Låg tröskel för registrering och fortsatt användning.",
+      "timeframe": "3 months back, 9 months forward Target Effects Ökad kontroll över återkommande privata kostnader. Minskad risk att missa uppsägning eller kostnadsbortfall. Säker och portabel lokal hantering av privat ekonomidata. Låg tröskel för registrering och fortsatt användning.",
+      "value_owner": "Frasse Friday",
+      "ai_level": "level_3",
+      "risk_profile": "low",
+      "solution_context": null,
+      "constraints": "## General constraints\nImported constraints\n- Configuration and planning constraints: Planning Unit: MVP Calculation Granularity: monthly Reporting Granularity: context and month Forecast Horizon: 3 months back, 9 months forward Flag Levels - necessary | Nödvändig - comfortable | Bekväm - luxury | Lyxi...\n- Data model constraints: Data Model Candidates - Context: id, name, currency, monthsBack, monthsForward, createdAt, updatedAt - Person: id, contextId, firstName, lastName, monthlyAvailableIncome, active - Supplier: id, contextId, name, logoFi...\nImported design notes\n- Journey context design input: Journey Contexts - J-001 | Första användning | Ny användare | Onboarding, första kontext, första utgift och första tidslinje. - J-002 | Lägga till kostnad | Återkommande användare | Snabbregistrering, leverantörsförsl...\n\n## UX principles\nUX direction\nUX profile: Enterprise control plane (enterprise-control-plane)\nTarget surface: Responsive web app (responsive-web)\nColor schema: Forest green (forest-green)\nStyle authority: AAS suggested style (aas-suggested-style)\n\nStyle priority:\nThe selected AAS UX direction is the primary source unless explicit customer UX rules are added in the additional instructions.\nIf customer UX rules are supplied, downstream AI must explicitly resolve conflicts using this style authority before applying AAS profile, color, or signature component guidance.\n\nCore UX guidance:\nPrioritize dashboard density, strong hierarchy, audit-ready status, table/list scanning, durable navigation, and clear ownership of decisions.\n\nDownstream AI visual grammar:\nThe selected UX profile must materially change layout, components, density, navigation, and status treatment. Do not collapse this into a generic SaaS card UI.\n- Use dense control-plane layouts with compact rectangular cards, tables, right rails, and persistent navigation.\n- Prefer squared or small-radius controls, clear borders, muted surfaces, and high information density.\n- Place owner, status, evidence, version, and governance action together so the decision context is never hidden.\n\nSignature components to prefer when relevant:\nUse these as primary building blocks before generic button/select/input examples. Generic controls should support the signature component, not define the experience.\n- Approval matrix for comparing owners, evidence, risk, and approval state.\n- Audit trail rail beside forms and review screens.\n- Readiness scorecard for tollgate, release, or portfolio decisions.\n\nSurface guidance:\nDesign from responsive web constraints with clear desktop density and a readable mobile layout for core review and input tasks.\n\nColor guidance:\nUse grounded greens with neutral surfaces, visible success states, and a trustworthy operations-oriented tone.\n\n## Non-functional requirements\nImported non-functional requirements\n- AI governance and risk constraints: Human Mandate: Människa ansvarar för prioritering, riskacceptans, AI-nivå, releasebeslut och beslut om hantering av verkliga användardata. Governance Requirements - AI Acceleration Level sätts initialt till Level 1 - ...\n\n## Additional requirements\nImported additional requirements\n- Additional requirements - MVP scope: MVP In Scope - Skapa och växla mellan separata kontexter. - Personregister med namn och frivillig tillgänglig inkomst. - Leverantörsregister med namn, logga och basinformation. - Kategoriregister. - Registrering av ut...",
+      "data_sensitivity": null,
+      "delivery_type": "AD",
+      "delivery_type_description": "Application Development: frame a new application, service or meaningful functional expansion. Keep focus on outcome, scope and why the capability should exist."
+    },
+    "baseline": {
+      "definition": "Baseline saknas idag och etableras i första användartest samt genom regressionsskydd för beräkning, uppsägning, lokal lagring och import/export.",
+      "source": "Första användartest | Tidtagning och enkät | Beräknings- och importtestsvit | Automatiserade tester\r\nMeasurement Method: Minst 80 % av testanvändarna ska inom 10 minuter kunna registrera minst fem återkommande kostnader och förstå total månadskostnad kommande 9 månader. | Minst 90 % av kostnader med uppsägningstid ska visa korrekt låst period och tidigaste möjliga kostnadsfria månad. | 100 % av testade exporter ska kunna importeras till ny kontext utan datatapp i grunddata, utgifter och metadata. | En enkel utgift ska kunna registreras på maximalt 30 sekunder av en van användare och 90 sekunder av en ny användare.",
+      "warnings": [],
+      "readiness": "ready"
+    },
+    "ai_and_risk": {
+      "execution_pattern": "orchestrated",
+      "ai_usage_intent": "Hög accelleration ",
+      "ai_level": "level_3",
+      "risk_profile": "low",
+      "risk_rationale": {
+        "business_impact": "low: N/A",
+        "data_sensitivity": "low: N/A",
+        "blast_radius": "low: N/A",
+        "decision_impact": "low: N/A"
+      },
+      "level_3_justification": "Vi testar högsta accellerlationen i Disovery Loop"
+    },
+    "framing_structure": {
+      "epic_count": 16,
+      "story_idea_count": 51,
+      "epics": [
+        {
+          "key": "EPC-001",
+          "title": "Kontext och dataseparering",
+          "scope_boundary": "Scope in: Skapa kontext, byta aktiv kontext, visa endast data från aktiv kontext, exportera/importera per kontext och hantera kontextspecifika inställningar.\r\nScope out: Not set",
+          "story_ideas": [
+            {
+              "key": "SC-001",
+              "title": "Skapa ny kontext",
+              "value_intent": "Användaren ska kunna separera olika ekonomiska sammanhang, exempelvis privat, familj, resa eller delat boende.",
+              "expected_behavior": "Systemet ska skapa en kontext med namn och valuta och göra den valbar som aktiv kontext utan att blanda data med andra kontexter.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-002",
+              "title": "Växla aktiv kontext",
+              "value_intent": "Användaren ska kunna arbeta i rätt ekonomiskt sammanhang och bara se data som hör till det sammanhanget.",
+              "expected_behavior": "Systemet ska byta aktiv kontext och filtrera utgifter, personer, leverantörer, kategorier och inställningar till vald kontext.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-003",
+              "title": "Konfigurera tidslinjefönster per kontext",
+              "value_intent": "Användaren ska kunna anpassa hur mycket historik och framtid som visas beroende på kontextens behov.",
+              "expected_behavior": "Systemet ska spara antal månader bakåt och framåt per kontext och använda inställningen när tidslinjen renderas.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-004",
+              "title": "Duplicera kontext som mall",
+              "value_intent": "Användaren ska kunna återanvända grundstruktur utan att kopiera historiska utgifter eller blanda verkliga kostnadsdata.",
+              "expected_behavior": "Systemet ska duplicera mallgrunddata enligt definierad regel och skapa en ny isolerad kontext utan historiska utgifter.",
+              "ux_sketches": []
+            }
+          ]
+        },
+        {
+          "key": "EPC-002",
+          "title": "Snabbregistrering av utgift",
+          "scope_boundary": "Scope in: Ny utgift, leverantör, belopp, periodicitet, kategori, betalare, ny leverantör direkt i flödet samt direkt visning i tidslinjen.\r\nScope out: Not set",
+          "story_ideas": [
+            {
+              "key": "SC-005",
+              "title": "Skapa månadsutgift",
+              "value_intent": "Användaren ska snabbt kunna registrera en vanlig återkommande månadskostnad.",
+              "expected_behavior": "Systemet ska spara leverantör, belopp, periodicitet och kategori och visa utgiften i rätt månader i tidslinjen.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-006",
+              "title": "Skapa leverantör i utgiftsflödet",
+              "value_intent": "Användaren ska slippa lämna snabbregistreringen när en leverantör saknas.",
+              "expected_behavior": "Systemet ska kunna skapa en ny leverantör från utgiftsformuläret och återanvända leverantören på senare utgifter.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-007",
+              "title": "Välj betalande person",
+              "value_intent": "Användaren ska kunna förstå vem som bär kostnaden i en kontext med flera personer.",
+              "expected_behavior": "Systemet ska koppla utgiften till vald betalare och använda kopplingen i personsummor och filtrering.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-008",
+              "title": "Flagga nödvändighetsnivå",
+              "value_intent": "Användaren ska kunna skilja nödvändiga kostnader från bekväma, lyxiga eller onödiga kostnader inför analys.",
+              "expected_behavior": "Systemet ska spara nödvändighetsflagga på utgiften och göra den användbar i filter och summeringar.",
+              "ux_sketches": []
+            }
+          ]
+        },
+        {
+          "key": "EPC-003",
+          "title": "Tidslinje och månadsöversikt",
+          "scope_boundary": "Scope in: Utgifter som rader, månader som kolumner, standardvy 3 månader bakåt och 9 månader framåt, detaljexpansion och månadssummering.\r\nScope out: Not set",
+          "story_ideas": []
+        },
+        {
+          "key": "EPC-004",
+          "title": "Uppsägningstid och låst period",
+          "scope_boundary": "Scope in: Uppsägningstid i dagar eller månader, beräkning av tidigaste avslutsdatum, låst period i tidslinje och uppsägningsinformation i detaljpanel.\r\nScope out: Not set",
+          "story_ideas": []
+        },
+        {
+          "key": "EPC-005",
+          "title": "Grunddataregister",
+          "scope_boundary": "Scope in: Personer, leverantörer, leverantörslogga, uppsägningsinstruktioner, kategorier och standardkategorier.\r\nScope out: Not set",
+          "story_ideas": []
+        },
+        {
+          "key": "EPC-006",
+          "title": "Export och import",
+          "scope_boundary": "Scope in: Export av hel kontext, import som ny kontext, val om filer ska ingå, CSV-export och importvalidering.\r\nScope out: Not set",
+          "story_ideas": []
+        },
+        {
+          "key": "EPC-007",
+          "title": "Lokal lagring och filhantering",
+          "scope_boundary": "Scope in: Lokal persistens, bilagor, filmetadata, varning om datarensning, radering av filer och senare krypterad kontext som exploration.\r\nScope out: Not set",
+          "story_ideas": []
+        },
+        {
+          "key": "EPC-008",
+          "title": "Summeringar och insikter",
+          "scope_boundary": "Scope in: Månadssumma, kategorisumma, personsummor, disponibel inkomst efter kostnader och potentiell besparing från flaggor.\r\nScope out: Not set",
+          "story_ideas": []
+        },
+        {
+          "key": "EPC-009",
+          "title": "Responsiv UX och onboarding",
+          "scope_boundary": "Scope in: Responsiv layout, första-kontext-flöde, snabbregistrering, tomma lägen, tillgänglighet och läsbarhet.\r\nScope out: Not set",
+          "story_ideas": []
+        },
+        {
+          "key": "EPC-010",
+          "title": "Premium- och tillväxtfunktioner",
+          "scope_boundary": "Scope in: Simuleringar, PDF-rapporter, mallar, obegränsade kontexter och lokala besparingsförslag.\r\nScope out: Not set",
+          "story_ideas": []
+        },
+        {
+          "key": "EPC-011",
+          "title": "Fallback Epic",
+          "scope_boundary": "Describe what this Epic includes, excludes, or leaves for later.",
+          "story_ideas": [
+            {
+              "key": "SC-009",
+              "title": "Spara ofullständig utgift",
+              "value_intent": "Användaren ska kunna fånga en kostnad snabbt även när alla detaljer inte är kända.",
+              "expected_behavior": "Systemet ska tillåta minimal utgiftsdata, markera posten som behöver kompletteras och göra den lätt att hitta senare.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-010",
+              "title": "Visa utgifter som rader och månader som kolumner",
+              "value_intent": "Användaren ska snabbt kunna se vilka kostnader som påverkar varje månad.",
+              "expected_behavior": "Systemet ska rendera en tidslinje där varje utgift är en rad och varje månad är en kolumn enligt kontextens tidsfönster.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-011",
+              "title": "Visa kostnadsstapel över giltig period",
+              "value_intent": "Användaren ska förstå när en kostnad gäller över tid.",
+              "expected_behavior": "Systemet ska visa kostnadsstapel endast för månader mellan start- och slutdatum eller enligt återkommande period.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-012",
+              "title": "Öppna detaljer från tidslinjerad",
+              "value_intent": "Användaren ska kunna granska underliggande data utan att tappa överblicken.",
+              "expected_behavior": "Systemet ska öppna en detaljpanel från vald rad eller cell med leverantör, belopp, kategori, betalare och period.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-013",
+              "title": "Göm historiska månader",
+              "value_intent": "Användaren ska kunna fokusera på kommande kostnader när historiken stör överblicken.",
+              "expected_behavior": "Systemet ska kunna dölja månader före aktuell månad och återställa vyn utan att ändra data.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-014",
+              "title": "Visa total kostnad per månad",
+              "value_intent": "Användaren ska förstå total månadspåverkan för vald period.",
+              "expected_behavior": "Systemet ska summera alla aktiva synliga utgifter per månad och visa totalen i tidslinjen.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-015",
+              "title": "Ange uppsägningstid",
+              "value_intent": "Användaren ska kunna registrera bindning eller uppsägning så att kostnaden kan analyseras korrekt.",
+              "expected_behavior": "Systemet ska spara uppsägningstid som värde och enhet och använda regeln i beräkningar.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-016",
+              "title": "Visa låst period",
+              "value_intent": "Användaren ska visuellt förstå när en kostnad inte kan falla bort ännu.",
+              "expected_behavior": "Systemet ska markera låst period i tidslinjen med särskild visuell behandling som inte enbart bygger på färg.",
+              "ux_sketches": []
+            }
+          ]
+        },
+        {
+          "key": "EPC-012",
+          "title": "Fallback Epic",
+          "scope_boundary": "Describe what this Epic includes, excludes, or leaves for later.",
+          "story_ideas": [
+            {
+              "key": "SC-017",
+              "title": "Beräkna tidigaste kostnadsfria månad",
+              "value_intent": "Användaren ska kunna se när en uppsagd kostnad tidigast slutar påverka månadsbudgeten.",
+              "expected_behavior": "Systemet ska beräkna tidigaste möjliga kostnadsfria månad deterministiskt utifrån uppsägningsregel och datum.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-018",
+              "title": "Varna när uppsägningsinformation saknas",
+              "value_intent": "Användaren ska uppmärksammas på abonnemang där beslutsunderlag saknas.",
+              "expected_behavior": "Systemet ska markera abonnemangsliknande utgifter utan uppsägningsinformation som behöver kompletteras.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-019",
+              "title": "Skapa påminnelse inför uppsägningsdeadline",
+              "value_intent": "Användaren ska kunna agera i tid innan en kostnad fortsätter längre än nödvändigt.",
+              "expected_behavior": "Systemet ska skapa en påminnelsedatumspunkt kopplad till utgiftens uppsägningsdeadline och visa den i relevant vy.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-020",
+              "title": "Skapa person",
+              "value_intent": "Användaren ska kunna representera betalare och eventuellt disponibel inkomst i kontexten.",
+              "expected_behavior": "Systemet ska spara person med förnamn, efternamn och frivillig inkomst och göra personen valbar som betalare.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-021",
+              "title": "Skapa och återanvänd leverantör",
+              "value_intent": "Användaren ska slippa skriva samma leverantörsdata flera gånger.",
+              "expected_behavior": "Systemet ska spara leverantörer per kontext och låta flera utgifter kopplas till samma leverantör.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-022",
+              "title": "Ladda upp leverantörslogga",
+              "value_intent": "Användaren ska kunna känna igen leverantörer snabbare i listor och detaljer.",
+              "expected_behavior": "Systemet ska acceptera godkända bildformat, lagra filmetadata och visa loggan vid leverantören.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-023",
+              "title": "Spara uppsägningsinstruktion för leverantör",
+              "value_intent": "Användaren ska ha praktisk information tillgänglig när en kostnad ska sägas upp.",
+              "expected_behavior": "Systemet ska spara uppsägningsinstruktion på leverantören och visa den i relevanta utgiftsdetaljer.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-024",
+              "title": "Skapa och ändra kategorier",
+              "value_intent": "Användaren ska kunna strukturera kostnader på ett sätt som passar kontexten.",
+              "expected_behavior": "Systemet ska låta användaren skapa och ändra kategorier och koppla dem till utgifter och filter.",
+              "ux_sketches": []
+            }
+          ]
+        },
+        {
+          "key": "EPC-013",
+          "title": "Fallback Epic",
+          "scope_boundary": "Describe what this Epic includes, excludes, or leaves for later.",
+          "story_ideas": [
+            {
+              "key": "SC-025",
+              "title": "Skapa standardkategorier i ny kontext",
+              "value_intent": "Användaren ska komma igång snabbare utan att behöva skapa all grundstruktur manuellt.",
+              "expected_behavior": "Systemet ska erbjuda eller skapa en uppsättning fördefinierade kategorier när en ny kontext skapas.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-026",
+              "title": "Exportera hel kontext",
+              "value_intent": "Användaren ska kunna säkerhetskopiera eller flytta en komplett ekonomisk kontext.",
+              "expected_behavior": "Systemet ska skapa en exportfil med personer, leverantörer, kategorier, utgifter och relevant metadata för vald kontext.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-027",
+              "title": "Importera export som ny kontext",
+              "value_intent": "Användaren ska kunna återställa eller dela data utan att riskera befintliga kontexter.",
+              "expected_behavior": "Systemet ska importera en giltig export till en ny kontext och aldrig skriva över befintlig data som standard.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-028",
+              "title": "Välj om filer ska ingå i export",
+              "value_intent": "Användaren ska kunna balansera komplett backup mot filstorlek och delningsrisk.",
+              "expected_behavior": "Systemet ska låta användaren exportera med eller utan bifogade filer och tydligt ange konsekvensen.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-029",
+              "title": "Exportera kostnader till CSV",
+              "value_intent": "Användaren ska kunna analysera kostnadsdata utanför appen.",
+              "expected_behavior": "Systemet ska skapa CSV med definierade kolumner, korrekta belopp och tillräcklig kontext för extern analys.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-030",
+              "title": "Visa valideringsfel före import",
+              "value_intent": "Användaren ska förstå varför en import inte kan sparas och undvika datakorruption.",
+              "expected_behavior": "Systemet ska validera format, version och obligatoriska fält innan import sparas och visa begripligt fel vid problem.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-031",
+              "title": "Spara data lokalt utan konto",
+              "value_intent": "Användaren ska kunna använda grundfunktionerna utan konto och utan serverberoende.",
+              "expected_behavior": "Systemet ska lagra strukturerad data lokalt och återläsa den efter omstart eller omladdning.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-032",
+              "title": "Bifoga fil till utgift",
+              "value_intent": "Användaren ska kunna koppla relevanta underlag till en kostnad.",
+              "expected_behavior": "Systemet ska låta användaren bifoga tillåtna filtyper till en utgift och lista dem i detaljvyn.",
+              "ux_sketches": []
+            }
+          ]
+        },
+        {
+          "key": "EPC-014",
+          "title": "Fallback Epic",
+          "scope_boundary": "Describe what this Epic includes, excludes, or leaves for later.",
+          "story_ideas": [
+            {
+              "key": "SC-033",
+              "title": "Visa filmetadata",
+              "value_intent": "Användaren ska kunna förstå vad som är bifogat utan att öppna varje fil.",
+              "expected_behavior": "Systemet ska visa filnamn, filtyp och storlek efter uppladdning och vid senare visning.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-034",
+              "title": "Varna om lokal datarisk",
+              "value_intent": "Användaren ska förstå att lokal webbläsardata kan förloras och att backup/export är användarens ansvar.",
+              "expected_behavior": "Systemet ska visa tydlig information om lokal lagring och datarensningsrisk i onboarding eller admin.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-035",
+              "title": "Radera bifogad fil",
+              "value_intent": "Användaren ska kunna ta bort privata filer som inte längre ska sparas i kontexten.",
+              "expected_behavior": "Systemet ska radera filkoppling och binärt innehåll enligt definierad regel och reflektera ändringen i export.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-036",
+              "title": "Utforska krypterad kontext",
+              "value_intent": "Användaren ska på sikt kunna skydda lokal data starkare, men bara om nyckelhantering och återställningsrisk är förstådda.",
+              "expected_behavior": "Systemet ska inte införa kryptering i MVP utan en separat exploration som dokumenterar säkerhets- och nyckelhanteringsrisker.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-037",
+              "title": "Visa total kostnad per månad",
+              "value_intent": "Användaren ska förstå total kostnad i vald period.",
+              "expected_behavior": "Systemet ska summera aktiva utgifter för varje månad i vald period och visa totalsumman.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-038",
+              "title": "Visa kostnader per kategori",
+              "value_intent": "Användaren ska kunna se vilka typer av kostnader som driver totalen.",
+              "expected_behavior": "Systemet ska summera kostnader per kategori baserat på registrerade utgifter i vald kontext och period.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-039",
+              "title": "Visa kostnader per betalande person",
+              "value_intent": "Användaren ska kunna förstå hur kostnader fördelas mellan personer i kontexten.",
+              "expected_behavior": "Systemet ska summera kostnader per betalare utifrån utgifternas personkoppling.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-040",
+              "title": "Visa disponibel inkomst efter kostnader",
+              "value_intent": "Användaren ska få en enkel bild av återstående utrymme efter registrerade kostnader.",
+              "expected_behavior": "Systemet ska beräkna disponibel inkomst minus registrerade kostnader när inkomstdata finns och tydligt visa om data saknas.",
+              "ux_sketches": []
+            }
+          ]
+        },
+        {
+          "key": "EPC-015",
+          "title": "Fallback Epic",
+          "scope_boundary": "Describe what this Epic includes, excludes, or leaves for later.",
+          "story_ideas": [
+            {
+              "key": "SC-041",
+              "title": "Visa potentiell besparing från flaggor",
+              "value_intent": "Användaren ska kunna identifiera kostnader som kan vara kandidater för besparing.",
+              "expected_behavior": "Systemet ska summera kostnader flaggade som lyxiga eller onödiga och presentera dem som beräkningsstöd, inte rådgivning.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-042",
+              "title": "Skapa första kontext via guidat flöde",
+              "value_intent": "Ny användare ska förstå första steget och komma till värde utan tom yta eller förvirring.",
+              "expected_behavior": "Systemet ska guida ny användare genom första kontexten och vidare mot första utgiften.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-043",
+              "title": "Användbar mobil tidslinje",
+              "value_intent": "Mobilanvändare ska kunna använda kärnvyn utan horisontellt kaos.",
+              "expected_behavior": "Systemet ska anpassa tidslinjen för små skärmar med scroll, fokuserad månadsvy eller annan mobilanpassad struktur.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-044",
+              "title": "Visa hjälptexter i tomma lägen",
+              "value_intent": "Användaren ska förstå nästa steg när data saknas.",
+              "expected_behavior": "Systemet ska visa kontextuella tomlägen med tydliga nästa steg utan att skapa in-app dokumentationstyngd.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-045",
+              "title": "Gör ny utgift lätt att hitta",
+              "value_intent": "Användaren ska snabbt kunna återvända till appens viktigaste handling.",
+              "expected_behavior": "Systemet ska göra primär åtgärd för ny utgift synlig och åtkomlig från huvudvyer.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-046",
+              "title": "Filtrera tidslinjen utan tappad överblick",
+              "value_intent": "Användaren ska kunna fokusera på relevant data utan att tappa sammanhanget.",
+              "expected_behavior": "Systemet ska erbjuda filter som kan aktiveras och återställas tydligt i tidslinjen.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-047",
+              "title": "Simulera borttag av kostnader",
+              "value_intent": "Användaren ska kunna förstå möjlig ekonomisk effekt av att avsluta valda kostnader utan att ändra faktisk data.",
+              "expected_behavior": "Systemet ska skapa en temporär simulering där valda kostnader exkluderas från summeringar utan att originaldata ändras.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-048",
+              "title": "Skapa PDF-rapport",
+              "value_intent": "Användaren ska kunna dela eller arkivera en sammanställning av vald kontext och period.",
+              "expected_behavior": "Systemet ska skapa en PDF-rapport med valda perioder, summeringar och relevant kontextdata.",
+              "ux_sketches": []
+            }
+          ]
+        },
+        {
+          "key": "EPC-016",
+          "title": "Fallback Epic",
+          "scope_boundary": "Describe what this Epic includes, excludes, or leaves for later.",
+          "story_ideas": [
+            {
+              "key": "SC-049",
+              "title": "Använd mall för familj, resa eller sambo",
+              "value_intent": "Användaren ska kunna starta snabbare från en struktur som passar vanligt användningsfall.",
+              "expected_behavior": "Systemet ska skapa relevanta kategorier och inställningar från vald mall utan att lägga in verkliga kostnader.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-050",
+              "title": "Stöd obegränsade kontexter för betalande användare",
+              "value_intent": "Betalande användare ska kunna hantera fler separata sammanhang utan konstgjord begränsning.",
+              "expected_behavior": "Systemet ska kunna styra kontextbegränsning via plan eller feature flag utan att påverka dataseparering.",
+              "ux_sketches": []
+            },
+            {
+              "key": "SC-051",
+              "title": "Visa lokala besparingsförslag",
+              "value_intent": "Användaren ska få hjälp att upptäcka potentiella besparingar baserat på egen registrerad data.",
+              "expected_behavior": "Systemet ska visa regelbaserade förslag lokalt och tydligt presentera dem som stöd, inte automatisk rådgivning.",
+              "ux_sketches": []
+            }
+          ]
+        }
+      ],
+      "unassigned_story_ideas": []
+    },
+    "journey_contexts": [],
+    "downstream_ai_instructions": {
+      "initiativeType": "AD",
+      "aiLevel": 3,
+      "mandatoryControls": [
+        {
+          "id": "MC-1",
+          "title": "Preserve Epic -> Story -> Test traceability",
+          "description": "Keep downstream AI outputs linked from Epic through Story to later test intent.",
+          "enabled": true
+        },
+        {
+          "id": "MC-2",
+          "title": "Preserve AI-level-specific review expectations",
+          "description": "Keep review strictness aligned with the current AI level.",
+          "enabled": true
+        },
+        {
+          "id": "MC-3",
+          "title": "Preserve human approval on critical decisions",
+          "description": "Do not let downstream AI remove human approval where decision impact or governance requires it.",
+          "enabled": true
+        },
+        {
+          "id": "MC-4",
+          "title": "Preserve security/privacy/compliance constraints",
+          "description": "Carry security, privacy, compliance, and data sensitivity constraints forward into downstream AI behavior.",
+          "enabled": true
+        },
+        {
+          "id": "MC-5",
+          "title": "Preserve testability and binary acceptance intent",
+          "description": "Keep downstream refinement tied to later testability and acceptance clarity.",
+          "enabled": true
+        },
+        {
+          "id": "MC-6",
+          "title": "Preserve reproducibility expectations at higher AI levels",
+          "description": "At higher AI levels, keep logs, reproducibility, and reviewability expectations visible in downstream work.",
+          "enabled": true
+        }
+      ],
+      "refinementPreferences": [
+        {
+          "id": "E1",
+          "group": "epic",
+          "title": "Keep each Epic centered on one coherent capability/value area",
+          "description": "Prefer clear scope and one main value center per Epic",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "E2",
+          "group": "epic",
+          "title": "Separate user-facing Epics from enabling/platform/compliance Epics",
+          "description": "Avoid mixing visible user change with enabling work unless needed",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "E3",
+          "group": "epic",
+          "title": "Minimize cross-Epic dependencies",
+          "description": "Prefer decomposition that reduces orchestration overhead",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "E4",
+          "group": "epic",
+          "title": "Preserve Journey Context during Epic refinement",
+          "description": "Keep flow context visible when Journey Context exists",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "E5",
+          "group": "epic",
+          "title": "Prefer standard patterns before variants",
+          "description": "Reuse common refinement patterns before special cases",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "E6",
+          "group": "epic",
+          "title": "Model transition/coexistence work as explicit Epics",
+          "description": "Separate migration/coexistence concerns when needed",
+          "recommended": "NO",
+          "selectedValue": "NO",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "E7",
+          "group": "epic",
+          "title": "Model operability/stability work as explicit Epics",
+          "description": "Make runability/stability visible as delivery structure when useful",
+          "recommended": "NO",
+          "selectedValue": "NO",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "S1",
+          "group": "story",
+          "title": "Keep each Story Idea centered on one primary intent",
+          "description": "Prefer one main intent per Story Idea",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "S2",
+          "group": "story",
+          "title": "Tie each Story Idea to an actor, journey step, or trigger",
+          "description": "Preserve context when refining Story Ideas",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "S3",
+          "group": "story",
+          "title": "Split large Story Ideas before Design if verification would be hard",
+          "description": "Prefer refinement into verifiable units",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "S4",
+          "group": "story",
+          "title": "Require future testability when refining Story Ideas",
+          "description": "Keep refined Story Ideas mappable to later testable delivery",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": false,
+          "rationale": null
+        },
+        {
+          "id": "S5",
+          "group": "story",
+          "title": "Keep architecture direction lightweight at Story Idea level",
+          "description": "Avoid locking technical design too early",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "S6",
+          "group": "story",
+          "title": "Force Story Type classification during refinement",
+          "description": "Preserve explicit Story category such as Feature, Refactor, Bugfix, Exploration",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "S7",
+          "group": "story",
+          "title": "Force AI Usage Scope visibility when downstream AI is expected",
+          "description": "Preserve visibility of intended AI usage",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "S8",
+          "group": "story",
+          "title": "Require rollback/fallback thinking for risky Story Ideas",
+          "description": "Preserve reversibility thinking for risky work",
+          "recommended": "NO",
+          "selectedValue": "NO",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "J1",
+          "group": "journey",
+          "title": "Use Journey Context as a primary refinement source when present",
+          "description": "Let Journey Context actively influence refinement",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "J2",
+          "group": "journey",
+          "title": "Preserve journey-to-story traceability when Journey Context exists",
+          "description": "Preserve explainability between Journeys and Story Ideas",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "J3",
+          "group": "journey",
+          "title": "Allow AI to suggest missing journey/story mappings",
+          "description": "Enable AI-assisted mapping support",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "J4",
+          "group": "journey",
+          "title": "Prefer actor and flow continuity when Journey Context exists",
+          "description": "Preserve flow continuity in refinement",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "J5",
+          "group": "journey",
+          "title": "Allow Story Ideas to stand without Journey Context when Journey Context is absent",
+          "description": "Keep tool useful without Journey Context",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": false,
+          "rationale": null
+        },
+        {
+          "id": "D1",
+          "group": "design",
+          "title": "Optimize for modularity and future changeability",
+          "description": "Favor low coupling and evolvable structure",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "D2",
+          "group": "design",
+          "title": "Prefer reuse when fit-for-purpose",
+          "description": "Evaluate existing assets before new build-out",
+          "recommended": "NO",
+          "selectedValue": "NO",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "D3",
+          "group": "design",
+          "title": "Prefer integration discipline over shortcuts",
+          "description": "Avoid tactical and opaque integration design",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "D4",
+          "group": "design",
+          "title": "Make data ownership and classification explicit",
+          "description": "Preserve data boundaries and source-of-truth clarity",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": false,
+          "rationale": null
+        },
+        {
+          "id": "D5",
+          "group": "design",
+          "title": "Preserve security/privacy/compliance in design proposals",
+          "description": "Keep compliance and sensitive-data rules active in Design",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": false,
+          "rationale": null
+        },
+        {
+          "id": "D6",
+          "group": "design",
+          "title": "Make observability and operability part of Design",
+          "description": "Keep runability and diagnostics as design concerns",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "D7",
+          "group": "design",
+          "title": "Separate experimentation zones from stable zones",
+          "description": "Preserve experimentation boundary where relevant",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "D8",
+          "group": "design",
+          "title": "Prefer continuity over architectural purity when needed",
+          "description": "Favor safer transition when context requires it",
+          "recommended": "NO",
+          "selectedValue": "NO",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "D9",
+          "group": "design",
+          "title": "Prefer phased rollout over big bang",
+          "description": "Preserve controlled rollout thinking",
+          "recommended": "NO",
+          "selectedValue": "NO",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "B1",
+          "group": "build",
+          "title": "Require Story and Epic traceability for all implementation work",
+          "description": "Preserve implementation lineage",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": false,
+          "rationale": null
+        },
+        {
+          "id": "B2",
+          "group": "build",
+          "title": "Require traceability for AI-generated implementation artifacts",
+          "description": "Keep AI-generated artifacts linked to Story/Test context",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": false,
+          "rationale": null
+        },
+        {
+          "id": "B3",
+          "group": "build",
+          "title": "Enforce AI-level-specific review and reproducibility rules",
+          "description": "Keep review/reproducibility aligned with AI level",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": false,
+          "rationale": null
+        },
+        {
+          "id": "B4",
+          "group": "build",
+          "title": "Require test strategy proportional to Story risk/type",
+          "description": "Preserve verification expectations",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": false,
+          "rationale": null
+        },
+        {
+          "id": "B5",
+          "group": "build",
+          "title": "Require architecture/security checks in review or CI/CD",
+          "description": "Keep structural and security controls active in Build",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "B6",
+          "group": "build",
+          "title": "Prefer automatically generated release evidence",
+          "description": "Favor generated evidence/logging where feasible",
+          "recommended": "YES",
+          "selectedValue": "YES",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "B7",
+          "group": "build",
+          "title": "Treat support/runbook/handover updates as part of done",
+          "description": "Preserve operational readiness in completion rules",
+          "recommended": "NO",
+          "selectedValue": "NO",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "B8",
+          "group": "build",
+          "title": "Prefer low blast radius and reversibility in rollout",
+          "description": "Favor smaller and safer release mechanics",
+          "recommended": "NO",
+          "selectedValue": "NO",
+          "allowNa": true,
+          "rationale": null
+        },
+        {
+          "id": "B9",
+          "group": "build",
+          "title": "Allow emergency handling only with retroactive traceability",
+          "description": "Preserve control in urgent cases",
+          "recommended": "NO",
+          "selectedValue": "NO",
+          "allowNa": false,
+          "rationale": null
+        }
+      ],
+      "customInstructions": [
+        {
+          "id": "discovery-loop-accelerator",
+          "title": "Discovery loop accelerator",
+          "body": "Downstream AI should run an accelerated discovery loop from this Framing package instead of asking for approval at every ordinary refinement step.\nStart by inspecting Outcome, Epics, Story Ideas, Journey Context, constraints, AI level, risk posture and approval context.\nUse available specialist agents or BMAD-style roles when helpful, for example analyst, product, UX, architect, dev and QA perspectives, but return one consolidated source-of-truth output.\nMake reasonable documented assumptions, batch open questions, and continue until a meaningful refinement package exists.\nEscalate to the human only for governance-sensitive decisions, missing critical facts, material scope changes, high-risk data/security/privacy issues, or approval/sign-off boundaries.\nReturn traceable discovery outputs linked back to Outcome -> Epic -> Story Idea -> Journey where applicable, plus assumptions, risks, suggested next experiments and validation checks.",
+          "category": "General",
+          "priority": "High"
+        }
+      ],
+      "deviations": [],
+      "warnings": [],
+      "hard_validation_issues": [],
+      "generatedGuidance": {
+        "epicRefinementGuide": [
+          "Interpret Epic refinement through the AD delivery posture at AI Level 3.",
+          "Keep the main delivery structure Outcome -> Epic -> Story -> Test intact.",
+          "Keep each Epic centered on one coherent capability/value area: AI should refine Epics into coherent value/capability containers.",
+          "Separate user-facing Epics from enabling/platform/compliance Epics: AI should split enabling work into distinct Epics.",
+          "Minimize cross-Epic dependencies: AI should reduce coupling between Epics.",
+          "Preserve Journey Context during Epic refinement: AI should preserve journey influence in Epic refinement.",
+          "Prefer standard patterns before variants: AI should challenge local variants and seek reusable Epic patterns.",
+          "Model transition/coexistence work as explicit Epics: AI may mix transition work into target-state Epics.",
+          "Model operability/stability work as explicit Epics: AI may keep focus on visible change only.",
+          "Always-on controls remain active: Preserve Epic -> Story -> Test traceability; Preserve AI-level-specific review expectations; Preserve human approval on critical decisions; Preserve security/privacy/compliance constraints; Preserve testability and binary acceptance intent; Preserve reproducibility expectations at higher AI levels."
+        ],
+        "storyIdeaRefinementGuide": [
+          "Refine Story Ideas so they remain mappable to later implementation and test intent.",
+          "Keep each Story Idea centered on one primary intent: AI should split oversized Story Ideas into focused candidates.",
+          "Tie each Story Idea to an actor, journey step, or trigger: AI should preserve role/flow/trigger context.",
+          "Split large Story Ideas before Design if verification would be hard: AI should split Story Ideas that would be hard to verify.",
+          "Require future testability when refining Story Ideas: AI must reformulate Story Ideas so they can become testable later.",
+          "Keep architecture direction lightweight at Story Idea level: AI should avoid premature architecture lock-in.",
+          "Force Story Type classification during refinement: AI should classify Story Ideas explicitly.",
+          "Force AI Usage Scope visibility when downstream AI is expected: AI should mark expected AI usage scope explicitly.",
+          "Require rollback/fallback thinking for risky Story Ideas: AI may postpone rollback/fallback thinking.",
+          "Do not let downstream AI remove testability, traceability, or human review expectations."
+        ],
+        "journeyUsageGuide": [
+          "No Journey Context is present. Downstream AI should still proceed using Outcome, Epics, Story Ideas, constraints, and other Framing inputs.",
+          "Use Journey Context as a primary refinement source when present: AI should actively use Journey Context to refine Epics and Story Ideas.",
+          "Preserve journey-to-story traceability when Journey Context exists: AI should preserve visible traceability between Journey elements and Story Ideas.",
+          "Allow AI to suggest missing journey/story mappings: AI should propose likely Story/Epic mappings where missing.",
+          "Prefer actor and flow continuity when Journey Context exists: AI should favor actor/flow continuity when refining.",
+          "Allow Story Ideas to stand without Journey Context when Journey Context is absent: AI should proceed normally even if no Journey Context exists.",
+          "If Journey Context is absent, do not block Story Idea refinement solely because journey data is missing."
+        ],
+        "designAiGuidance": [
+          "In Design, inherit the Source of Truth from Outcome, Problem, Baseline, Solution Context, Constraints, UX Principles, Non-functional Requirements, Additional Requirements, Data Sensitivity, Journey Context when present, Epics, Story Ideas, and optional references.",
+          "Optimize for modularity and future changeability: AI should prefer changeable modular structures.",
+          "Prefer reuse when fit-for-purpose: AI may propose more net-new implementation.",
+          "Prefer integration discipline over shortcuts: AI should avoid tactical shortcuts in integration design.",
+          "Make data ownership and classification explicit: AI must keep data ownership/classification explicit.",
+          "Preserve security/privacy/compliance in design proposals: AI must embed security/privacy/compliance constraints in design proposals.",
+          "Make observability and operability part of Design: AI should include observability/operability in design thinking.",
+          "Separate experimentation zones from stable zones: AI should preserve exploration vs. stable separation.",
+          "Prefer continuity over architectural purity when needed: AI may favor cleaner target architecture over safer transition.",
+          "Prefer phased rollout over big bang: AI may allow larger cutover plans.",
+          "Security, privacy, compliance, and data classification constraints must stay active in every design proposal."
+        ],
+        "buildAiGuidance": [
+          "In Build, preserve Story and Epic lineage, review discipline, test expectations, release evidence, and rollout control.",
+          "Require Story and Epic traceability for all implementation work: AI must preserve explicit Story/Epic traceability.",
+          "Require traceability for AI-generated implementation artifacts: AI output must remain traceable.",
+          "Enforce AI-level-specific review and reproducibility rules: AI must tailor Build guidance to AI level.",
+          "Require test strategy proportional to Story risk/type: AI must require verification proportional to risk and type.",
+          "Require architecture/security checks in review or CI/CD: AI should include structural/security checks in Build guidance.",
+          "Prefer automatically generated release evidence: AI should assume evidence generation where practical.",
+          "Treat support/runbook/handover updates as part of done: AI may focus mainly on code/test.",
+          "Prefer low blast radius and reversibility in rollout: AI may allow broader-impact changes.",
+          "Allow emergency handling only with retroactive traceability: AI may normalize emergency shortcuts.",
+          "Review strictness and reproducibility must remain aligned with AI Level 3."
+        ],
+        "customInstructionAppendix": [
+          {
+            "title": "Discovery loop accelerator",
+            "category": "General",
+            "priority": "High",
+            "body": "Downstream AI should run an accelerated discovery loop from this Framing package instead of asking for approval at every ordinary refinement step.\nStart by inspecting Outcome, Epics, Story Ideas, Journey Context, constraints, AI level, risk posture and approval context.\nUse available specialist agents or BMAD-style roles when helpful, for example analyst, product, UX, architect, dev and QA perspectives, but return one consolidated source-of-truth output.\nMake reasonable documented assumptions, batch open questions, and continue until a meaningful refinement package exists.\nEscalate to the human only for governance-sensitive decisions, missing critical facts, material scope changes, high-risk data/security/privacy issues, or approval/sign-off boundaries.\nReturn traceable discovery outputs linked back to Outcome -> Epic -> Story Idea -> Journey where applicable, plus assumptions, risks, suggested next experiments and validation checks."
+          }
+        ],
+        "deviationsSummary": [
+          "No preferences currently deviate from the recommended defaults."
+        ],
+        "warningValidationNotes": [
+          "No hard validation issues or warnings are currently active."
+        ]
+      }
+    },
+    "approvals": {
+      "status": "approved",
+      "approved_version": 28,
+      "approved_at": "2026-05-01T07:10:18.994Z",
+      "signoffs": [
+        {
+          "role": "aqa",
+          "person": "Denzel Washington",
+          "role_title": "AI Quality Authority",
+          "side": "supplier",
+          "note": "Låg risk motiverar hög accelleration",
+          "approved_at": "2026-05-01T07:10:16.980Z"
+        },
+        {
+          "role": "value owner",
+          "person": "Anne Hathaway",
+          "role_title": "Value Owner",
+          "side": "customer",
+          "note": "OK. Blir spännande att se!",
+          "approved_at": "2026-05-01T07:09:52.961Z"
+        }
+      ]
+    },
+    "next_step_handoff": {
+      "recommended_use": "Use this Framing package as the governed source of truth when you move into design, story refinement or structured delivery planning with BMAD or another AI tool.",
+      "references": [
+        "Treat the customer handshake, baseline and AI/risk posture as the framing source of truth.",
+        "Treat Epics and Story Ideas as directional input for design and later delivery refinement, not as fixed implementation steps.",
+        "If later steps create Delivery Stories or extra work items, keep them traceable back to this Framing package or record them explicitly as feedback-loop additions.",
+        "Use the approval section to understand whether this Framing version is already signed off for Tollgate 1.",
+        "Use the UX sketch references where they exist to preserve visual intent in the next step."
+      ]
+    },
+    "metadata": {
+      "lifecycle_state": "active",
+      "origin_type": "imported",
+      "exported_at": "2026-05-01T07:10:39.577Z"
+    }
+  }
+}

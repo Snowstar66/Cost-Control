@@ -1,0 +1,875 @@
+{
+  "document_type": "AAS Framing Import Package",
+  "product_name": "Utgiftskoll",
+  "version": "0.2-import",
+  "language": "sv-SE",
+  "source_document": "Utgiftskoll.txt",
+  "created_at": "2026-05-01",
+  "value_owner": "Pontus Hellgren",
+  "aas_context": {
+    "phase": "Framing",
+    "target_next_phase": "Design",
+    "domain": "Application Development",
+    "delivery_type": "New responsive local-first web application",
+    "ai_acceleration_level": 1,
+    "risk_profile": "medium",
+    "human_mandate": "Människa ansvarar för prioritering, riskacceptans, AI-nivå, releasebeslut och beslut om hantering av verkliga användardata.",
+    "governance_requirements": [
+      "AI Acceleration Level sätts initialt till Level 1 - Assisted Delivery.",
+      "Riskacceptans måste göras av Value Owner inför Design och varje release.",
+      "Baseline måste etableras genom första användartest.",
+      "Finansiella beräkningar, kontextisolering och export/import ska ha automatiserade tester innan release.",
+      "Kryptering får inte marknadsföras som säker utan separat säkerhetsgranskning."
+    ]
+  },
+  "problem_statement": {
+    "id": "PS-001",
+    "text": "Privatpersoner, familjer och mindre grupper saknar ofta en lågtröskelöversikt över återkommande kostnader, abonnemang, bindningstider, uppsägningstider och framtida ekonomiska åtaganden. Kalkylblad blir lätt manuella och sköra, medan breda budgetappar med bankkoppling kan skapa hög tröskel och integritetsoro. Det behövs en enkel lokal-first app som fokuserar på återkommande och tidsbundna kostnader, tidslinje, uppsägningslogik och kontextseparerad datalagring.",
+    "current_baseline": "Ingen befintlig app eller strukturerad datahantering finns. Baseline ska etableras genom första användartest, manuell jämförelse mot testfall och import/export-testsvit.",
+    "impact_areas": [
+      "Överblick över kommande 9-12 månaders kostnader.",
+      "Minskad risk att missa uppsägningsmöjligheter.",
+      "Portabel lokal hantering av privat ekonomidata.",
+      "Lägre tröskel för manuell registrering av återkommande kostnader."
+    ],
+    "baseline_sources": [
+      {
+        "name": "Första användartest",
+        "format": "Tidtagning och enkät",
+        "description": "Mäter tid till första fem registrerade kostnader och upplevd kontroll före/efter."
+      },
+      {
+        "name": "Beräknings- och importtestsvit",
+        "format": "Automatiserade tester",
+        "description": "Verifierar månadsberäkning, uppsägningstid, kontextisolering och export/import."
+      }
+    ]
+  },
+  "outcomes": [
+    {
+      "id": "OUT-001",
+      "title": "Kontroll över privata återkommande kostnader",
+      "statement": "Användaren ska kunna förstå, registrera, följa och flytta sina privata återkommande och tidsbundna kostnader i en vald lokal kontext, med tydlig överblick över nuläge, historik, kommande månader, uppsägningsmöjligheter och dataseparering.",
+      "baseline": "Baseline saknas idag och etableras i första användartest samt genom regressionsskydd för beräkning, uppsägning, lokal lagring och import/export.",
+      "measurement_method": [
+        "Minst 80 % av testanvändarna ska inom 10 minuter kunna registrera minst fem återkommande kostnader och förstå total månadskostnad kommande 9 månader.",
+        "Minst 90 % av kostnader med uppsägningstid ska visa korrekt låst period och tidigaste möjliga kostnadsfria månad.",
+        "100 % av testade exporter ska kunna importeras till ny kontext utan datatapp i grunddata, utgifter och metadata.",
+        "En enkel utgift ska kunna registreras på maximalt 30 sekunder av en van användare och 90 sekunder av en ny användare."
+      ],
+      "target_effects": [
+        "Ökad kontroll över återkommande privata kostnader.",
+        "Minskad risk att missa uppsägning eller kostnadsbortfall.",
+        "Säker och portabel lokal hantering av privat ekonomidata.",
+        "Låg tröskel för registrering och fortsatt användning."
+      ]
+    }
+  ],
+  "scope": {
+    "mvp_in_scope": [
+      "Skapa och växla mellan separata kontexter.",
+      "Personregister med namn och frivillig tillgänglig inkomst.",
+      "Leverantörsregister med namn, logga och basinformation.",
+      "Kategoriregister.",
+      "Registrering av utgifter med leverantör, kategori, betalare, period, belopp och nödvändighetsflagga.",
+      "Tidslinje med 3 månader bakåt och 9 månader framåt.",
+      "Summering per månad.",
+      "Uppsägningstid och tidigaste möjliga kostnadsfria månad.",
+      "Lokal lagring.",
+      "Export/import av kontext.",
+      "Grundläggande filbilagor."
+    ],
+    "mvp_out_of_scope": [
+      "Bankkoppling.",
+      "Molnsynk.",
+      "Flera användarkonton.",
+      "Betalplattform.",
+      "AI-baserad automatisk fakturatolkning.",
+      "Avancerade simuleringar.",
+      "Full mobilapp i app store."
+    ]
+  },
+  "configuration_defaults": {
+    "planning_unit": "MVP",
+    "calculation_granularity": "monthly",
+    "reporting_granularity": "context and month",
+    "forecast_horizon_months": "3 months back, 9 months forward",
+    "flag_levels": [
+      {
+        "id": "necessary",
+        "label": "Nödvändig"
+      },
+      {
+        "id": "comfortable",
+        "label": "Bekväm"
+      },
+      {
+        "id": "luxury",
+        "label": "Lyxig"
+      },
+      {
+        "id": "unnecessary",
+        "label": "Onödig"
+      }
+    ]
+  },
+  "epics": [
+    {
+      "id": "EP-001",
+      "outcome_id": "OUT-001",
+      "title": "Kontext och dataseparering",
+      "purpose": "Säkerställa att olika hushåll, grupper och privata sammanhang kan hållas åtskilda utan dataläckage.",
+      "scope": "Skapa kontext, byta aktiv kontext, visa endast data från aktiv kontext, exportera/importera per kontext och hantera kontextspecifika inställningar.",
+      "risk_note": "Fel i kontextisolering kan leda till dataläckage mellan privata sammanhang.",
+      "story_ideas": [
+        {
+          "id": "AD-001",
+          "title": "Skapa ny kontext",
+          "value_intent": "Användaren ska kunna separera olika ekonomiska sammanhang, exempelvis privat, familj, resa eller delat boende.",
+          "expected_behavior": "Systemet ska skapa en kontext med namn och valuta och göra den valbar som aktiv kontext utan att blanda data med andra kontexter.",
+          "candidate_test_ideas": [
+            "Skapa kontext och verifiera att den visas i kontextväljaren."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-002",
+          "title": "Växla aktiv kontext",
+          "value_intent": "Användaren ska kunna arbeta i rätt ekonomiskt sammanhang och bara se data som hör till det sammanhanget.",
+          "expected_behavior": "Systemet ska byta aktiv kontext och filtrera utgifter, personer, leverantörer, kategorier och inställningar till vald kontext.",
+          "candidate_test_ideas": [
+            "Skapa två kontexter med olika utgifter och verifiera isolerad visning."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-003",
+          "title": "Konfigurera tidslinjefönster per kontext",
+          "value_intent": "Användaren ska kunna anpassa hur mycket historik och framtid som visas beroende på kontextens behov.",
+          "expected_behavior": "Systemet ska spara antal månader bakåt och framåt per kontext och använda inställningen när tidslinjen renderas.",
+          "candidate_test_ideas": [
+            "Ändra inställning och verifiera tidslinjens kolumner."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-004",
+          "title": "Duplicera kontext som mall",
+          "value_intent": "Användaren ska kunna återanvända grundstruktur utan att kopiera historiska utgifter eller blanda verkliga kostnadsdata.",
+          "expected_behavior": "Systemet ska duplicera mallgrunddata enligt definierad regel och skapa en ny isolerad kontext utan historiska utgifter.",
+          "candidate_test_ideas": [
+            "Duplicera kontext och verifiera att mallgrunddata följer med enligt regel."
+          ],
+          "ai_acceleration_level": 1
+        }
+      ]
+    },
+    {
+      "id": "EP-002",
+      "outcome_id": "OUT-001",
+      "title": "Snabbregistrering av utgift",
+      "purpose": "Göra det möjligt att registrera en enkel kostnad med minimal friktion så att manuell användning blir hållbar över tid.",
+      "scope": "Ny utgift, leverantör, belopp, periodicitet, kategori, betalare, ny leverantör direkt i flödet samt direkt visning i tidslinjen.",
+      "risk_note": "Om registreringsflödet blir för tungt förloras kärnvärdet.",
+      "story_ideas": [
+        {
+          "id": "AD-010",
+          "title": "Skapa månadsutgift",
+          "value_intent": "Användaren ska snabbt kunna registrera en vanlig återkommande månadskostnad.",
+          "expected_behavior": "Systemet ska spara leverantör, belopp, periodicitet och kategori och visa utgiften i rätt månader i tidslinjen.",
+          "candidate_test_ideas": [
+            "Registrera 399 kr/mån och verifiera att den visas i rätt månader."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-011",
+          "title": "Skapa leverantör i utgiftsflödet",
+          "value_intent": "Användaren ska slippa lämna snabbregistreringen när en leverantör saknas.",
+          "expected_behavior": "Systemet ska kunna skapa en ny leverantör från utgiftsformuläret och återanvända leverantören på senare utgifter.",
+          "candidate_test_ideas": [
+            "Ange ny leverantör i utgiftsformulär och verifiera återanvändning."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-012",
+          "title": "Välj betalande person",
+          "value_intent": "Användaren ska kunna förstå vem som bär kostnaden i en kontext med flera personer.",
+          "expected_behavior": "Systemet ska koppla utgiften till vald betalare och använda kopplingen i personsummor och filtrering.",
+          "candidate_test_ideas": [
+            "Koppla utgift till person och verifiera personsummor."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-013",
+          "title": "Flagga nödvändighetsnivå",
+          "value_intent": "Användaren ska kunna skilja nödvändiga kostnader från bekväma, lyxiga eller onödiga kostnader inför analys.",
+          "expected_behavior": "Systemet ska spara nödvändighetsflagga på utgiften och göra den användbar i filter och summeringar.",
+          "candidate_test_ideas": [
+            "Spara flagga och verifiera filtrering/summering."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-014",
+          "title": "Spara ofullständig utgift",
+          "value_intent": "Användaren ska kunna fånga en kostnad snabbt även när alla detaljer inte är kända.",
+          "expected_behavior": "Systemet ska tillåta minimal utgiftsdata, markera posten som behöver kompletteras och göra den lätt att hitta senare.",
+          "candidate_test_ideas": [
+            "Spara minimal data och verifiera status behöver kompletteras."
+          ],
+          "ai_acceleration_level": 1
+        }
+      ]
+    },
+    {
+      "id": "EP-003",
+      "outcome_id": "OUT-001",
+      "title": "Tidslinje och månadsöversikt",
+      "purpose": "Visa aktuella, historiska och framtida kostnader i en begriplig visuell tidslinje.",
+      "scope": "Utgifter som rader, månader som kolumner, standardvy 3 månader bakåt och 9 månader framåt, detaljexpansion och månadssummering.",
+      "risk_note": "Beräkningslogik måste vara strikt testad eftersom fel i tidsperioder underminerar förtroendet.",
+      "story_ideas": [
+        {
+          "id": "AD-020",
+          "title": "Visa utgifter som rader och månader som kolumner",
+          "value_intent": "Användaren ska snabbt kunna se vilka kostnader som påverkar varje månad.",
+          "expected_behavior": "Systemet ska rendera en tidslinje där varje utgift är en rad och varje månad är en kolumn enligt kontextens tidsfönster.",
+          "candidate_test_ideas": [
+            "Verifiera att 12-månadersfönster visas enligt inställning."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-021",
+          "title": "Visa kostnadsstapel över giltig period",
+          "value_intent": "Användaren ska förstå när en kostnad gäller över tid.",
+          "expected_behavior": "Systemet ska visa kostnadsstapel endast för månader mellan start- och slutdatum eller enligt återkommande period.",
+          "candidate_test_ideas": [
+            "Utgift med start/slut visas endast mellan datum."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-022",
+          "title": "Öppna detaljer från tidslinjerad",
+          "value_intent": "Användaren ska kunna granska underliggande data utan att tappa överblicken.",
+          "expected_behavior": "Systemet ska öppna en detaljpanel från vald rad eller cell med leverantör, belopp, kategori, betalare och period.",
+          "candidate_test_ideas": [
+            "Klick öppnar detaljpanel med leverantör, belopp, kategori, betalare."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-023",
+          "title": "Göm historiska månader",
+          "value_intent": "Användaren ska kunna fokusera på kommande kostnader när historiken stör överblicken.",
+          "expected_behavior": "Systemet ska kunna dölja månader före aktuell månad och återställa vyn utan att ändra data.",
+          "candidate_test_ideas": [
+            "Toggle döljer månader före aktuell månad."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-024",
+          "title": "Visa total kostnad per månad",
+          "value_intent": "Användaren ska förstå total månadspåverkan för vald period.",
+          "expected_behavior": "Systemet ska summera alla aktiva synliga utgifter per månad och visa totalen i tidslinjen.",
+          "candidate_test_ideas": [
+            "Summering matchar summan av alla synliga utgifter."
+          ],
+          "ai_acceleration_level": 1
+        }
+      ]
+    },
+    {
+      "id": "EP-004",
+      "outcome_id": "OUT-001",
+      "title": "Uppsägningstid och låst period",
+      "purpose": "Göra det tydligt när en kostnad inte kan avslutas omedelbart och när den tidigast kan falla bort.",
+      "scope": "Uppsägningstid i dagar eller månader, beräkning av tidigaste avslutsdatum, låst period i tidslinje och uppsägningsinformation i detaljpanel.",
+      "risk_note": "Datumlogik nära månadsskiften kan ge fel beslut om den inte definieras och testas deterministiskt.",
+      "story_ideas": [
+        {
+          "id": "AD-030",
+          "title": "Ange uppsägningstid",
+          "value_intent": "Användaren ska kunna registrera bindning eller uppsägning så att kostnaden kan analyseras korrekt.",
+          "expected_behavior": "Systemet ska spara uppsägningstid som värde och enhet och använda regeln i beräkningar.",
+          "candidate_test_ideas": [
+            "Ange 2 månader och verifiera sparad regel."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-031",
+          "title": "Visa låst period",
+          "value_intent": "Användaren ska visuellt förstå när en kostnad inte kan falla bort ännu.",
+          "expected_behavior": "Systemet ska markera låst period i tidslinjen med särskild visuell behandling som inte enbart bygger på färg.",
+          "candidate_test_ideas": [
+            "Utgift med uppsägningstid visar visuell låsning."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-032",
+          "title": "Beräkna tidigaste kostnadsfria månad",
+          "value_intent": "Användaren ska kunna se när en uppsagd kostnad tidigast slutar påverka månadsbudgeten.",
+          "expected_behavior": "Systemet ska beräkna tidigaste möjliga kostnadsfria månad deterministiskt utifrån uppsägningsregel och datum.",
+          "candidate_test_ideas": [
+            "Testa datum nära månadsskifte och verifiera beräkning."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-033",
+          "title": "Varna när uppsägningsinformation saknas",
+          "value_intent": "Användaren ska uppmärksammas på abonnemang där beslutsunderlag saknas.",
+          "expected_behavior": "Systemet ska markera abonnemangsliknande utgifter utan uppsägningsinformation som behöver kompletteras.",
+          "candidate_test_ideas": [
+            "Utgift i abonnemangskategori utan uppsägning markeras."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-034",
+          "title": "Skapa påminnelse inför uppsägningsdeadline",
+          "value_intent": "Användaren ska kunna agera i tid innan en kostnad fortsätter längre än nödvändigt.",
+          "expected_behavior": "Systemet ska skapa en påminnelsedatumspunkt kopplad till utgiftens uppsägningsdeadline och visa den i relevant vy.",
+          "candidate_test_ideas": [
+            "Skapa påminnelse och verifiera datumlogik."
+          ],
+          "ai_acceleration_level": 1
+        }
+      ]
+    },
+    {
+      "id": "EP-005",
+      "outcome_id": "OUT-001",
+      "title": "Grunddataregister",
+      "purpose": "Hantera personer, leverantörer och kategorier så att utgifter kan beskrivas konsekvent och återanvändbart.",
+      "scope": "Personer, leverantörer, leverantörslogga, uppsägningsinstruktioner, kategorier och standardkategorier.",
+      "risk_note": "Grunddata måste vara kontextbunden för att inte läcka mellan privata sammanhang.",
+      "story_ideas": [
+        {
+          "id": "AD-040",
+          "title": "Skapa person",
+          "value_intent": "Användaren ska kunna representera betalare och eventuellt disponibel inkomst i kontexten.",
+          "expected_behavior": "Systemet ska spara person med förnamn, efternamn och frivillig inkomst och göra personen valbar som betalare.",
+          "candidate_test_ideas": [
+            "Person visas i betalare-lista."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-041",
+          "title": "Skapa och återanvänd leverantör",
+          "value_intent": "Användaren ska slippa skriva samma leverantörsdata flera gånger.",
+          "expected_behavior": "Systemet ska spara leverantörer per kontext och låta flera utgifter kopplas till samma leverantör.",
+          "candidate_test_ideas": [
+            "Leverantör kan kopplas till flera utgifter."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-042",
+          "title": "Ladda upp leverantörslogga",
+          "value_intent": "Användaren ska kunna känna igen leverantörer snabbare i listor och detaljer.",
+          "expected_behavior": "Systemet ska acceptera godkända bildformat, lagra filmetadata och visa loggan vid leverantören.",
+          "candidate_test_ideas": [
+            "PNG/JPG/WebP accepteras och visas."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-043",
+          "title": "Spara uppsägningsinstruktion för leverantör",
+          "value_intent": "Användaren ska ha praktisk information tillgänglig när en kostnad ska sägas upp.",
+          "expected_behavior": "Systemet ska spara uppsägningsinstruktion på leverantören och visa den i relevanta utgiftsdetaljer.",
+          "candidate_test_ideas": [
+            "Instruktion visas i utgiftens detaljvy."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-044",
+          "title": "Skapa och ändra kategorier",
+          "value_intent": "Användaren ska kunna strukturera kostnader på ett sätt som passar kontexten.",
+          "expected_behavior": "Systemet ska låta användaren skapa och ändra kategorier och koppla dem till utgifter och filter.",
+          "candidate_test_ideas": [
+            "Kategori kan kopplas till utgift och visas i filter."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-045",
+          "title": "Skapa standardkategorier i ny kontext",
+          "value_intent": "Användaren ska komma igång snabbare utan att behöva skapa all grundstruktur manuellt.",
+          "expected_behavior": "Systemet ska erbjuda eller skapa en uppsättning fördefinierade kategorier när en ny kontext skapas.",
+          "candidate_test_ideas": [
+            "Ny kontext innehåller fördefinierade kategorier."
+          ],
+          "ai_acceleration_level": 1
+        }
+      ]
+    },
+    {
+      "id": "EP-006",
+      "outcome_id": "OUT-001",
+      "title": "Export och import",
+      "purpose": "Göra kontextdata flyttbar, delbar och återställbar utan att skriva över befintlig data.",
+      "scope": "Export av hel kontext, import som ny kontext, val om filer ska ingå, CSV-export och importvalidering.",
+      "risk_note": "Export/import är kritiskt för portabilitet och måste versionssättas och regressionsskyddas.",
+      "story_ideas": [
+        {
+          "id": "AD-050",
+          "title": "Exportera hel kontext",
+          "value_intent": "Användaren ska kunna säkerhetskopiera eller flytta en komplett ekonomisk kontext.",
+          "expected_behavior": "Systemet ska skapa en exportfil med personer, leverantörer, kategorier, utgifter och relevant metadata för vald kontext.",
+          "candidate_test_ideas": [
+            "Exportfil innehåller personer, leverantörer, kategorier och utgifter."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-051",
+          "title": "Importera export som ny kontext",
+          "value_intent": "Användaren ska kunna återställa eller dela data utan att riskera befintliga kontexter.",
+          "expected_behavior": "Systemet ska importera en giltig export till en ny kontext och aldrig skriva över befintlig data som standard.",
+          "candidate_test_ideas": [
+            "Import skapar ny kontext utan att skriva över befintlig."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-052",
+          "title": "Välj om filer ska ingå i export",
+          "value_intent": "Användaren ska kunna balansera komplett backup mot filstorlek och delningsrisk.",
+          "expected_behavior": "Systemet ska låta användaren exportera med eller utan bifogade filer och tydligt ange konsekvensen.",
+          "candidate_test_ideas": [
+            "Export med/utan filer verifieras."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-053",
+          "title": "Exportera kostnader till CSV",
+          "value_intent": "Användaren ska kunna analysera kostnadsdata utanför appen.",
+          "expected_behavior": "Systemet ska skapa CSV med definierade kolumner, korrekta belopp och tillräcklig kontext för extern analys.",
+          "candidate_test_ideas": [
+            "CSV öppnas med korrekta kolumner och belopp."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-054",
+          "title": "Visa valideringsfel före import",
+          "value_intent": "Användaren ska förstå varför en import inte kan sparas och undvika datakorruption.",
+          "expected_behavior": "Systemet ska validera format, version och obligatoriska fält innan import sparas och visa begripligt fel vid problem.",
+          "candidate_test_ideas": [
+            "Korrupt eller fel version stoppas med begripligt fel."
+          ],
+          "ai_acceleration_level": 1
+        }
+      ]
+    },
+    {
+      "id": "EP-007",
+      "outcome_id": "OUT-001",
+      "title": "Lokal lagring och filhantering",
+      "purpose": "Lagra data och filer lokalt på ett sätt som fungerar utan konto och som tydliggör användarens backupansvar.",
+      "scope": "Lokal persistens, bilagor, filmetadata, varning om datarensning, radering av filer och senare krypterad kontext som exploration.",
+      "risk_note": "Lokal data kan förloras om webbläsarlagring rensas och filhantering kan skapa integritets- och kvotrisker.",
+      "story_ideas": [
+        {
+          "id": "AD-060",
+          "title": "Spara data lokalt utan konto",
+          "value_intent": "Användaren ska kunna använda grundfunktionerna utan konto och utan serverberoende.",
+          "expected_behavior": "Systemet ska lagra strukturerad data lokalt och återläsa den efter omstart eller omladdning.",
+          "candidate_test_ideas": [
+            "Stäng/öppna app och verifiera att data kvarstår."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-061",
+          "title": "Bifoga fil till utgift",
+          "value_intent": "Användaren ska kunna koppla relevanta underlag till en kostnad.",
+          "expected_behavior": "Systemet ska låta användaren bifoga tillåtna filtyper till en utgift och lista dem i detaljvyn.",
+          "candidate_test_ideas": [
+            "Flera filtyper kan sparas och listas."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-062",
+          "title": "Visa filmetadata",
+          "value_intent": "Användaren ska kunna förstå vad som är bifogat utan att öppna varje fil.",
+          "expected_behavior": "Systemet ska visa filnamn, filtyp och storlek efter uppladdning och vid senare visning.",
+          "candidate_test_ideas": [
+            "Metadata visas korrekt efter uppladdning."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-063",
+          "title": "Varna om lokal datarisk",
+          "value_intent": "Användaren ska förstå att lokal webbläsardata kan förloras och att backup/export är användarens ansvar.",
+          "expected_behavior": "Systemet ska visa tydlig information om lokal lagring och datarensningsrisk i onboarding eller admin.",
+          "candidate_test_ideas": [
+            "Informationsruta visas i onboarding/admin."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-064",
+          "title": "Radera bifogad fil",
+          "value_intent": "Användaren ska kunna ta bort privata filer som inte längre ska sparas i kontexten.",
+          "expected_behavior": "Systemet ska radera filkoppling och binärt innehåll enligt definierad regel och reflektera ändringen i export.",
+          "candidate_test_ideas": [
+            "Fil tas bort och export påverkas korrekt."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-065",
+          "title": "Utforska krypterad kontext",
+          "value_intent": "Användaren ska på sikt kunna skydda lokal data starkare, men bara om nyckelhantering och återställningsrisk är förstådda.",
+          "expected_behavior": "Systemet ska inte införa kryptering i MVP utan en separat exploration som dokumenterar säkerhets- och nyckelhanteringsrisker.",
+          "candidate_test_ideas": [
+            "Säkerhets- och nyckelhanteringsrisker dokumenteras innan implementation."
+          ],
+          "ai_acceleration_level": 1
+        }
+      ]
+    },
+    {
+      "id": "EP-008",
+      "outcome_id": "OUT-001",
+      "title": "Summeringar och insikter",
+      "purpose": "Visa totaler per månad, kategori och person så att användaren förstår ekonomisk påverkan utan att appen ger finansiell rådgivning.",
+      "scope": "Månadssumma, kategorisumma, personsummor, disponibel inkomst efter kostnader och potentiell besparing från flaggor.",
+      "risk_note": "Appen får visa beräkningsstöd baserat på användarens egen data men ska inte ge finansiell rådgivning.",
+      "story_ideas": [
+        {
+          "id": "AD-070",
+          "title": "Visa total kostnad per månad",
+          "value_intent": "Användaren ska förstå total kostnad i vald period.",
+          "expected_behavior": "Systemet ska summera aktiva utgifter för varje månad i vald period och visa totalsumman.",
+          "candidate_test_ideas": [
+            "Månadssumma stämmer med aktiva utgifter."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-071",
+          "title": "Visa kostnader per kategori",
+          "value_intent": "Användaren ska kunna se vilka typer av kostnader som driver totalen.",
+          "expected_behavior": "Systemet ska summera kostnader per kategori baserat på registrerade utgifter i vald kontext och period.",
+          "candidate_test_ideas": [
+            "Kategorisummering matchar utgiftsdata."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-072",
+          "title": "Visa kostnader per betalande person",
+          "value_intent": "Användaren ska kunna förstå hur kostnader fördelas mellan personer i kontexten.",
+          "expected_behavior": "Systemet ska summera kostnader per betalare utifrån utgifternas personkoppling.",
+          "candidate_test_ideas": [
+            "Personsummor matchar kopplade betalare."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-073",
+          "title": "Visa disponibel inkomst efter kostnader",
+          "value_intent": "Användaren ska få en enkel bild av återstående utrymme efter registrerade kostnader.",
+          "expected_behavior": "Systemet ska beräkna disponibel inkomst minus registrerade kostnader när inkomstdata finns och tydligt visa om data saknas.",
+          "candidate_test_ideas": [
+            "Inkomst minus kostnader beräknas korrekt."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-074",
+          "title": "Visa potentiell besparing från flaggor",
+          "value_intent": "Användaren ska kunna identifiera kostnader som kan vara kandidater för besparing.",
+          "expected_behavior": "Systemet ska summera kostnader flaggade som lyxiga eller onödiga och presentera dem som beräkningsstöd, inte rådgivning.",
+          "candidate_test_ideas": [
+            "Summa för valda flaggor visas korrekt."
+          ],
+          "ai_acceleration_level": 1
+        }
+      ]
+    },
+    {
+      "id": "EP-009",
+      "outcome_id": "OUT-001",
+      "title": "Responsiv UX och onboarding",
+      "purpose": "Säkerställa att användaren snabbt förstår appen och kan använda den på mobil, surfplatta och desktop.",
+      "scope": "Responsiv layout, första-kontext-flöde, snabbregistrering, tomma lägen, tillgänglighet och läsbarhet.",
+      "risk_note": "Tidslinjen är produktens kärna men kan bli svår på mobil och behöver designas explicit.",
+      "story_ideas": [
+        {
+          "id": "AD-080",
+          "title": "Skapa första kontext via guidat flöde",
+          "value_intent": "Ny användare ska förstå första steget och komma till värde utan tom yta eller förvirring.",
+          "expected_behavior": "Systemet ska guida ny användare genom första kontexten och vidare mot första utgiften.",
+          "candidate_test_ideas": [
+            "Ny användare leds till första utgiften."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-081",
+          "title": "Användbar mobil tidslinje",
+          "value_intent": "Mobilanvändare ska kunna använda kärnvyn utan horisontellt kaos.",
+          "expected_behavior": "Systemet ska anpassa tidslinjen för små skärmar med scroll, fokuserad månadsvy eller annan mobilanpassad struktur.",
+          "candidate_test_ideas": [
+            "Tidslinjen anpassas med scroll/fokuserad månadsvy."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-082",
+          "title": "Visa hjälptexter i tomma lägen",
+          "value_intent": "Användaren ska förstå nästa steg när data saknas.",
+          "expected_behavior": "Systemet ska visa kontextuella tomlägen med tydliga nästa steg utan att skapa in-app dokumentationstyngd.",
+          "candidate_test_ideas": [
+            "Tomma vyer visar tydliga nästa steg."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-083",
+          "title": "Gör ny utgift lätt att hitta",
+          "value_intent": "Användaren ska snabbt kunna återvända till appens viktigaste handling.",
+          "expected_behavior": "Systemet ska göra primär åtgärd för ny utgift synlig och åtkomlig från huvudvyer.",
+          "candidate_test_ideas": [
+            "Primär åtgärd är synlig på huvudvyer."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-084",
+          "title": "Filtrera tidslinjen utan tappad överblick",
+          "value_intent": "Användaren ska kunna fokusera på relevant data utan att tappa sammanhanget.",
+          "expected_behavior": "Systemet ska erbjuda filter som kan aktiveras och återställas tydligt i tidslinjen.",
+          "candidate_test_ideas": [
+            "Filter kan aktiveras/återställas."
+          ],
+          "ai_acceleration_level": 1
+        }
+      ]
+    },
+    {
+      "id": "EP-010",
+      "outcome_id": "OUT-001",
+      "title": "Premium- och tillväxtfunktioner",
+      "purpose": "Identifiera senare funktioner som kan göra produkten betalbar utan att gå före kärnnyttan.",
+      "scope": "Simuleringar, PDF-rapporter, mallar, obegränsade kontexter och lokala besparingsförslag.",
+      "risk_note": "Premiumfunktioner ska inte prioriteras före kärnnyttan och kommersiell betalbarhet behöver valideras med användare.",
+      "story_ideas": [
+        {
+          "id": "AD-090",
+          "title": "Simulera borttag av kostnader",
+          "value_intent": "Användaren ska kunna förstå möjlig ekonomisk effekt av att avsluta valda kostnader utan att ändra faktisk data.",
+          "expected_behavior": "Systemet ska skapa en temporär simulering där valda kostnader exkluderas från summeringar utan att originaldata ändras.",
+          "candidate_test_ideas": [
+            "Simulering ändrar inte faktisk data."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-091",
+          "title": "Skapa PDF-rapport",
+          "value_intent": "Användaren ska kunna dela eller arkivera en sammanställning av vald kontext och period.",
+          "expected_behavior": "Systemet ska skapa en PDF-rapport med valda perioder, summeringar och relevant kontextdata.",
+          "candidate_test_ideas": [
+            "Rapport visar valda perioder och summeringar."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-092",
+          "title": "Använd mall för familj, resa eller sambo",
+          "value_intent": "Användaren ska kunna starta snabbare från en struktur som passar vanligt användningsfall.",
+          "expected_behavior": "Systemet ska skapa relevanta kategorier och inställningar från vald mall utan att lägga in verkliga kostnader.",
+          "candidate_test_ideas": [
+            "Mall skapar relevanta kategorier och inställningar."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-093",
+          "title": "Stöd obegränsade kontexter för betalande användare",
+          "value_intent": "Betalande användare ska kunna hantera fler separata sammanhang utan konstgjord begränsning.",
+          "expected_behavior": "Systemet ska kunna styra kontextbegränsning via plan eller feature flag utan att påverka dataseparering.",
+          "candidate_test_ideas": [
+            "Begränsning kan styras via plan/feature flag."
+          ],
+          "ai_acceleration_level": 1
+        },
+        {
+          "id": "AD-094",
+          "title": "Visa lokala besparingsförslag",
+          "value_intent": "Användaren ska få hjälp att upptäcka potentiella besparingar baserat på egen registrerad data.",
+          "expected_behavior": "Systemet ska visa regelbaserade förslag lokalt och tydligt presentera dem som stöd, inte automatisk rådgivning.",
+          "candidate_test_ideas": [
+            "Förslag baseras endast på lokala regler och visas som stöd."
+          ],
+          "ai_acceleration_level": 1
+        }
+      ]
+    }
+  ],
+  "data_model_candidates": {
+    "Context": [
+      "id",
+      "name",
+      "currency",
+      "monthsBack",
+      "monthsForward",
+      "createdAt",
+      "updatedAt"
+    ],
+    "Person": [
+      "id",
+      "contextId",
+      "firstName",
+      "lastName",
+      "monthlyAvailableIncome",
+      "active"
+    ],
+    "Supplier": [
+      "id",
+      "contextId",
+      "name",
+      "logoFileId",
+      "website",
+      "email",
+      "phone",
+      "cancellationInstructions",
+      "notes"
+    ],
+    "Category": [
+      "id",
+      "contextId",
+      "name",
+      "parentCategoryId",
+      "color",
+      "icon"
+    ],
+    "Expense": [
+      "id",
+      "contextId",
+      "supplierId",
+      "categoryId",
+      "payerPersonId",
+      "name",
+      "necessityLevel",
+      "startDate",
+      "endDate",
+      "noticePeriodValue",
+      "noticePeriodUnit",
+      "status",
+      "notes"
+    ],
+    "ExpenseCostPeriod": [
+      "id",
+      "expenseId",
+      "amount",
+      "recurrence",
+      "startDate",
+      "endDate"
+    ],
+    "Attachment": [
+      "id",
+      "contextId",
+      "expenseId",
+      "supplierId",
+      "fileName",
+      "mimeType",
+      "size",
+      "blobRef",
+      "createdAt"
+    ]
+  },
+  "journey_contexts": [
+    {
+      "id": "J-001",
+      "title": "Första användning",
+      "primary_actor": "Ny användare",
+      "downstream_traceability": "Onboarding, första kontext, första utgift och första tidslinje."
+    },
+    {
+      "id": "J-002",
+      "title": "Lägga till kostnad",
+      "primary_actor": "Återkommande användare",
+      "downstream_traceability": "Snabbregistrering, leverantörsförslag, belopp, periodicitet, kategori, betalare och uppsägningstid."
+    },
+    {
+      "id": "J-003",
+      "title": "Förstå framtida kostnad",
+      "primary_actor": "Användare som analyserar kommande månader",
+      "downstream_traceability": "Tidslinje, historikfilter, detaljpanel, låst uppsägningsperiod och totalsumma framåt."
+    },
+    {
+      "id": "J-004",
+      "title": "Dela eller flytta data",
+      "primary_actor": "Användare som exporterar eller importerar kontext",
+      "downstream_traceability": "Admin/export, filval, exportfil och import som ny kontext."
+    }
+  ],
+  "initial_ai_risk_ledger": [
+    {
+      "id": "AIR-001",
+      "risk": "AI-genererad kod eller kravtext kan missa edge cases i finansiell beräkning.",
+      "mitigation": "Automatiserade tester krävs för all beräkningslogik och mänsklig review krävs före release.",
+      "owner_role": "Value Owner",
+      "status": "open"
+    },
+    {
+      "id": "AIR-002",
+      "risk": "AI kan föreslå funktioner som hanterar känslig data utan tillräcklig integritetskontroll.",
+      "mitigation": "Level 1 gäller initialt och ingen känslig data får skickas till extern tjänst i grundversion.",
+      "owner_role": "Value Owner",
+      "status": "open"
+    },
+    {
+      "id": "AIR-003",
+      "risk": "Kryptering kan marknadsföras som säker utan granskad nyckelhantering.",
+      "mitigation": "Kryptering hålls som exploration eller senare release tills säkerhetsreview finns.",
+      "owner_role": "Value Owner",
+      "status": "open"
+    }
+  ],
+  "tollgate_1_readiness": {
+    "recommended_decision": "Gå vidare till Design med villkor.",
+    "remaining_decisions": [
+      "Ska MVP byggas helt lokal-first utan server?",
+      "Ska filbilagor ingå i MVP eller först i Release 2?",
+      "Ska kryptering vara del av MVP eller hanteras som senare Exploration?",
+      "Ska årsutgifter periodiseras per månad i MVP, eller visas i faktisk betalningsmånad?",
+      "Ska kostnadsförändringar över tid lösas med kostnadsperioder redan i MVP?",
+      "Ska personer bara vara betalare i MVP, eller ska kostnadsdelning mellan flera personer ingå?",
+      "Ska exportformat vara ZIP redan från start eller initialt JSON?",
+      "Ska kommersiell betalmodell beaktas i arkitektur redan i MVP?",
+      "Ska appen initialt stödja flera språk eller endast svenska?",
+      "Vilka filtyper och maxstorlekar ska accepteras?"
+    ]
+  },
+  "downstream_ai_refinement_readiness": {
+    "assessment": "ready_with_review",
+    "rationale": "Alla Story Ideas har explicit value_intent och expected_behavior. De är tydliga nog för downstream AI-refinement till detaljerade delivery stories, men acceptanskriterier, datumregler, filstorlekar, exportformat och mobil tidslinjedesign behöver fortfarande mänskliga beslut i Design.",
+    "known_gaps": [
+      "Baseline är inte verifierad.",
+      "Riskacceptans är inte formellt beslutad.",
+      "Exakta datumregler för uppsägning och årskostnader behöver definieras.",
+      "Exakta filtyper, maxstorlekar och exportformat behöver beslutas.",
+      "Mobil tidslinje behöver UX-design innan byggbar refinement."
+    ]
+  }
+}

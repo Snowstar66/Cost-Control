@@ -1,0 +1,281 @@
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import type { AppState } from "../domain/types";
+import { App } from "./App";
+
+const storageKey = "cost-control.state.v1";
+
+function stateWithCarWash(): AppState {
+  return {
+    version: 1,
+    activeContextId: "ctx-1",
+    contexts: [
+      {
+        id: "ctx-1",
+        name: "Pontus",
+        currency: "SEK",
+        monthsBack: 3,
+        monthsForward: 4,
+        plan: "free",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z"
+      }
+    ],
+    people: [],
+    suppliers: [{ id: "sup-1", contextId: "ctx-1", name: "OK Q8", color: "#f7c86b", icon: "car" }],
+    categories: [{ id: "cat-1", contextId: "ctx-1", name: "Transport", color: "#f7c86b", icon: "car" }],
+    expenses: [
+      {
+        id: "exp-1",
+        contextId: "ctx-1",
+        supplierId: "sup-1",
+        categoryId: "cat-1",
+        name: "Biltvatt",
+        necessityLevel: "luxury",
+        startDate: "2026-02-01",
+        status: "active",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z"
+      }
+    ],
+    costPeriods: [{ id: "cost-1", expenseId: "exp-1", amount: 299, recurrence: "monthly", startDate: "2026-02-01", chargeDay: 25 }],
+    attachments: [],
+    reminders: [],
+    transactions: [],
+    merchantRules: [],
+    onboardingComplete: true,
+    hidePastMonths: false,
+    purchasesEnabled: true,
+    filters: { categoryIds: [], payerIds: [], necessityLevels: [], search: "", simulationExcludedExpenseIds: [] }
+  };
+}
+
+function stateWithMixedNecessity(): AppState {
+  const state = stateWithCarWash();
+  return {
+    ...state,
+    suppliers: [...state.suppliers, { id: "sup-2", contextId: "ctx-1", name: "Vattenfall", color: "#2f6fdf", icon: "zap" }],
+    categories: [...state.categories, { id: "cat-2", contextId: "ctx-1", name: "Boende", color: "#2f6fdf", icon: "home" }],
+    expenses: [
+      ...state.expenses,
+      {
+        id: "exp-2",
+        contextId: "ctx-1",
+        supplierId: "sup-2",
+        categoryId: "cat-2",
+        name: "El",
+        necessityLevel: "necessary",
+        startDate: "2026-02-01",
+        status: "active",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z"
+      }
+    ],
+    costPeriods: [...state.costPeriods, { id: "cost-2", expenseId: "exp-2", amount: 1200, recurrence: "monthly", startDate: "2026-02-01", chargeDay: 28 }]
+  };
+}
+
+function stateWithPurchaseCategoryRows(): AppState {
+  const state = stateWithCarWash();
+  return {
+    ...state,
+    transactions: [
+      {
+        id: "txn-1",
+        contextId: "ctx-1",
+        date: "2026-01-10",
+        bookedDate: "2026-01-11",
+        importId: "februari 2026.xlsx-123",
+        amount: 125,
+        currency: "SEK",
+        merchantRaw: "ICA",
+        merchantNormalized: "ICA",
+        categoryId: "cat-1",
+        source: "manual",
+        type: "one-off",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z"
+      }
+    ]
+  };
+}
+
+describe("App", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("renderar huvudytan utan att krascha", () => {
+    render(<App />);
+
+    expect(screen.getAllByText("Mina Utgifter")[0]).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Ny utgift/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Ny utgift/i }));
+    expect(screen.getByRole("form", { name: /L.gg till utgift/i })).toBeInTheDocument();
+  });
+
+  it("visar hjalpvyn fran navigationen", () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^Hjälp$/i }));
+
+    expect(screen.getByText("Om Mina Utgifter")).toBeInTheDocument();
+    expect(screen.getByText("Rekommenderat arbetssätt")).toBeInTheDocument();
+    expect(screen.getByText("Undvik dubbelräkning")).toBeInTheDocument();
+  });
+
+  it("uppdaterar oversikten nar startdatum andras", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithCarWash()));
+    render(<App />);
+
+    const row = screen.getAllByRole("button", { name: /BiltvattOK Q8/i })[0];
+    expect(screen.getByRole("button", { name: /Biltvatt feb 2026: 299/i })).toBeInTheDocument();
+    fireEvent.click(row);
+    fireEvent.click(screen.getByRole("button", { name: /Redigera/i }));
+    fireEvent.change(screen.getByLabelText(/Startdatum/i), { target: { value: "2026-03-01" } });
+    fireEvent.click(screen.getByRole("button", { name: /Uppdatera/i }));
+
+    expect(screen.getByRole("button", { name: /Biltvatt feb 2026: ingen utgift/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Biltvatt mars 2026: 299/i })).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem(storageKey) ?? "{}")).toMatchObject({
+      expenses: [{ startDate: "2026-03-01" }],
+      costPeriods: [{ startDate: "2026-03-01" }]
+    });
+  });
+
+  it("stanger sidopanelen nar samma rad klickas igen", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithCarWash()));
+    render(<App />);
+
+    const row = screen.getAllByRole("button", { name: /BiltvattOK Q8/i })[0];
+    fireEvent.click(row);
+    expect(screen.getByRole("button", { name: /Redigera/i })).toBeInTheDocument();
+    fireEvent.click(row);
+
+    expect(screen.queryByRole("button", { name: /Redigera/i })).not.toBeInTheDocument();
+  });
+
+  it("filtrerar oversikten nar en summering valjs", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithMixedNecessity()));
+    render(<App />);
+
+    expect(screen.getAllByRole("button", { name: /ElVattenfall/i }).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: /Lyxigt:/i }));
+
+    expect(screen.getAllByRole("button", { name: /BiltvattOK Q8/i }).length).toBeGreaterThan(0);
+    expect(screen.queryAllByRole("button", { name: /ElVattenfall/i })).toHaveLength(0);
+  });
+
+  it("visar enstaka kop som kategorirader i oversikten", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithPurchaseCategoryRows()));
+    render(<App />);
+
+    expect(screen.getAllByText("Enskilda köp")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Transport")[0]).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Transport feb 2026: 125/i }));
+    expect(screen.getByText("ICA")).toBeInTheDocument();
+    expect(screen.getAllByText(/424/).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getAllByRole("button", { name: /Visa köp ICA/i })[0]);
+    expect(screen.getByRole("form", { name: /Uppdatera enskilt köp/i })).toBeInTheDocument();
+  });
+
+  it("visar finansiell kopstatistik per handlare", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithPurchaseCategoryRows()));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Statistik/i }));
+
+    expect(screen.getByText("Var pengarna går")).toBeInTheDocument();
+    expect(screen.getAllByText("Mest pengar").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Flest transaktioner").length).toBeGreaterThan(0);
+    expect(screen.getByText("Köpintelligens")).toBeInTheDocument();
+    expect(screen.getAllByText("ICA").length).toBeGreaterThan(0);
+    expect(screen.getByText(/Medelköp/i)).toBeInTheDocument();
+  });
+
+  it("kan flagga ett enstaka kop fran kassaboken", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithPurchaseCategoryRows()));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^Enskilda köp$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Granska: ICA/i }));
+
+    expect(JSON.parse(localStorage.getItem(storageKey) ?? "{}").transactions[0].flags).toContain("review");
+  });
+
+  it("sorterar kassaboken nar ett radarkort valjs", () => {
+    const state = stateWithPurchaseCategoryRows();
+    localStorage.setItem(storageKey, JSON.stringify({
+      ...state,
+      transactions: [
+        {
+          ...state.transactions[0],
+          id: "txn-1",
+          date: "2026-01-20",
+          merchantRaw: "ICA",
+          merchantNormalized: "ICA",
+          amount: 125,
+          flags: []
+        },
+        {
+          ...state.transactions[0],
+          id: "txn-2",
+          date: "2026-01-05",
+          merchantRaw: "VINTED",
+          merchantNormalized: "VINTED",
+          amount: 300,
+          flags: ["unnecessary"]
+        }
+      ]
+    }));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^Enskilda köp$/i }));
+    fireEvent.click(screen.getByTitle("Sortera kassaboken efter onödigt"));
+
+    const table = within(screen.getByRole("table", { name: /Köplista/i }));
+    const vinted = table.getByText("VINTED");
+    const ica = table.getByText("ICA");
+    expect(vinted.compareDocumentPosition(ica) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("kan uppdatera kategori for alla kop fran samma handlare", () => {
+    const state = stateWithPurchaseCategoryRows();
+    localStorage.setItem(storageKey, JSON.stringify({
+      ...state,
+      categories: [...state.categories, { id: "cat-2", contextId: "ctx-1", name: "Hälsa", color: "#a2dba6", icon: "heart" }],
+      transactions: [
+        {
+          ...state.transactions[0],
+          id: "txn-1",
+          merchantRaw: "STADIUM OSTERSU",
+          merchantNormalized: "STADIUM OSTERSU",
+          amount: 184,
+          categoryId: "cat-1"
+        },
+        {
+          ...state.transactions[0],
+          id: "txn-2",
+          date: "2026-01-16",
+          merchantRaw: "STADIUM OSTERSU",
+          merchantNormalized: "STADIUM OSTERSU",
+          amount: 430,
+          categoryId: "cat-1"
+        }
+      ]
+    }));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^Enskilda köp$/i }));
+    fireEvent.click(screen.getAllByRole("button", { name: /STADIUM OSTERSU/i })[0]);
+    fireEvent.change(screen.getByLabelText(/^Kategori$/i), { target: { value: "cat-2" } });
+    fireEvent.click(screen.getByRole("button", { name: /Uppdatera/i }));
+
+    const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
+    expect(saved.transactions.map((transaction) => transaction.categoryId)).toEqual(["cat-2", "cat-2"]);
+  });
+});
