@@ -181,9 +181,9 @@ type PurchaseImportPreview = BankStatementImportResult & {
 type PurchaseSaveOptions = {
   applyCategoryToSameMerchant?: boolean;
 };
-const bankStatementFilePattern = /\.(csv|xlsx)$/i;
+const bankStatementFilePattern = /\.(csv|xlsx|pdf)$/i;
 function isBankStatementImportFile(file: File): boolean {
-  return bankStatementFilePattern.test(file.name) || file.type === "text/csv" || file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  return bankStatementFilePattern.test(file.name) || file.type === "text/csv" || file.type === "application/pdf" || file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 }
 type PurchaseCategoryRow = {
   key: string;
@@ -664,7 +664,7 @@ export function App() {
         ref={quickImportInputRef}
         className="quickImportInput"
         type="file"
-        accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        accept=".xlsx,.csv,.pdf,text/csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         onChange={importQuickPurchaseFile}
         aria-hidden="true"
         tabIndex={-1}
@@ -721,7 +721,7 @@ function QuickAddMenu({
           },
           {
             label: "Importera kontoutdrag",
-            detail: "Läs in köp från CSV eller Excel",
+            detail: "Läs in köp från CSV, Excel eller PDF",
             icon: Upload,
             action: onImportPurchases
           }
@@ -2166,7 +2166,7 @@ const helpViewCards: Array<{ icon: typeof Wallet; title: string; text: string; i
 
 const helpFunctionCards: Array<{ icon: typeof Wallet; title: string; text: string }> = [
   { icon: Plus, title: "Lägg till utgift", text: "Skapa en återkommande kostnad som prenumeration, försäkring eller avtal. Ofullständiga poster sparas som utkast." },
-  { icon: Upload, title: "Importera kontoutdrag", text: "Läs in bankrader som enskilda köp. Appen försöker koppla kända abonnemangsdragningar till rätt återkommande utgift." },
+  { icon: Upload, title: "Importera kontoutdrag", text: "Läs in bankrader från CSV, Excel eller PDF som enskilda köp. Appen försöker koppla kända abonnemangsdragningar till rätt återkommande utgift." },
   { icon: RefreshCcw, title: "Undvik dubbelräkning", text: "Återkommande utgift är plan eller avtal. Banktransaktionen är faktisk dragning. Matchade dragningar blir återkommande betalning, inte extra köp." },
   { icon: Paperclip, title: "Bifoga underlag", text: "Spara kvitton, avtal eller uppsägningsunderlag på en utgift. Filer följer med i export med filer." },
   { icon: Download, title: "Flytta mellan enheter", text: "Använd Dela datafil eller exportera JSON. På den andra enheten importerar du filen som ny kontext." },
@@ -4287,7 +4287,7 @@ function Admin({
                 <strong>Importera från fil</strong>
                 <small>Läs in datafil, kontext-export eller kontoutdrag.</small>
               </span>
-              <input type="file" accept="application/json,.json,.csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={importFile} />
+              <input type="file" accept="application/json,.json,.csv,.xlsx,.pdf,text/csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={importFile} />
             </label>
           </div>
           <details className="inlineAdvanced">

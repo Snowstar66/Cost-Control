@@ -37,6 +37,12 @@ async function buildXlsxFile(name: string, rows: Array<Array<string | number | u
   return { name, type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", arrayBuffer: async () => buffer } as File;
 }
 
+function buildPdfFile(name: string, content: string): File {
+  const pdf = ["%PDF-1.5", "1 0 obj", `<< /Length ${content.length} >>`, "stream", content, "endstream", "endobj", "%%EOF"].join("\n");
+  const buffer = new TextEncoder().encode(pdf).buffer;
+  return { name, type: "application/pdf", arrayBuffer: async () => buffer } as File;
+}
+
 describe("parseBankStatementFile", () => {
   it("parses statement rows and ignores summaries", async () => {
     const csv = [
@@ -117,5 +123,39 @@ describe("parseBankStatementFile", () => {
       amount: 348
     });
     expect(result.ignoredRows).toBeGreaterThan(0);
+  });
+
+  it("läser PDF-utdrag med samma köpformat som Excel", async () => {
+    const file = buildPdfFile(
+      "mc_pdf_april.pdf",
+      [
+        "BT",
+        "/F1 9.75 Tf",
+        "1 0 0 1 306.30 761.70 Tm (2026-04-20) Tj",
+        "1 0 0 1 56.70 646.80 Tm (260317) Tj 36.90 0 Td (ZIGNED.SE) Tj 151.50 0 Td (STOCKHOLM) Tj 72.30 0 Td (SEK) Tj 124.80 0 Td (260318) Tj 99.60 0 Td (36,25) Tj",
+        "1 0 0 1 56.70 637.80 Tm (260418) Tj 15.51 0 Td (av) Tj 21.39 0 Td (ICA) Tj 17.51 0 Td (KVANTUM) Tj 7.13 0 Td (kreditutrymme,) Tj 39.37 0 Td (LILLANGE) Tj 87.49 0 Td (OSTERSUND) Tj 72.30 0 Td (SEK) Tj 124.80 0 Td (260419) Tj 99.60 0 Td (95,85) Tj",
+        "ET"
+      ].join("\n")
+    );
+
+    const result = await parseBankStatementFile(file);
+
+    expect(result.transactions).toHaveLength(2);
+    expect(result.transactions[0]).toMatchObject({
+      date: "2026-03-17",
+      bookedDate: "2026-03-18",
+      merchantRaw: "ZIGNED.SE",
+      location: "STOCKHOLM",
+      statementMonth: "2026-04",
+      amount: 36.25
+    });
+    expect(result.transactions[1]).toMatchObject({
+      date: "2026-04-18",
+      bookedDate: "2026-04-19",
+      merchantRaw: "ICA KVANTUM LILLANGE",
+      location: "OSTERSUND",
+      statementMonth: "2026-04",
+      amount: 95.85
+    });
   });
 });
