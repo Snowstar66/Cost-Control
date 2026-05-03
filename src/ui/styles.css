@@ -2877,14 +2877,16 @@ button.radarCard.green.active {
   gap: 5px;
 }
 
-.supplierBadge {
+.supplierBadge,
+.categoryBadge {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   min-width: 0;
 }
 
-.supplierIcon {
+.supplierIcon,
+.categoryIcon {
   width: 24px;
   height: 24px;
   border-radius: 5px;
@@ -3588,12 +3590,14 @@ body {
   background: #fbfcfd;
 }
 
-.registerGrid .supplierBadge {
+.registerGrid .supplierBadge,
+.registerGrid .categoryBadge {
   color: #1f2937;
   font-weight: 520;
 }
 
-.registerGrid .supplierIcon {
+.registerGrid .supplierIcon,
+.registerGrid .categoryIcon {
   width: 22px;
   height: 22px;
   border-radius: 6px;
@@ -5821,6 +5825,10 @@ textarea {
   .purchaseToolbar .primary {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .purchaseToolbar .purchaseManualAdd {
+    display: none;
   }
 
   .searchBox {

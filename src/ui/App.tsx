@@ -1982,23 +1982,13 @@ function Registers({ people, suppliers, categories, attachments, showLists, setS
           }}
         >
           {showLists && (
-            <RegisterRows compact>
+            <RegisterRows>
               {categories.map((category) => {
-                const Icon = iconMap[category.icon as keyof typeof iconMap] ?? Tag;
                 return (
                   <EditableRow
                     key={category.id}
-                    primary={
-                      <span className="chip">
-                        <Icon size={14} /> {category.name}
-                      </span>
-                    }
-                    secondary={
-                      <span className="colorSwatchLabel">
-                        <i style={{ background: category.color }} />
-                        {categoryColorName(category.color)}
-                      </span>
-                    }
+                    primary={<CategoryBadge category={category} />}
+                    secondary={categoryColorName(category.color)}
                     onEdit={() => setEditingCategory(category)}
                     onDelete={() => setState((current) => removeCategory(current, category.id))}
                   />
@@ -2287,6 +2277,18 @@ function SupplierBadge({ supplier }: { supplier: Supplier }) {
   );
 }
 
+function CategoryBadge({ category }: { category: Category }) {
+  const Icon = iconMap[category.icon as keyof typeof iconMap] ?? Tag;
+  return (
+    <span className="categoryBadge">
+      <span className="categoryIcon" style={{ background: category.color }}>
+        <Icon size={14} />
+      </span>
+      <span>{category.name}</span>
+    </span>
+  );
+}
+
 function categoryColorName(color: string): string {
   return categoryColorOptions.find((option) => option.value.toLowerCase() === color.toLowerCase())?.label ?? "Egen färg";
 }
@@ -2381,7 +2383,7 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
           <Upload size={17} /> Importera kontoutdrag
           <input type="file" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(event) => event.target.files?.[0] && onImportFile(event.target.files[0])} />
         </label>
-        <button className="primary" onClick={() => onEdit()}>
+        <button className="primary purchaseManualAdd" onClick={() => onEdit()}>
           <Plus size={17} /> Lägg till enskilt köp
         </button>
       </div>
