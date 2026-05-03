@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { AppState } from "../domain/types";
+import { toIsoDate } from "../domain/date";
 import { App } from "./App";
 
 const storageKey = "cost-control.state.v1";
@@ -205,6 +206,34 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: /Granska: ICA/i }));
 
     expect(JSON.parse(localStorage.getItem(storageKey) ?? "{}").transactions[0].flags).toContain("review");
+  });
+
+  it("lagger till manuellt kop med dagens datum och forslag pa handlare", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithPurchaseCategoryRows()));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^Enskilda köp$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^Lägg till enskilt köp$/i }));
+
+    const merchant = screen.getByLabelText(/^Handlare$/i);
+    expect(merchant).toHaveAttribute("list", "merchant-suggestions");
+    expect(document.querySelector('datalist#merchant-suggestions option[value="ICA"]')).not.toBeNull();
+    expect(document.querySelector('datalist#merchant-suggestions option[value="OK Q8"]')).not.toBeNull();
+
+    fireEvent.change(merchant, { target: { value: "okq8" } });
+    fireEvent.blur(merchant);
+    expect(merchant).toHaveValue("OK Q8");
+    fireEvent.change(screen.getByLabelText(/^Belopp$/i), { target: { value: "89" } });
+    fireEvent.click(screen.getByRole("button", { name: /Spara/i }));
+
+    const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
+    expect(saved.transactions.at(-1)).toMatchObject({
+      date: toIsoDate(new Date()),
+      merchantRaw: "OK Q8",
+      amount: 89,
+      source: "manual",
+      type: "one-off"
+    });
   });
 
   it("sorterar kassaboken nar ett radarkort valjs", () => {

@@ -584,6 +584,7 @@ export function App() {
           categories={categories}
           suppliers={suppliers}
           expenses={contextExpenses}
+          transactions={transactions}
           currency={context.currency}
           onClose={closePurchaseForm}
           onSave={saveTransaction}
@@ -1225,7 +1226,21 @@ function ExpenseModal({ expense, costPeriod, categories, people, suppliers, onSa
   );
 }
 
-function PurchaseModal({ transaction, categories, suppliers, expenses, currency, onSave, onClose }: { transaction?: PurchaseTransaction; categories: Category[]; suppliers: Supplier[]; expenses: Expense[]; currency: string; onSave: (input: UpsertTransactionInput, options?: PurchaseSaveOptions) => void; onClose: () => void }) {
+function PurchaseModal({ transaction, categories, suppliers, expenses, transactions, currency, onSave, onClose }: { transaction?: PurchaseTransaction; categories: Category[]; suppliers: Supplier[]; expenses: Expense[]; transactions: PurchaseTransaction[]; currency: string; onSave: (input: UpsertTransactionInput, options?: PurchaseSaveOptions) => void; onClose: () => void }) {
+  const merchantSuggestions = useMemo(() => {
+    const labels = new Map<string, string>();
+    for (const transaction of transactions) {
+      if (transaction.type !== "ignored") labels.set(normalizeSuggestionKey(transaction.merchantRaw), transaction.merchantRaw);
+    }
+    for (const expense of expenses) {
+      const supplier = suppliers.find((item) => item.id === expense.supplierId);
+      if (supplier) labels.set(normalizeSuggestionKey(supplier.name), supplier.name);
+    }
+    for (const supplier of suppliers) {
+      labels.set(normalizeSuggestionKey(supplier.name), supplier.name);
+    }
+    return [...labels.values()].sort((a, b) => a.localeCompare(b, "sv"));
+  }, [expenses, suppliers, transactions]);
   const [form, setForm] = useState({
     date: toIsoDate(new Date()),
     bookedDate: "",
@@ -1265,6 +1280,13 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, currency,
       ...current,
       flags: current.flags.includes(flag) ? current.flags.filter((item) => item !== flag) : [...current.flags, flag]
     }));
+  };
+
+  const canonicalizeMerchant = () => {
+    setForm((current) => {
+      const suggestion = merchantSuggestions.find((merchant) => normalizeSuggestionKey(merchant) === normalizeSuggestionKey(current.merchantRaw));
+      return suggestion && suggestion !== current.merchantRaw ? { ...current, merchantRaw: suggestion } : current;
+    });
   };
 
   const submit = (event: FormEvent) => {
@@ -1309,19 +1331,18 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, currency,
         </div>
         <div className="formSection split">
           <label>
-            <span>Datum</span>
-            <input type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} autoFocus />
+            <span>Handlare</span>
+            <input value={form.merchantRaw} onChange={(event) => setForm({ ...form, merchantRaw: event.target.value })} onBlur={canonicalizeMerchant} placeholder="ICA, Apple, OKQ8..." list="merchant-suggestions" autoFocus />
+            <datalist id="merchant-suggestions">
+              {merchantSuggestions.map((merchant) => <option key={merchant} value={merchant} />)}
+            </datalist>
           </label>
           <label>
             <span>Belopp</span>
             <input type="number" min="0" step="0.01" value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} placeholder="0" />
           </label>
         </div>
-        <div className="formSection split">
-          <label>
-            <span>Handlare</span>
-            <input value={form.merchantRaw} onChange={(event) => setForm({ ...form, merchantRaw: event.target.value })} placeholder="ICA, Apple, OKQ8..." />
-          </label>
+        <div className="formSection single">
           <CategoryField categories={categories} value={form.categoryId} onChange={(categoryId) => setForm({ ...form, categoryId })} />
         </div>
         {transaction && (
@@ -1356,16 +1377,22 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, currency,
           </summary>
           <div className="formSection three">
             <label>
+              <span>Datum</span>
+              <input type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} />
+            </label>
+            <label>
               <span>Bokfört</span>
               <input type="date" value={form.bookedDate} onChange={(event) => setForm({ ...form, bookedDate: event.target.value })} />
             </label>
             <label>
-              <span>Leverantör</span>
+              <span>Leverantör (avtal)</span>
               <select value={form.supplierId} onChange={(event) => setForm({ ...form, supplierId: event.target.value })}>
                 <option value="">Ingen koppling</option>
                 {suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}
               </select>
             </label>
+          </div>
+          <div className="formSection split">
             <label>
               <span>Typ</span>
               <select value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value as PurchaseTransaction["type"] })}>
@@ -2545,6 +2572,14 @@ const analyticsColors = ["#1f4a8a", "#0f766e", "#9c7439", "#b75159", "#52787d", 
 
 function transactionMerchantLabel(transaction: PurchaseTransaction): string {
   return transaction.merchantNormalized || transaction.merchantRaw || "Okänd handlare";
+}
+
+function normalizeSuggestionKey(value: string): string {
+  return value
+    .trim()
+    .replace(/\s+(AB|HB)$/i, "")
+    .toLocaleLowerCase("sv")
+    .replace(/[^0-9a-zåäö]/gi, "");
 }
 
 function transactionSecondaryText(transaction: PurchaseTransaction, supplier?: Supplier): string {
