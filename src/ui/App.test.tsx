@@ -117,6 +117,23 @@ function stateWithManyPurchaseRows(): AppState {
   };
 }
 
+function stateWithHistoricalPurchaseRows(): AppState {
+  const state = stateWithPurchaseCategoryRows();
+  return {
+    ...state,
+    transactions: [
+      {
+        ...state.transactions[0],
+        id: "txn-april",
+        date: "2026-04-18",
+        bookedDate: "2026-04-19",
+        importId: "april 2026.xlsx-123",
+        amount: 777
+      }
+    ]
+  };
+}
+
 function stateWithBusinessPurchaseRows(): AppState {
   const state = stateWithPurchaseCategoryRows();
   return {
@@ -282,12 +299,22 @@ describe("App", () => {
     expect(screen.getByText("ICA 8")).toBeInTheDocument();
   });
 
+  it("visar periodsumma pa inkopskategori nar aktuell manad saknar kop", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithHistoricalPurchaseRows()));
+    const { container } = render(<App />);
+
+    const transportCard = [...container.querySelectorAll(".purchaseAggregateMobile")].find((card) => card.textContent?.includes("Transport"));
+
+    expect(transportCard).toBeTruthy();
+    expect(transportCard?.querySelector(".mobileExpenseAmount")).toHaveTextContent("777 kr");
+  });
+
   it("visar businesskop i oversikten och kopradarn", () => {
     localStorage.setItem(storageKey, JSON.stringify(stateWithBusinessPurchaseRows()));
     render(<App />);
 
     expect(screen.getAllByText("Business").length).toBeGreaterThan(0);
-    const businessSummary = screen.getByRole("button", { name: /Business: 125.*per månad/i });
+    const businessSummary = screen.getByRole("button", { name: /Business: 125.*vald period/i });
     expect(businessSummary).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Transport maj 2026: 49/i })).toBeInTheDocument();
     fireEvent.click(businessSummary);

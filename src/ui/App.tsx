@@ -938,7 +938,7 @@ function Overview(props: {
     count: summaryExpenses.filter((expense) => expense.necessityLevel === level && expense.status !== "cancelled").length
   }));
   const businessPurchaseRow = props.purchaseRows.find((row) => row.key === "business");
-  const businessTotal = currentMonth && businessPurchaseRow ? businessPurchaseRow.totals[currentMonth.key] ?? 0 : 0;
+  const businessTotal = businessPurchaseRow ? purchaseRowTotal(businessPurchaseRow) : 0;
   const businessCount = businessPurchaseRow?.count ?? 0;
   return (
     <div className="overviewGrid">
@@ -993,7 +993,7 @@ function Overview(props: {
         <button
           type="button"
           className={`necessitySummary business ${businessSelected ? "selected" : ""}`}
-          aria-label={`Business: ${formatMoney(businessTotal, props.currency)} per månad, ${businessCount} köp`}
+          aria-label={`Business: ${formatMoney(businessTotal, props.currency)} under vald period, ${businessCount} köp`}
           aria-pressed={businessSelected}
           onClick={() =>
             props.setState((current) => ({
@@ -1053,6 +1053,10 @@ function PurchaseSignalBadges({ flags }: { flags?: PurchaseFlag[] }) {
       })}
     </span>
   );
+}
+
+function purchaseRowTotal(row: PurchaseCategoryRow): number {
+  return Object.values(row.totals).reduce((sum, value) => sum + value, 0);
 }
 
 function CategoryField({
@@ -1951,9 +1955,7 @@ function Timeline(props: {
           );
         })}
         {purchaseRows.map((row) => {
-          const focusMonth = props.months.find((month) => month.isCurrentMonth) ?? props.months[0];
-          const focusValue = focusMonth ? row.totals[focusMonth.key] ?? 0 : 0;
-          const firstMonthValue = props.months[0] ? row.totals[props.months[0].key] ?? 0 : 0;
+          const periodValue = purchaseRowTotal(row);
           const expanded = expandedMobilePurchaseKey === row.key;
           const transactions = mobilePurchaseTransactions(row);
           return (
@@ -1970,7 +1972,7 @@ function Timeline(props: {
                   <strong>{row.label}</strong>
                   <small>Enskilda köp · {row.count} köp</small>
                 </span>
-                <span className="mobileExpenseAmount">{formatMoney(focusValue > 0 ? focusValue : firstMonthValue, props.contextCurrency)}</span>
+                <span className="mobileExpenseAmount">{formatMoney(periodValue, props.contextCurrency)}</span>
                 <ChevronDown className="mobileRowChevron" size={15} />
                 <span className="mobileMonthStrip">
                   {mobileMonths.map((month) => (
