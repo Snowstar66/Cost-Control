@@ -2639,7 +2639,7 @@ button.radarCard.green.active {
 .purchaseDetailLabel {
   min-height: 30px;
   padding: 4px 10px;
-  grid-template-columns: 42px minmax(0, 1fr);
+  grid-template-columns: 42px minmax(0, 1fr) auto;
   grid-template-rows: auto;
   align-items: center;
   background: #f8fbff;
@@ -2676,6 +2676,44 @@ button.radarCard.green.active {
   text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.purchaseSignalBadges {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 0;
+}
+
+.purchaseSignalBadge {
+  width: 20px;
+  height: 20px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid #d7e0ea;
+  border-radius: 999px;
+  color: #1f4a8a;
+  background: #fff;
+}
+
+.purchaseSignalBadge.red {
+  color: #b4232d;
+  border-color: #f2c5cb;
+  background: #fff5f6;
+}
+
+.purchaseSignalBadge.amber {
+  color: #99610a;
+  border-color: #ead5a7;
+  background: #fff8e8;
+}
+
+.purchaseSignalBadge.green {
+  color: #167468;
+  border-color: #b9ded8;
+  background: #edf9f6;
 }
 
 .purchaseDetailCell {
@@ -6891,6 +6929,16 @@ textarea {
   .mobilePurchaseDetails small {
     color: var(--muted);
     font-size: 10px;
+  }
+
+  .mobilePurchaseDetails .purchaseSignalBadges {
+    justify-content: flex-start;
+    margin-top: 4px;
+  }
+
+  .mobilePurchaseDetails .purchaseSignalBadge {
+    width: 18px;
+    height: 18px;
   }
 
   .mobilePurchaseDetails b {

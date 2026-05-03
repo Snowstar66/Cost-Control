@@ -1037,6 +1037,24 @@ function Metric({ title, value, icon: Icon, hint, onClick }: { title: string; va
   );
 }
 
+function PurchaseSignalBadges({ flags }: { flags?: PurchaseFlag[] }) {
+  const activeFlags = (Object.keys(purchaseFlagMeta) as PurchaseFlag[]).filter((flag) => flags?.includes(flag));
+  if (activeFlags.length === 0) return null;
+  return (
+    <span className="purchaseSignalBadges" aria-label={`Signaler: ${activeFlags.map((flag) => purchaseFlagMeta[flag].label).join(", ")}`}>
+      {activeFlags.map((flag) => {
+        const meta = purchaseFlagMeta[flag];
+        const Icon = meta.icon;
+        return (
+          <span className={`purchaseSignalBadge ${meta.tone}`} key={flag} title={meta.label}>
+            <Icon size={12} aria-hidden="true" />
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
 function CategoryField({
   categories,
   value,
@@ -1875,6 +1893,7 @@ function Timeline(props: {
                           <strong>{transaction.merchantRaw}</strong>
                           {subtitle && <small>{subtitle}</small>}
                         </span>
+                        <PurchaseSignalBadges flags={transaction.flags} />
                       </button>
                       {props.months.map((month) => (
                         <button
@@ -1971,6 +1990,7 @@ function Timeline(props: {
                       <span>
                         <strong>{transaction.merchantRaw}</strong>
                         <small>{transaction.date}</small>
+                        <PurchaseSignalBadges flags={transaction.flags} />
                       </span>
                       <b>{formatMoney(transaction.amount, transaction.currency)}</b>
                     </button>

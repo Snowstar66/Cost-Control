@@ -268,6 +268,8 @@ describe("App", () => {
     expect(businessSummary).toHaveAttribute("aria-pressed", "true");
     expect(screen.queryByRole("button", { name: /Transport maj 2026: 49/i })).not.toBeInTheDocument();
     expect(screen.queryAllByRole("button", { name: /BiltvattOK Q8/i })).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", { name: /Business maj 2026: 125/i }));
+    expect(screen.getByLabelText(/Signaler: Business/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /^Inköp$/i }));
 
     expect(screen.getAllByText("Business").length).toBeGreaterThan(0);
