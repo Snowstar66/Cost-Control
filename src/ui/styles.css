@@ -5420,6 +5420,7 @@ textarea {
     display: grid;
     align-content: center;
     gap: 2px;
+    text-align: center;
     border: 1px solid #e5e9ef;
     border-radius: 8px;
     background: #fbfbfc;
@@ -5427,12 +5428,14 @@ textarea {
 
   .mobileMonthStrip small,
   .mobileTotals small {
+    justify-self: center;
     font-size: 10px;
     color: var(--muted);
   }
 
   .mobileMonthStrip strong,
   .mobileTotals strong {
+    justify-self: center;
     font-size: 11px;
     font-weight: 650;
   }
@@ -5878,16 +5881,26 @@ textarea {
   .necessitySummary {
     min-height: 50px;
     padding: 7px;
+    align-items: center;
     gap: 2px;
+    text-align: center;
   }
 
   .summaryTop {
-    grid-template-columns: 16px minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, auto);
     gap: 4px;
+    justify-content: center;
   }
 
   .summaryTop em {
     display: none;
+  }
+
+  .summaryTop span,
+  .necessitySummary strong,
+  .necessitySummary small {
+    justify-self: center;
+    text-align: center;
   }
 
   .necessitySummary strong {
