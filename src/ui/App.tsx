@@ -1792,8 +1792,7 @@ function Timeline(props: {
   const mobilePurchaseTransactions = (row: PurchaseCategoryRow) =>
     Object.values(row.transactionsByMonth)
       .flat()
-      .sort((a, b) => b.date.localeCompare(a.date))
-      .slice(0, 6);
+      .sort((a, b) => b.date.localeCompare(a.date));
   return (
     <>
       <div className="timelineWrap">

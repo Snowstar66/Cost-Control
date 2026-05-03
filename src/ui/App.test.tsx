@@ -101,6 +101,22 @@ function stateWithPurchaseCategoryRows(): AppState {
   };
 }
 
+function stateWithManyPurchaseRows(): AppState {
+  const state = stateWithPurchaseCategoryRows();
+  return {
+    ...state,
+    transactions: Array.from({ length: 8 }, (_, index) => ({
+      ...state.transactions[0],
+      id: `txn-${index + 1}`,
+      merchantRaw: `ICA ${index + 1}`,
+      merchantNormalized: `ICA ${index + 1}`,
+      amount: 10 + index,
+      date: `2026-01-${String(10 + index).padStart(2, "0")}`,
+      bookedDate: `2026-01-${String(11 + index).padStart(2, "0")}`
+    }))
+  };
+}
+
 function stateWithBusinessPurchaseRows(): AppState {
   const state = stateWithPurchaseCategoryRows();
   return {
@@ -254,6 +270,16 @@ describe("App", () => {
     expect(screen.getAllByText(/424/).length).toBeGreaterThan(0);
     fireEvent.click(screen.getAllByRole("button", { name: /Visa köp ICA/i })[0]);
     expect(screen.getByRole("form", { name: /Uppdatera enskilt köp/i })).toBeInTheDocument();
+  });
+
+  it("visar alla kop nar en kategorirad expanderas i mobiloversikten", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithManyPurchaseRows()));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Transport\. 8 enskilda köp/i }));
+
+    expect(screen.getByText("ICA 1")).toBeInTheDocument();
+    expect(screen.getByText("ICA 8")).toBeInTheDocument();
   });
 
   it("visar businesskop i oversikten och kopradarn", () => {
