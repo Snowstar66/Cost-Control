@@ -3604,6 +3604,12 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  width: max-content;
+  max-width: 100%;
+  padding: 2px 7px;
+  border: 1px solid #e5e9ef;
+  border-radius: 999px;
+  background: #fbfcfd;
   color: #667085;
   font-variant-numeric: tabular-nums;
 }
@@ -6321,6 +6327,14 @@ textarea {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .categoryRegisterForm .editableRow small {
+    overflow: visible;
+  }
+
+  .categoryRegisterForm .colorSwatchLabel {
+    max-width: 100%;
   }
 
   .editableRow .rowActions {

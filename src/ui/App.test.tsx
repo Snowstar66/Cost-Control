@@ -267,6 +267,7 @@ describe("App", () => {
 
   it("skapar kontext efter namnfraga", () => {
     const prompt = vi.spyOn(window, "prompt").mockReturnValue("Semester");
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     localStorage.setItem(storageKey, JSON.stringify(stateWithCarWash()));
     render(<App />);
 
@@ -274,9 +275,11 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: /^Ny kontext$/i }));
 
     expect(prompt).toHaveBeenCalledWith("Vad ska den nya kontexten heta?");
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining("standardföretag"));
     const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
     expect(saved.activeContextId).not.toBe("ctx-1");
     expect(saved.contexts.map((context) => context.name)).toContain("Semester");
+    expect(saved.suppliers.filter((supplier) => supplier.contextId === saved.activeContextId)).toHaveLength(0);
   });
 
   it("sparar ikon och färg på ny leverantör", () => {
@@ -304,11 +307,12 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: /Register/i }));
     const categoryForm = screen.getByText("Kategorier").closest("form")!;
     fireEvent.change(within(categoryForm).getByPlaceholderText("Namn"), { target: { value: "Mat" } });
+    fireEvent.change(within(categoryForm).getByLabelText("Etikett"), { target: { value: "home" } });
     fireEvent.change(within(categoryForm).getByLabelText("Färg"), { target: { value: "#f58e92" } });
     fireEvent.click(within(categoryForm).getByRole("button", { name: /Lägg till kategori/i }));
 
     const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
-    expect(saved.categories.at(-1)).toMatchObject({ name: "Mat", color: "#f58e92" });
+    expect(saved.categories.at(-1)).toMatchObject({ name: "Mat", color: "#f58e92", icon: "home" });
     expect(within(categoryForm).getAllByText("Rosa").length).toBeGreaterThan(0);
     expect(within(categoryForm).queryByText("F58E92")).not.toBeInTheDocument();
   });

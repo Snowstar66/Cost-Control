@@ -768,7 +768,9 @@ function ContextSwitcher({ state, setState, activeContextId }: { state: ReturnTy
   const canDeleteContext = state.contexts.length > 1 && Boolean(activeContext);
   const createContext = () => {
     const name = window.prompt("Vad ska den nya kontexten heta?");
-    if (name?.trim()) setState((current) => addContext(current, name.trim()));
+    if (!name?.trim()) return;
+    const includeDefaultSuppliers = window.confirm("Vill du lägga in vanliga standardföretag som Netflix, Spotify och Vattenfall i den nya kontexten?");
+    setState((current) => addContext(current, name.trim(), "SEK", undefined, includeDefaultSuppliers));
   };
   const deleteContext = () => {
     if (!activeContext || !canDeleteContext) return;
@@ -1968,12 +1970,13 @@ function Registers({ people, suppliers, categories, attachments, showLists, setS
           title="Kategorier"
           fields={[
             { key: "name", placeholder: "Namn", value: editingCategory?.name ?? "" },
+            { key: "icon", placeholder: "Etikett", value: editingCategory?.icon ?? "tag", options: iconOptions },
             { key: "color", placeholder: "Färg", value: editingCategory?.color ?? "#4fc4bd", options: categoryColorOptions, swatch: true }
           ]}
           submitLabel={editingCategory ? "Spara kategori" : "Lägg till kategori"}
           onCancel={editingCategory ? () => setEditingCategory(undefined) : undefined}
           onSubmit={(values) => {
-            setState((current) => upsertCategory(current, { id: editingCategory?.id, name: values.name, color: values.color || "#4fc4bd", icon: editingCategory?.icon ?? "tag" }));
+            setState((current) => upsertCategory(current, { id: editingCategory?.id, name: values.name, color: values.color || "#4fc4bd", icon: values.icon || "tag" }));
             setEditingCategory(undefined);
           }}
         >

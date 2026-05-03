@@ -158,12 +158,6 @@ export function enrichStateWithBaselineData(state: AppState): AppState {
   });
 
   for (const context of state.contexts) {
-    const supplierNames = new Set(suppliers.filter((supplier) => supplier.contextId === context.id).map((supplier) => supplier.name.toLowerCase()));
-    const missingSuppliers = defaultSupplierTemplates
-      .filter((supplier) => !supplierNames.has(supplier.name.toLowerCase()))
-      .map((supplier) => ({ id: id("sup"), contextId: context.id, ...supplier }));
-    suppliers = [...suppliers, ...missingSuppliers];
-
     const categoryNames = new Set(categories.filter((category) => category.contextId === context.id).map((category) => category.name.toLowerCase()));
     const missingCategories = defaultCategoryTemplates
       .filter((category) => !categoryNames.has(category.name.toLowerCase()))

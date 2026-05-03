@@ -1,4 +1,4 @@
-import { createContext as makeContext, createDefaultCategories, cloneContextTemplate } from "../domain/seed";
+import { createContext as makeContext, createDefaultCategories, createDefaultSuppliers, cloneContextTemplate } from "../domain/seed";
 import type { AppState, Attachment, Category, Context, Expense, ExpenseCostPeriod, NecessityLevel, Person, PurchaseFlag, PurchaseTransaction, Recurrence, Reminder, Supplier, TransactionType } from "../domain/types";
 import { createReminderForExpense } from "../domain/calculations";
 
@@ -111,9 +111,10 @@ function expandContextWindowForTransactions(state: AppState, transactions: Upser
   };
 }
 
-export function addContext(state: AppState, name: string, currency = "SEK", template?: "family" | "travel" | "cohabiting"): AppState {
+export function addContext(state: AppState, name: string, currency = "SEK", template?: "family" | "travel" | "cohabiting", includeDefaultSuppliers = false): AppState {
   const context = makeContext(name, currency, state.contexts.length >= 2 ? "premium" : "free");
   const categories = createDefaultCategories(context.id);
+  const suppliers = includeDefaultSuppliers ? createDefaultSuppliers(context.id) : [];
   const templatedCategories: Category[] =
     template === "travel"
       ? ["Boende resa", "Transport resa", "Mat", "Aktiviteter"].map((name, index) => ({ id: id("cat"), contextId: context.id, name, color: ["#7db7ee", "#f7c86b", "#a2dba6", "#b58df1"][index], icon: "tag" }))
@@ -124,6 +125,7 @@ export function addContext(state: AppState, name: string, currency = "SEK", temp
     ...state,
     activeContextId: context.id,
     contexts: [...state.contexts, context],
+    suppliers: [...state.suppliers, ...suppliers],
     categories: [...state.categories, ...templatedCategories],
     onboardingComplete: true
   };
