@@ -101,6 +101,14 @@ function stateWithPurchaseCategoryRows(): AppState {
   };
 }
 
+function stateWithBusinessPurchaseRows(): AppState {
+  const state = stateWithPurchaseCategoryRows();
+  return {
+    ...state,
+    transactions: state.transactions.map((transaction) => ({ ...transaction, flags: ["business"] }))
+  };
+}
+
 function stateWithoutContext(): AppState {
   return {
     ...stateWithCarWash(),
@@ -233,6 +241,17 @@ describe("App", () => {
     expect(screen.getAllByText(/424/).length).toBeGreaterThan(0);
     fireEvent.click(screen.getAllByRole("button", { name: /Visa köp ICA/i })[0]);
     expect(screen.getByRole("form", { name: /Uppdatera enskilt köp/i })).toBeInTheDocument();
+  });
+
+  it("visar businesskop i oversikten och kopradarn", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithBusinessPurchaseRows()));
+    render(<App />);
+
+    expect(screen.getAllByText("Business").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: /^Inköp$/i }));
+
+    expect(screen.getAllByText("Business").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("125 kr").length).toBeGreaterThan(0);
   });
 
   it("visar finansiell kopstatistik per handlare", () => {

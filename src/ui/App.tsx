@@ -2350,6 +2350,7 @@ function buildPurchaseRadar(transactions: PurchaseTransaction[], currency: strin
   const reviewRows = byFlag("review");
   const unnecessaryRows = byFlag("unnecessary");
   const worthRows = byFlag("worthIt");
+  const businessRows = byFlag("business");
   const candidateCount = recurringGroups.reduce((sum, row) => sum + row.count, 0);
   return {
     cards: [
@@ -2384,6 +2385,14 @@ function buildPurchaseRadar(transactions: PurchaseTransaction[], currency: strin
         detail: `${worthRows.length} köp markerade som bra värde.`,
         tone: "green" as const,
         icon: CheckCircle2
+      },
+      {
+        flag: "business" as const,
+        title: "Business",
+        value: formatMoney(totalFor(businessRows), currency),
+        detail: `${businessRows.length} köp markerade som arbete.`,
+        tone: "blue" as const,
+        icon: BriefcaseBusiness
       }
     ],
     habits: recurringGroups
@@ -2813,15 +2822,17 @@ function buildPurchaseCategoryRows(transactions: PurchaseTransaction[], categori
     const monthKey = transactionPeriodMonth(transaction);
     if (!monthKeys.has(monthKey)) continue;
     const category = categories.find((item) => item.id === transaction.categoryId);
-    const categoryKey = transaction.categoryId ?? "uncategorized";
-    const categoryLabel = category?.name ?? "Okategoriserat";
+    const isBusiness = transaction.flags?.includes("business") ?? false;
+    const categoryKey = isBusiness ? "business" : transaction.categoryId ?? "uncategorized";
+    const categoryLabel = isBusiness ? "Business" : category?.name ?? "Okategoriserat";
+    const categoryColor = isBusiness ? "#1f4a8a" : category?.color ?? "#7c8a9c";
     if (categoryIds.size > 0 && (!transaction.categoryId || !categoryIds.has(transaction.categoryId))) continue;
     if (search && ![transaction.merchantRaw, transaction.merchantNormalized, transaction.location, categoryLabel].join(" ").toLowerCase().includes(search)) continue;
 
     const current = groups.get(categoryKey) ?? {
       key: categoryKey,
       label: categoryLabel,
-      color: category?.color ?? "#7c8a9c",
+      color: categoryColor,
       count: 0,
       totals: Object.fromEntries(months.map((month) => [month.key, 0])),
       transactionsByMonth: Object.fromEntries(months.map((month) => [month.key, [] as PurchaseTransaction[]]))
