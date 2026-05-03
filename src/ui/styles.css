@@ -1466,7 +1466,7 @@ button.radarCard.green.active {
 
 .whereRow {
   display: grid;
-  grid-template-columns: 26px minmax(0, 1fr) minmax(78px, auto);
+  grid-template-columns: minmax(0, 1fr) minmax(78px, auto);
   align-items: center;
   gap: 8px 10px;
   min-height: 50px;
@@ -1598,7 +1598,7 @@ button.radarCard.green.active {
 
 .merchantInsightRow {
   display: grid;
-  grid-template-columns: 28px minmax(180px, 1fr) 118px minmax(92px, auto) 74px;
+  grid-template-columns: minmax(180px, 1fr) 118px minmax(92px, auto) 74px;
   align-items: center;
   gap: 12px;
   min-height: 48px;
@@ -3416,7 +3416,7 @@ body {
   }
 
   .merchantInsightRow {
-    grid-template-columns: 24px minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 
   .merchantInsightRow .sparkline,
@@ -5999,11 +5999,11 @@ textarea {
   }
 
   .whereRow {
-    grid-template-columns: 24px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .whereRow b {
-    grid-column: 2;
+    grid-column: 1;
     justify-self: start;
   }
 

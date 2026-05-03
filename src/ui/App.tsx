@@ -3086,9 +3086,8 @@ function Statistics({ state, setState, expenses, allExpenses, categories, people
                   <span>Total · antal · snitt</span>
                 </div>
                 {merchantInsights.length === 0 && <p className="note">Ingen köpdata ännu.</p>}
-                {merchantInsights.map((row, index) => (
+                {merchantInsights.map((row) => (
                   <div className="merchantInsightRow" key={row.label}>
-                    <em>{String(index + 1).padStart(2, "0")}</em>
                     <span>
                       <strong>{row.label}</strong>
                       <small>{row.count} köp · {row.monthsActive} aktiva månader · snitt {formatMoney(row.average, currency)}</small>
@@ -3551,11 +3550,10 @@ function SpendRanking({ icon: Icon, title, subtitle, mode, rows, currency }: { i
         <span>{subtitle}</span>
       </div>
       {rows.length === 0 && <p className="note">Ingen köpdata ännu.</p>}
-      {rows.map((row, index) => {
+      {rows.map((row) => {
         const metric = mode === "amount" ? row.total : row.count;
         return (
           <div className="whereRow" key={`${title}-${row.label}`}>
-            <em>{String(index + 1).padStart(2, "0")}</em>
             <span>
               <strong>{row.label}</strong>
               <small>{row.count} köp · snitt {formatMoney(row.average, currency)}</small>
@@ -3649,9 +3647,9 @@ function BarList({ rows, monthsCount = 1, currency, annualize = false, mode = "r
   return (
     <div className="barList">
       {rows.length === 0 && <p className="note">Ingen data ännu.</p>}
-      {rows.map((row, index) => (
+      {rows.map((row) => (
         <div className="statBar" key={row.label} title={`${row.label}: ${formatMoney(row.value, currency)}`}>
-          <span><em>{String(index + 1).padStart(2, "0")}</em>{row.label}</span>
+          <span>{row.label}</span>
           <strong>{formatMoney(row.value, currency)}</strong>
           <small>
             {Math.round((row.value / max) * 100)}% av topp · {mode === "purchases" ? `periodsnitt ${formatMoney(monthly(row.value), currency)}/mån` : `${formatMoney(monthly(row.value), currency)}/mån`}
