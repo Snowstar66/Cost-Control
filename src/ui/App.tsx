@@ -735,9 +735,12 @@ function QuickAddMenu({
 }
 
 function ContextSwitcher({ state, setState, activeContextId }: { state: ReturnType<typeof useAppState>["state"]; setState: ReturnType<typeof useAppState>["setState"]; activeContextId: string }) {
-  const [name, setName] = useState("");
   const activeContext = state.contexts.find((context) => context.id === activeContextId) ?? state.contexts[0];
   const canDeleteContext = state.contexts.length > 1 && Boolean(activeContext);
+  const createContext = () => {
+    const name = window.prompt("Vad ska den nya kontexten heta?");
+    if (name?.trim()) setState((current) => addContext(current, name.trim()));
+  };
   const deleteContext = () => {
     if (!activeContext || !canDeleteContext) return;
     const confirmed = window.confirm(`Radera kontexten "${activeContext.name}" och all data som hör till den? Det går inte att ångra.`);
@@ -763,24 +766,13 @@ function ContextSwitcher({ state, setState, activeContextId }: { state: ReturnTy
       <label>Döp om aktiv kontext</label>
       <input value={activeContext?.name ?? ""} onChange={(event) => activeContext && setState((current) => updateContext(current, { id: activeContext.id, name: event.target.value }))} />
       <div className="contextActions">
-        <div className="inline">
-          <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ny kontext" />
-          <button
-            className="iconBtn"
-            title="Skapa kontext"
-            onClick={() => {
-              if (!name.trim()) return;
-              setState((current) => addContext(current, name.trim()));
-              setName("");
-            }}
-          >
-            <Plus size={17} />
-          </button>
-        </div>
+        <button className="ghostBtn" onClick={createContext}>
+          <Plus size={16} /> Ny kontext
+        </button>
         <button className="ghostBtn" onClick={() => setState((current) => duplicateCurrentContext(current, `${current.contexts.find((context) => context.id === activeContextId)?.name ?? "Kontext"} mall`))}>
           <FolderPlus size={16} /> Duplicera som mall
         </button>
-        <button className="danger" onClick={deleteContext} disabled={!canDeleteContext} title={canDeleteContext ? "Radera aktiv kontext" : "Minst en kontext måste finnas kvar"}>
+        <button className="ghostBtn dangerText contextDeleteButton" onClick={deleteContext} disabled={!canDeleteContext} title={canDeleteContext ? "Radera aktiv kontext" : "Minst en kontext måste finnas kvar"}>
           <Trash2 size={16} /> Radera kontext
         </button>
       </div>

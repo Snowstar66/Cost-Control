@@ -265,6 +265,20 @@ describe("App", () => {
     expect(saved.categories.some((category) => category.contextId === "ctx-2")).toBe(false);
   });
 
+  it("skapar kontext efter namnfraga", () => {
+    const prompt = vi.spyOn(window, "prompt").mockReturnValue("Semester");
+    localStorage.setItem(storageKey, JSON.stringify(stateWithCarWash()));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Data/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^Ny kontext$/i }));
+
+    expect(prompt).toHaveBeenCalledWith("Vad ska den nya kontexten heta?");
+    const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
+    expect(saved.activeContextId).not.toBe("ctx-1");
+    expect(saved.contexts.map((context) => context.name)).toContain("Semester");
+  });
+
   it("sorterar kassaboken nar ett radarkort valjs", () => {
     const state = stateWithPurchaseCategoryRows();
     localStorage.setItem(storageKey, JSON.stringify({
