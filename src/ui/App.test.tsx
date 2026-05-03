@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { AppState } from "../domain/types";
+import type { AppState, PurchaseFlag } from "../domain/types";
 import { toIsoDate } from "../domain/date";
 import { App } from "./App";
 
@@ -47,7 +47,7 @@ function stateWithCarWash(): AppState {
     onboardingComplete: true,
     hidePastMonths: false,
     purchasesEnabled: true,
-    filters: { categoryIds: [], payerIds: [], necessityLevels: [], search: "", simulationExcludedExpenseIds: [] }
+    filters: { categoryIds: [], payerIds: [], necessityLevels: [], purchaseFlags: [], search: "", simulationExcludedExpenseIds: [] }
   };
 }
 
@@ -105,7 +105,18 @@ function stateWithBusinessPurchaseRows(): AppState {
   const state = stateWithPurchaseCategoryRows();
   return {
     ...state,
-    transactions: state.transactions.map((transaction) => ({ ...transaction, importId: "maj 2026.xlsx-123", flags: ["business"] }))
+    transactions: [
+      ...state.transactions.map((transaction) => ({ ...transaction, importId: "maj 2026.xlsx-123", flags: ["business" as PurchaseFlag] })),
+      {
+        ...state.transactions[0],
+        id: "txn-2",
+        importId: "maj 2026.xlsx-456",
+        merchantRaw: "PRESSBYRAN",
+        merchantNormalized: "PRESSBYRAN",
+        amount: 49,
+        flags: [] as PurchaseFlag[]
+      }
+    ]
   };
 }
 
@@ -250,7 +261,13 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getAllByText("Business").length).toBeGreaterThan(0);
-    expect(screen.getByRole("group", { name: /Business: 125.*per månad/i })).toBeInTheDocument();
+    const businessSummary = screen.getByRole("button", { name: /Business: 125.*per månad/i });
+    expect(businessSummary).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Transport maj 2026: 49/i })).toBeInTheDocument();
+    fireEvent.click(businessSummary);
+    expect(businessSummary).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByRole("button", { name: /Transport maj 2026: 49/i })).not.toBeInTheDocument();
+    expect(screen.queryAllByRole("button", { name: /BiltvattOK Q8/i })).toHaveLength(0);
     fireEvent.click(screen.getByRole("button", { name: /^Inköp$/i }));
 
     expect(screen.getAllByText("Business").length).toBeGreaterThan(0);

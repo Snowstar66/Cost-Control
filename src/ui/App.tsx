@@ -926,7 +926,8 @@ function Overview(props: {
 }) {
   const currentMonth = props.months.find((month) => month.isCurrentMonth) ?? props.months[0];
   const activeNecessity = props.state.filters.necessityLevels.length === 1 ? props.state.filters.necessityLevels[0] : undefined;
-  const summaryExpenses = filterExpenses({ ...props.state, filters: { ...props.state.filters, necessityLevels: [] } }, props.expenses);
+  const businessSelected = props.state.filters.purchaseFlags.length === 1 && props.state.filters.purchaseFlags[0] === "business";
+  const summaryExpenses = filterExpenses({ ...props.state, filters: { ...props.state.filters, necessityLevels: [], purchaseFlags: [] } }, props.expenses);
   const necessitySummaries = overviewNecessityOrder.map((level) => ({
     level,
     total: currentMonth
@@ -973,7 +974,8 @@ function Overview(props: {
                   ...current,
                   filters: {
                     ...current.filters,
-                    necessityLevels: selected ? [] : [summary.level]
+                    necessityLevels: selected ? [] : [summary.level],
+                    purchaseFlags: []
                   }
                 }))
               }
@@ -988,10 +990,21 @@ function Overview(props: {
             </button>
           );
         })}
-        <div
-          className="necessitySummary business"
-          role="group"
+        <button
+          type="button"
+          className={`necessitySummary business ${businessSelected ? "selected" : ""}`}
           aria-label={`Business: ${formatMoney(businessTotal, props.currency)} per månad, ${businessCount} köp`}
+          aria-pressed={businessSelected}
+          onClick={() =>
+            props.setState((current) => ({
+              ...current,
+              filters: {
+                ...current.filters,
+                necessityLevels: [],
+                purchaseFlags: businessSelected ? [] : ["business"]
+              }
+            }))
+          }
         >
           <span className="summaryTop">
             <BriefcaseBusiness size={15} />
@@ -1000,7 +1013,7 @@ function Overview(props: {
           </span>
           <strong>{formatMoney(businessTotal, props.currency)}</strong>
           <small>{businessCount} köp · markerade som arbete</small>
-        </div>
+        </button>
       </div>
     </div>
   );
@@ -1652,6 +1665,7 @@ function TimelineToolbar({ context, state, setState, categories, people }: { con
     state.filters.categoryIds.length +
     state.filters.payerIds.length +
     state.filters.necessityLevels.length +
+    state.filters.purchaseFlags.length +
     (state.hidePastMonths ? 1 : 0);
   const filterControls = (variant: "desktop" | "mobile") => (
     <>
@@ -1696,7 +1710,7 @@ function TimelineToolbar({ context, state, setState, categories, people }: { con
         type="button"
         className="ghostBtn"
         onClick={() => {
-          setState((current) => ({ ...current, filters: { ...current.filters, categoryIds: [], payerIds: [], necessityLevels: [], search: "" } }));
+          setState((current) => ({ ...current, filters: { ...current.filters, categoryIds: [], payerIds: [], necessityLevels: [], purchaseFlags: [], search: "" } }));
           if (variant === "mobile") setMobileFiltersOpen(false);
         }}
       >
@@ -2848,10 +2862,12 @@ function buildPurchaseCategoryRows(transactions: PurchaseTransaction[], categori
   const monthKeys = new Set(months.map((month) => month.key));
   const search = state.filters.search.trim().toLowerCase();
   const categoryIds = new Set(state.filters.categoryIds);
+  const purchaseFlags = new Set(state.filters.purchaseFlags);
   const groups = new Map<string, PurchaseCategoryRow>();
 
   for (const transaction of transactions) {
     if (transaction.type !== "one-off" || transaction.amount <= 0) continue;
+    if (purchaseFlags.size > 0 && !(transaction.flags ?? []).some((flag) => purchaseFlags.has(flag))) continue;
     const monthKey = transactionPeriodMonth(transaction);
     if (!monthKeys.has(monthKey)) continue;
     const category = categories.find((item) => item.id === transaction.categoryId);

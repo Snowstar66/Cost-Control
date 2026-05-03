@@ -57,6 +57,7 @@ const state: AppState = {
     categoryIds: [],
     payerIds: [],
     necessityLevels: [],
+    purchaseFlags: [],
     search: "",
     simulationExcludedExpenseIds: []
   }

@@ -113,7 +113,8 @@ export function createReminderForExpense(expense: Expense, contextId: string, fr
 
 export function filterExpenses(state: AppState, expenses: Expense[], options: { applySimulation?: boolean } = {}): Expense[] {
   const applySimulation = options.applySimulation ?? true;
-  const { categoryIds, payerIds, necessityLevels, search, simulationExcludedExpenseIds } = state.filters;
+  const { categoryIds, payerIds, necessityLevels, purchaseFlags, search, simulationExcludedExpenseIds } = state.filters;
+  if (purchaseFlags.length > 0) return [];
   const normalized = search.trim().toLowerCase();
   return expenses.filter((expense) => {
     if (applySimulation && simulationExcludedExpenseIds.includes(expense.id)) return false;

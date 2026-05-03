@@ -157,6 +157,7 @@ export type AppState = {
     categoryIds: string[];
     payerIds: string[];
     necessityLevels: NecessityLevel[];
+    purchaseFlags: PurchaseFlag[];
     search: string;
     simulationExcludedExpenseIds: string[];
     budgetOutcomeStartMonth?: string;

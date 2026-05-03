@@ -140,6 +140,7 @@ export function createInitialState(): AppState {
       categoryIds: [],
       payerIds: [],
       necessityLevels: [],
+      purchaseFlags: [],
       search: "",
       simulationExcludedExpenseIds: [],
       budgetOutcomeStartMonth: undefined
@@ -168,6 +169,7 @@ export function createEmptyState(): AppState {
       categoryIds: [],
       payerIds: [],
       necessityLevels: [],
+      purchaseFlags: [],
       search: "",
       simulationExcludedExpenseIds: [],
       budgetOutcomeStartMonth: undefined
@@ -204,6 +206,7 @@ export function enrichStateWithBaselineData(state: AppState): AppState {
       categoryIds: state.filters?.categoryIds ?? [],
       payerIds: state.filters?.payerIds ?? [],
       necessityLevels: state.filters?.necessityLevels ?? [],
+      purchaseFlags: state.filters?.purchaseFlags ?? [],
       search: state.filters?.search ?? "",
       simulationExcludedExpenseIds: state.filters?.simulationExcludedExpenseIds ?? [],
       budgetOutcomeStartMonth: state.filters?.budgetOutcomeStartMonth
