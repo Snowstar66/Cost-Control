@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { expenseAmountForMonth } from "../domain/calculations";
 import { buildTimelineMonths } from "../domain/date";
 import type { AppState } from "../domain/types";
-import { importTransactions, upsertExpense } from "./actions";
+import { importTransactions, removeContext, upsertExpense } from "./actions";
 
 const state: AppState = {
   version: 1,
@@ -124,5 +124,55 @@ describe("importTransactions", () => {
     const context = next.contexts.find((item) => item.id === "ctx-1");
 
     expect(context?.monthsBack).toBeGreaterThanOrEqual(5);
+  });
+});
+
+describe("removeContext", () => {
+  it("raderar vald kontext och all data som hör till den", () => {
+    const next = removeContext({
+      ...state,
+      activeContextId: "ctx-2",
+      contexts: [
+        ...state.contexts,
+        { id: "ctx-2", name: "Resa", currency: "SEK", monthsBack: 1, monthsForward: 1, plan: "free", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" }
+      ],
+      people: [...state.people, { id: "per-2", contextId: "ctx-2", firstName: "Ada", lastName: "Test", active: true }],
+      suppliers: [...state.suppliers, { id: "sup-2", contextId: "ctx-2", name: "SJ" }],
+      categories: [...state.categories, { id: "cat-2", contextId: "ctx-2", name: "Resa", color: "#7db7ee", icon: "tag" }],
+      expenses: [
+        ...state.expenses,
+        { id: "exp-2", contextId: "ctx-2", supplierId: "sup-2", categoryId: "cat-2", name: "Tåg", necessityLevel: "comfortable", status: "active", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" }
+      ],
+      costPeriods: [...state.costPeriods, { id: "cost-2", expenseId: "exp-2", amount: 500, recurrence: "one-time", startDate: "2026-02-01" }],
+      attachments: [{ id: "att-2", contextId: "ctx-2", expenseId: "exp-2", fileName: "ticket.pdf", mimeType: "application/pdf", size: 10, blobRef: "blob", dataUrl: "data:", createdAt: "2026-01-01T00:00:00.000Z" }],
+      reminders: [{ id: "rem-2", contextId: "ctx-2", expenseId: "exp-2", date: "2026-02-01", title: "Kolla", done: false }],
+      transactions: [{ id: "txn-2", contextId: "ctx-2", date: "2026-02-01", amount: 100, currency: "SEK", merchantRaw: "SJ", merchantNormalized: "SJ", source: "manual", type: "one-off", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" }],
+      merchantRules: [{ id: "rule-2", contextId: "ctx-2", pattern: "SJ", merchantName: "SJ", categoryId: "cat-2", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" }],
+      filters: {
+        ...state.filters,
+        categoryIds: ["cat-1", "cat-2"],
+        payerIds: ["per-2"],
+        simulationExcludedExpenseIds: ["exp-2"]
+      }
+    }, "ctx-2");
+
+    expect(next.activeContextId).toBe("ctx-1");
+    expect(next.contexts.map((context) => context.id)).toEqual(["ctx-1"]);
+    expect(next.people).toHaveLength(0);
+    expect(next.suppliers.map((supplier) => supplier.id)).toEqual(["sup-1"]);
+    expect(next.categories.map((category) => category.id)).toEqual(["cat-1"]);
+    expect(next.expenses.map((expense) => expense.id)).toEqual(["exp-1"]);
+    expect(next.costPeriods.map((period) => period.id)).toEqual(["cost-1"]);
+    expect(next.attachments).toHaveLength(0);
+    expect(next.reminders).toHaveLength(0);
+    expect(next.transactions).toHaveLength(0);
+    expect(next.merchantRules).toHaveLength(0);
+    expect(next.filters.categoryIds).toEqual(["cat-1"]);
+    expect(next.filters.payerIds).toEqual([]);
+    expect(next.filters.simulationExcludedExpenseIds).toEqual([]);
+  });
+
+  it("behåller sista kvarvarande kontexten", () => {
+    expect(removeContext(state, "ctx-1")).toBe(state);
   });
 });

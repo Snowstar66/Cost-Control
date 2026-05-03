@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AppState } from "../domain/types";
 import { toIsoDate } from "../domain/date";
 import { App } from "./App";
@@ -107,6 +107,7 @@ describe("App", () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     cleanup();
   });
 
@@ -239,6 +240,29 @@ describe("App", () => {
       source: "manual",
       type: "one-off"
     });
+  });
+
+  it("fragar innan aktiv kontext raderas", () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    localStorage.setItem(storageKey, JSON.stringify({
+      ...stateWithCarWash(),
+      contexts: [
+        ...stateWithCarWash().contexts,
+        { id: "ctx-2", name: "Resa", currency: "SEK", monthsBack: 1, monthsForward: 1, plan: "free", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" }
+      ],
+      activeContextId: "ctx-2",
+      categories: [...stateWithCarWash().categories, { id: "cat-2", contextId: "ctx-2", name: "Resa", color: "#7db7ee", icon: "tag" }]
+    }));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Data/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^Radera kontext$/i }));
+
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Radera kontexten "Resa"'));
+    const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
+    expect(saved.activeContextId).toBe("ctx-1");
+    expect(saved.contexts.map((context) => context.id)).toEqual(["ctx-1"]);
+    expect(saved.categories.some((category) => category.contextId === "ctx-2")).toBe(false);
   });
 
   it("sorterar kassaboken nar ett radarkort valjs", () => {

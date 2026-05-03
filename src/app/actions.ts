@@ -136,6 +136,36 @@ export function updateContext(state: AppState, patch: Partial<Context> & { id: s
   };
 }
 
+export function removeContext(state: AppState, contextId: string): AppState {
+  const context = state.contexts.find((item) => item.id === contextId);
+  if (!context || state.contexts.length <= 1) return state;
+
+  const remainingContexts = state.contexts.filter((item) => item.id !== contextId);
+  const removedPeopleIds = new Set(state.people.filter((person) => person.contextId === contextId).map((person) => person.id));
+  const removedCategoryIds = new Set(state.categories.filter((category) => category.contextId === contextId).map((category) => category.id));
+  const removedExpenseIds = new Set(state.expenses.filter((expense) => expense.contextId === contextId).map((expense) => expense.id));
+  return {
+    ...state,
+    activeContextId: state.activeContextId === contextId ? remainingContexts[0].id : state.activeContextId,
+    contexts: remainingContexts,
+    people: state.people.filter((person) => person.contextId !== contextId),
+    suppliers: state.suppliers.filter((supplier) => supplier.contextId !== contextId),
+    categories: state.categories.filter((category) => category.contextId !== contextId),
+    expenses: state.expenses.filter((expense) => expense.contextId !== contextId),
+    costPeriods: state.costPeriods.filter((period) => !removedExpenseIds.has(period.expenseId)),
+    attachments: state.attachments.filter((attachment) => attachment.contextId !== contextId),
+    reminders: state.reminders.filter((reminder) => reminder.contextId !== contextId),
+    transactions: state.transactions.filter((transaction) => transaction.contextId !== contextId),
+    merchantRules: state.merchantRules.filter((rule) => rule.contextId !== contextId),
+    filters: {
+      ...state.filters,
+      categoryIds: state.filters.categoryIds.filter((id) => !removedCategoryIds.has(id)),
+      payerIds: state.filters.payerIds.filter((id) => !removedPeopleIds.has(id)),
+      simulationExcludedExpenseIds: state.filters.simulationExcludedExpenseIds.filter((id) => !removedExpenseIds.has(id))
+    }
+  };
+}
+
 export function duplicateCurrentContext(state: AppState, name: string): AppState {
   return cloneContextTemplate(state, state.activeContextId, name);
 }

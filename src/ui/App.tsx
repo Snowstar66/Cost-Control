@@ -53,6 +53,7 @@ import {
   duplicateCurrentContext,
   removeCategory,
   removeAttachment,
+  removeContext,
   removeExpense,
   removePerson,
   removeSupplier,
@@ -736,6 +737,12 @@ function QuickAddMenu({
 function ContextSwitcher({ state, setState, activeContextId }: { state: ReturnType<typeof useAppState>["state"]; setState: ReturnType<typeof useAppState>["setState"]; activeContextId: string }) {
   const [name, setName] = useState("");
   const activeContext = state.contexts.find((context) => context.id === activeContextId) ?? state.contexts[0];
+  const canDeleteContext = state.contexts.length > 1 && Boolean(activeContext);
+  const deleteContext = () => {
+    if (!activeContext || !canDeleteContext) return;
+    const confirmed = window.confirm(`Radera kontexten "${activeContext.name}" och all data som hör till den? Det går inte att ångra.`);
+    if (confirmed) setState((current) => removeContext(current, activeContext.id));
+  };
   return (
     <div className="contextBox adminContextPanel">
       <div className="panelHeader">
@@ -772,6 +779,9 @@ function ContextSwitcher({ state, setState, activeContextId }: { state: ReturnTy
         </div>
         <button className="ghostBtn" onClick={() => setState((current) => duplicateCurrentContext(current, `${current.contexts.find((context) => context.id === activeContextId)?.name ?? "Kontext"} mall`))}>
           <FolderPlus size={16} /> Duplicera som mall
+        </button>
+        <button className="danger" onClick={deleteContext} disabled={!canDeleteContext} title={canDeleteContext ? "Radera aktiv kontext" : "Minst en kontext måste finnas kvar"}>
+          <Trash2 size={16} /> Radera kontext
         </button>
       </div>
     </div>
