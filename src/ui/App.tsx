@@ -127,6 +127,18 @@ const iconOptions: Array<{ value: keyof typeof iconMap; label: string }> = [
   { value: "music", label: "Musik" },
   { value: "zap", label: "El" }
 ];
+const categoryColorOptions = [
+  { value: "#7db7ee", label: "Blå" },
+  { value: "#8fb7ff", label: "Ljusblå" },
+  { value: "#4fc4bd", label: "Turkos" },
+  { value: "#a2dba6", label: "Mintgrön" },
+  { value: "#93c5a0", label: "Grön" },
+  { value: "#f7c86b", label: "Gul" },
+  { value: "#f58e92", label: "Rosa" },
+  { value: "#b58df1", label: "Lila" },
+  { value: "#a9b2c4", label: "Grå" },
+  { value: "#b75159", label: "Röd" }
+];
 const allowedFileTypes = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
 const maxFileSize = 10 * 1024 * 1024;
 const overviewNecessityOrder: NecessityLevel[] = ["luxury", "necessary", "comfortable", "unnecessary"];
@@ -1956,7 +1968,7 @@ function Registers({ people, suppliers, categories, attachments, showLists, setS
           title="Kategorier"
           fields={[
             { key: "name", placeholder: "Namn", value: editingCategory?.name ?? "" },
-            { key: "color", placeholder: "Färg", value: editingCategory?.color ?? "" }
+            { key: "color", placeholder: "Färg", value: editingCategory?.color ?? "#4fc4bd", options: categoryColorOptions, swatch: true }
           ]}
           submitLabel={editingCategory ? "Spara kategori" : "Lägg till kategori"}
           onCancel={editingCategory ? () => setEditingCategory(undefined) : undefined}
@@ -1980,7 +1992,7 @@ function Registers({ people, suppliers, categories, attachments, showLists, setS
                     secondary={
                       <span className="colorSwatchLabel">
                         <i style={{ background: category.color }} />
-                        {category.color.replace(/^#/, "").toUpperCase()}
+                        {categoryColorName(category.color)}
                       </span>
                     }
                     onEdit={() => setEditingCategory(category)}
@@ -2178,7 +2190,7 @@ function HelpMini({ icon: Icon, title, text }: { icon: typeof Wallet; title: str
   );
 }
 
-function RegisterForm({ title, description, fields, submitLabel, onSubmit, onCancel, children, className = "" }: { title: string; description?: string; fields: Array<{ key: string; placeholder: string; value: string; type?: "text" | "color"; options?: Array<{ value: string; label: string }> }>; submitLabel: string; onSubmit: (values: Record<string, string>) => void; onCancel?: () => void; children?: ReactNode; className?: string }) {
+function RegisterForm({ title, description, fields, submitLabel, onSubmit, onCancel, children, className = "" }: { title: string; description?: string; fields: Array<{ key: string; placeholder: string; value: string; type?: "text" | "color"; options?: Array<{ value: string; label: string }>; swatch?: boolean }>; submitLabel: string; onSubmit: (values: Record<string, string>) => void; onCancel?: () => void; children?: ReactNode; className?: string }) {
   const [values, setValues] = useState<Record<string, string>>(() => Object.fromEntries(fields.map((field) => [field.key, field.value])));
   const signature = fields.map((field) => `${field.key}:${field.value}`).join("|");
   useEffect(() => {
@@ -2202,13 +2214,16 @@ function RegisterForm({ title, description, fields, submitLabel, onSubmit, onCan
           field.options ? (
             <label key={field.key} className="registerSelectField">
               <span>{field.placeholder}</span>
-              <select value={values[field.key] ?? ""} onChange={(event) => setValues({ ...values, [field.key]: event.target.value })}>
-                {field.options.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <span className={field.swatch ? "selectWithSwatch" : undefined}>
+                {field.swatch && <i style={{ background: values[field.key] || field.options[0]?.value }} />}
+                <select value={values[field.key] ?? ""} onChange={(event) => setValues({ ...values, [field.key]: event.target.value })}>
+                  {field.options.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </span>
             </label>
           ) : field.type === "color" ? (
             <label key={field.key} className="registerColorField">
@@ -2266,6 +2281,10 @@ function SupplierBadge({ supplier }: { supplier: Supplier }) {
       <span>{supplier.name}</span>
     </span>
   );
+}
+
+function categoryColorName(color: string): string {
+  return categoryColorOptions.find((option) => option.value.toLowerCase() === color.toLowerCase())?.label ?? "Egen färg";
 }
 
 function buildPurchaseRadar(transactions: PurchaseTransaction[], currency: string) {

@@ -297,6 +297,22 @@ describe("App", () => {
     expect(within(supplierForm).getAllByText("Spotify").length).toBeGreaterThan(0);
   });
 
+  it("väljer kategorifärg med namn i stället för hexkod", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithCarWash()));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Register/i }));
+    const categoryForm = screen.getByText("Kategorier").closest("form")!;
+    fireEvent.change(within(categoryForm).getByPlaceholderText("Namn"), { target: { value: "Mat" } });
+    fireEvent.change(within(categoryForm).getByLabelText("Färg"), { target: { value: "#f58e92" } });
+    fireEvent.click(within(categoryForm).getByRole("button", { name: /Lägg till kategori/i }));
+
+    const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
+    expect(saved.categories.at(-1)).toMatchObject({ name: "Mat", color: "#f58e92" });
+    expect(within(categoryForm).getAllByText("Rosa").length).toBeGreaterThan(0);
+    expect(within(categoryForm).queryByText("F58E92")).not.toBeInTheDocument();
+  });
+
   it("sorterar kassaboken nar ett radarkort valjs", () => {
     const state = stateWithPurchaseCategoryRows();
     localStorage.setItem(storageKey, JSON.stringify({

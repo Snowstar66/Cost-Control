@@ -3478,6 +3478,26 @@ body {
   padding: 3px;
 }
 
+.selectWithSwatch {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.selectWithSwatch i {
+  position: absolute;
+  left: 9px;
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgba(16, 24, 40, 0.12);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.selectWithSwatch select {
+  padding-left: 30px;
+}
+
 .personRegisterForm .registerFields {
   min-height: 149px;
   align-content: start;
