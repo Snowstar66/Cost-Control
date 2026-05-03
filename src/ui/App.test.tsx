@@ -105,7 +105,7 @@ function stateWithBusinessPurchaseRows(): AppState {
   const state = stateWithPurchaseCategoryRows();
   return {
     ...state,
-    transactions: state.transactions.map((transaction) => ({ ...transaction, flags: ["business"] }))
+    transactions: state.transactions.map((transaction) => ({ ...transaction, importId: "maj 2026.xlsx-123", flags: ["business"] }))
   };
 }
 
@@ -186,6 +186,8 @@ describe("App", () => {
     expect(screen.getByText("Om Mina Utgifter")).toBeInTheDocument();
     expect(screen.getByText("Rekommenderat arbetssätt")).toBeInTheDocument();
     expect(screen.getByText("Undvik dubbelräkning")).toBeInTheDocument();
+    expect(screen.getByText(/business-märkta köp/i)).toBeInTheDocument();
+    expect(screen.getByText(/Rensa all data och börja om/i)).toBeInTheDocument();
   });
 
   it("uppdaterar oversikten nar startdatum andras", () => {
@@ -248,6 +250,7 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getAllByText("Business").length).toBeGreaterThan(0);
+    expect(screen.getByRole("group", { name: /Business: 125.*per månad/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /^Inköp$/i }));
 
     expect(screen.getAllByText("Business").length).toBeGreaterThan(0);

@@ -919,6 +919,9 @@ function Overview(props: {
       : 0,
     count: summaryExpenses.filter((expense) => expense.necessityLevel === level && expense.status !== "cancelled").length
   }));
+  const businessPurchaseRow = props.purchaseRows.find((row) => row.key === "business");
+  const businessTotal = currentMonth && businessPurchaseRow ? businessPurchaseRow.totals[currentMonth.key] ?? 0 : 0;
+  const businessCount = businessPurchaseRow?.count ?? 0;
   return (
     <div className="overviewGrid">
       <div className="panel wide">
@@ -968,6 +971,19 @@ function Overview(props: {
             </button>
           );
         })}
+        <div
+          className="necessitySummary business"
+          role="group"
+          aria-label={`Business: ${formatMoney(businessTotal, props.currency)} per månad, ${businessCount} köp`}
+        >
+          <span className="summaryTop">
+            <BriefcaseBusiness size={15} />
+            <span>Business</span>
+            <em>Köp</em>
+          </span>
+          <strong>{formatMoney(businessTotal, props.currency)}</strong>
+          <small>{businessCount} köp · markerade som arbete</small>
+        </div>
       </div>
     </div>
   );
@@ -2069,13 +2085,13 @@ const helpViewCards: Array<{ icon: typeof Wallet; title: string; text: string; i
     icon: BarChart3,
     title: "Översikt",
     text: "Här ser du återkommande kostnader och enskilda köp i samma månadsbild.",
-    items: ["Sök, filtrera och göm historik i verktygsraden.", "Tryck på en utgift för detaljer, filer och åtgärder.", "Summeringskorten visar vilka kostnader som är lyxiga, nödvändiga, bekväma eller onödiga."]
+    items: ["Sök, filtrera och göm historik i verktygsraden.", "Tryck på en utgift för detaljer, filer och åtgärder.", "Summeringskorten visar utgiftstyper och business-märkta köp."]
   },
   {
     icon: ShoppingBag,
     title: "Enskilda köp",
     text: "Kassaboken för bankrader och manuella köp. Den hjälper dig se mönster utan att dubbelräkna abonnemang.",
-    items: ["Importera kontoutdrag eller lägg till köp manuellt.", "Flagga köp som granska, onödigt, kandidat eller värt det.", "Matchade återkommande betalningar räknas inte som vanliga enskilda köp."]
+    items: ["Importera kontoutdrag eller lägg till köp manuellt.", "Flagga köp som granska, onödigt, kandidat, värt det eller business.", "Matchade återkommande betalningar räknas inte som vanliga enskilda köp."]
   },
   {
     icon: LineChart,
@@ -2093,7 +2109,7 @@ const helpViewCards: Array<{ icon: typeof Wallet; title: string; text: string; i
     icon: ShieldCheck,
     title: "Data",
     text: "Allt som rör lagring, export, import, molnsync och lokal integritet finns här.",
-    items: ["Spara lokal datafil när du vill äga filen själv.", "Dela datafil för att flytta till annan enhet.", "Molnsync är local-first och kan kopplas till en egen endpoint."]
+    items: ["Spara lokal datafil när du vill äga filen själv.", "Dela datafil för att flytta till annan enhet.", "Rensa all data och börja om när du vill testa från noll."]
   }
 ];
 

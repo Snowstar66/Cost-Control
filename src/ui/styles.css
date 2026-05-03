@@ -3307,7 +3307,7 @@ body {
 .necessitySummaryGrid {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  grid-template-columns: repeat(5, minmax(140px, 1fr));
   gap: 10px;
 }
 
@@ -3349,6 +3349,10 @@ body {
 
 .necessitySummary.unnecessary::before {
   background: #52787d;
+}
+
+.necessitySummary.business::before {
+  background: #1f4a8a;
 }
 
 .necessitySummary:hover {
