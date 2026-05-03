@@ -181,6 +181,10 @@ type PurchaseImportPreview = BankStatementImportResult & {
 type PurchaseSaveOptions = {
   applyCategoryToSameMerchant?: boolean;
 };
+const bankStatementFilePattern = /\.(csv|xlsx)$/i;
+function isBankStatementImportFile(file: File): boolean {
+  return bankStatementFilePattern.test(file.name) || file.type === "text/csv" || file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+}
 type PurchaseCategoryRow = {
   key: string;
   label: string;
@@ -409,14 +413,25 @@ export function App() {
   const importFile = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    if (isBankStatementImportFile(file)) {
+      await importPurchaseFile(file);
+      setImportErrors([]);
+      setActiveView("purchases");
+      event.target.value = "";
+      return;
+    }
     const text = await file.text();
     try {
       const importedState = parseDataFile(text);
       const importedContext = importedState.contexts.find((item) => item.id === importedState.activeContextId) ?? importedState.contexts[0];
       const shouldImport = window.confirm(`Läs in datafilen "${importedContext?.name ?? file.name}" och ersätt lokal data i den här webbläsaren?`);
-      if (!shouldImport) return;
+      if (!shouldImport) {
+        event.target.value = "";
+        return;
+      }
       setState(importedState);
       setImportErrors([]);
+      event.target.value = "";
       return;
     } catch {
       // Not a full data file. Fall through to context import below.
@@ -426,6 +441,7 @@ export function App() {
       const validation = validateImportPayload(parsed);
       if (!validation.ok) {
         setImportErrors(validation.errors);
+        event.target.value = "";
         return;
       }
       setState((current) => importAsNewContext(current, validation.payload));
@@ -433,6 +449,7 @@ export function App() {
     } catch {
       setImportErrors(["Filen kunde inte läsas som JSON. ZIP-import stöds via context.json som du kan exportera separat."]);
     }
+    event.target.value = "";
   };
 
   if (!hasContexts) {
@@ -4232,9 +4249,9 @@ function Admin({
               <Import size={18} />
               <span>
                 <strong>Importera från fil</strong>
-                <small>Läs in datafil eller kontext-export.</small>
+                <small>Läs in datafil, kontext-export eller kontoutdrag.</small>
               </span>
-              <input type="file" accept="application/json" onChange={importFile} />
+              <input type="file" accept="application/json,.json,.csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={importFile} />
             </label>
           </div>
           <details className="inlineAdvanced">

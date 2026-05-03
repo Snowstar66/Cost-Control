@@ -47,13 +47,30 @@ async function readSharedStrings(zip: JSZip): Promise<string[]> {
 
 function readSheetRows(xml: string, shared: string[]): SheetRow[] {
   const doc = new DOMParser().parseFromString(xml, "application/xml");
-  return [...doc.getElementsByTagNameNS(worksheetNamespace, "row")].map((row) =>
-    [...row.getElementsByTagNameNS(worksheetNamespace, "c")].map((cell) => {
-      const value = cell.getElementsByTagNameNS(worksheetNamespace, "v")[0]?.textContent ?? "";
-      if (cell.getAttribute("t") === "s") return shared[Number(value)] ?? "";
-      return value;
-    })
-  );
+  return [...doc.getElementsByTagNameNS(worksheetNamespace, "row")].map((row) => {
+    const cells: string[] = [];
+    for (const cell of [...row.getElementsByTagNameNS(worksheetNamespace, "c")]) {
+      const index = columnIndexFromCellRef(cell.getAttribute("r")) ?? cells.length;
+      cells[index] = readCellValue(cell, shared);
+    }
+    return Array.from({ length: cells.length }, (_, index) => cells[index] ?? "");
+  });
+}
+
+function readCellValue(cell: Element, shared: string[]): string {
+  const type = cell.getAttribute("t");
+  if (type === "inlineStr") {
+    return [...cell.getElementsByTagNameNS(worksheetNamespace, "t")].map((node) => node.textContent ?? "").join("");
+  }
+  const value = cell.getElementsByTagNameNS(worksheetNamespace, "v")[0]?.textContent ?? "";
+  if (type === "s") return shared[Number(value)] ?? "";
+  return value;
+}
+
+function columnIndexFromCellRef(ref: string | null): number | undefined {
+  const letters = ref?.match(/^[A-Z]+/i)?.[0];
+  if (!letters) return undefined;
+  return [...letters.toUpperCase()].reduce((index, letter) => index * 26 + letter.charCodeAt(0) - 64, 0) - 1;
 }
 
 function transactionsFromRows(rows: SheetRow[], fileName: string): BankStatementImportResult {
@@ -142,11 +159,7 @@ function monthKeyFromText(value: string, allowIso: boolean): string | undefined 
 }
 
 function normalizeHeader(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/ö/g, "o")
-    .replace(/Ã¶/g, "o");
+  return foldText(value);
 }
 
 function normalizeDate(value?: string): string | undefined {
@@ -165,7 +178,7 @@ function normalizeDate(value?: string): string | undefined {
 
 function parseAmount(value?: string): number | undefined {
   if (!value) return undefined;
-  const amount = Number(value.replace(/\s/g, "").replace(",", "."));
+  const amount = Number(value.replace(/\s/g, "").replace("\u2212", "-").replace(",", "."));
   return Number.isFinite(amount) ? amount : undefined;
 }
 
@@ -174,11 +187,17 @@ function normalizeMerchant(value: string): string {
 }
 
 function isSummaryRow(value: string): boolean {
-  const normalized = value
+  const normalized = foldText(value);
+  return /saldo|summa|totalt|inbetalning|avg|average|medel|snitt|genomsnitt|ar\s*\/\s*man|man\s*\/\s*ar/i.test(normalized);
+}
+
+function foldText(value: string): string {
+  return value
     .trim()
     .toLowerCase()
-    .replace(/å/g, "a")
-    .replace(/ä/g, "a")
-    .replace(/ö/g, "o");
-  return /saldo|summa|totalt|inbetalning|avg|average|medel|snitt|genomsnitt|ar\s*\/\s*man|man\s*\/\s*ar/i.test(normalized);
+    .replace(/Ã¥|ÃƒÂ¥/g, "å")
+    .replace(/Ã¤|ÃƒÂ¤/g, "ä")
+    .replace(/Ã¶|ÃƒÂ¶/g, "ö")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 }
