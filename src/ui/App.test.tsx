@@ -203,7 +203,7 @@ describe("App", () => {
     localStorage.setItem(storageKey, JSON.stringify(stateWithPurchaseCategoryRows()));
     render(<App />);
 
-    fireEvent.click(screen.getByRole("button", { name: /^Enskilda köp$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^Inköp$/i }));
     fireEvent.click(screen.getByRole("button", { name: /Granska: ICA/i }));
 
     expect(JSON.parse(localStorage.getItem(storageKey) ?? "{}").transactions[0].flags).toContain("review");
@@ -213,7 +213,7 @@ describe("App", () => {
     localStorage.setItem(storageKey, JSON.stringify(stateWithPurchaseCategoryRows()));
     render(<App />);
 
-    fireEvent.click(screen.getByRole("button", { name: /^Enskilda köp$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^Inköp$/i }));
     fireEvent.click(screen.getByRole("button", { name: /^Lägg till enskilt köp$/i }));
 
     const merchant = screen.getByLabelText(/^Handlare$/i);
@@ -344,7 +344,7 @@ describe("App", () => {
     }));
     render(<App />);
 
-    fireEvent.click(screen.getByRole("button", { name: /^Enskilda köp$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^Inköp$/i }));
     fireEvent.click(screen.getByTitle("Sortera kassaboken efter onödigt"));
 
     const table = within(screen.getByRole("table", { name: /Köplista/i }));
@@ -380,7 +380,7 @@ describe("App", () => {
     }));
     render(<App />);
 
-    fireEvent.click(screen.getByRole("button", { name: /^Enskilda köp$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^Inköp$/i }));
     fireEvent.click(screen.getAllByRole("button", { name: /STADIUM OSTERSU/i })[0]);
     fireEvent.change(screen.getByLabelText(/^Kategori$/i), { target: { value: "cat-2" } });
     fireEvent.click(screen.getByRole("button", { name: /Uppdatera/i }));

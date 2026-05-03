@@ -256,7 +256,7 @@ export function App() {
     disconnectCloudSync
   } = useAppState();
   const [activeView, setActiveView] = useState<"overview" | "purchases" | "statistics" | "registers" | "admin" | "help">("overview");
-  const activeViewLabel = activeView === "overview" ? "Översikt" : activeView === "purchases" ? "Enskilda köp" : activeView === "statistics" ? "Statistik" : activeView === "registers" ? "Register" : activeView === "admin" ? "Data" : "Hjälp";
+  const activeViewLabel = activeView === "overview" ? "Översikt" : activeView === "purchases" ? "Inköp" : activeView === "statistics" ? "Statistik" : activeView === "registers" ? "Register" : activeView === "admin" ? "Data" : "Hjälp";
   const [selectedExpenseId, setSelectedExpenseId] = useState<string | undefined>();
   const [expenseFormOpen, setExpenseFormOpen] = useState(false);
   const [editingExpenseId, setEditingExpenseId] = useState<string | undefined>();
@@ -439,7 +439,7 @@ export function App() {
           {(
             [
               ["overview", BarChart3, "Översikt"],
-              ...(state.purchasesEnabled ? ([["purchases", ShoppingBag, "Enskilda köp"]] as const) : []),
+              ...(state.purchasesEnabled ? ([["purchases", ShoppingBag, "Inköp"]] as const) : []),
               ["statistics", LineChart, "Statistik"],
               ["registers", Users, "Register"],
               ["admin", ShieldCheck, "Data"],
