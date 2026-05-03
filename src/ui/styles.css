@@ -5827,11 +5827,6 @@ textarea {
     justify-content: flex-start;
   }
 
-  .purchaseToolbar .fileButton,
-  .purchaseToolbar .purchaseManualAdd {
-    display: none;
-  }
-
   .searchBox {
     width: 100%;
     min-height: 38px;

@@ -214,7 +214,10 @@ describe("App", () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole("button", { name: /^Inköp$/i }));
-    fireEvent.click(screen.getByRole("button", { name: /^Lägg till enskilt köp$/i }));
+    expect(screen.queryByRole("button", { name: /^Importera kontoutdrag$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Lägg till enskilt köp$/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Fler nya val/i }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /Enskilt köp/i }));
 
     const merchant = screen.getByLabelText(/^Handlare$/i);
     expect(merchant).toHaveAttribute("list", "merchant-suggestions");

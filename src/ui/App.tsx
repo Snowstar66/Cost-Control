@@ -511,7 +511,6 @@ export function App() {
               categories={categories}
               suppliers={suppliers}
               importPreview={purchaseImportPreview}
-              onImportFile={(file) => void importPurchaseFile(file)}
               onCommitImport={() => {
                 if (!purchaseImportPreview) return;
                 setState((current) => importTransactions(current, purchaseImportPreview.transactions));
@@ -2343,7 +2342,7 @@ function buildPurchaseRadar(transactions: PurchaseTransaction[], currency: strin
   };
 }
 
-function Purchases({ context, transactions, categories, suppliers, importPreview, onImportFile, onCommitImport, onCancelImport, onEdit, onDelete, onToggleFlag }: { context: ReturnType<typeof useAppState>["context"]; transactions: PurchaseTransaction[]; categories: Category[]; suppliers: Supplier[]; importPreview?: PurchaseImportPreview; onImportFile: (file: File) => void; onCommitImport: () => void; onCancelImport: () => void; onEdit: (id?: string) => void; onDelete: (id: string) => void; onToggleFlag: (id: string, flag: PurchaseFlag) => void }) {
+function Purchases({ context, transactions, categories, suppliers, importPreview, onCommitImport, onCancelImport, onEdit, onDelete, onToggleFlag }: { context: ReturnType<typeof useAppState>["context"]; transactions: PurchaseTransaction[]; categories: Category[]; suppliers: Supplier[]; importPreview?: PurchaseImportPreview; onCommitImport: () => void; onCancelImport: () => void; onEdit: (id?: string) => void; onDelete: (id: string) => void; onToggleFlag: (id: string, flag: PurchaseFlag) => void }) {
   const [search, setSearch] = useState("");
   const [activeRadarFlag, setActiveRadarFlag] = useState<PurchaseFlag | undefined>();
   const baseVisible = transactions
@@ -2379,13 +2378,6 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
           <Search size={18} />
           <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Sök enskilt köp eller handlare" />
         </div>
-        <label className="fileButton">
-          <Upload size={17} /> Importera kontoutdrag
-          <input type="file" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(event) => event.target.files?.[0] && onImportFile(event.target.files[0])} />
-        </label>
-        <button className="primary purchaseManualAdd" onClick={() => onEdit()}>
-          <Plus size={17} /> Lägg till enskilt köp
-        </button>
       </div>
 
       {importPreview && (
