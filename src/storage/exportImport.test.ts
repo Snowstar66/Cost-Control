@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createInitialState } from "../domain/seed";
-import { buildExportPayload, buildHandoffHtml, importAsNewContext, validateImportPayload } from "./exportImport";
+import { buildExportPayload, buildHandoffHtml, downloadVercelHandoffFile, importAsNewContext, validateImportPayload } from "./exportImport";
 
 describe("context export/import", () => {
   it("validerar exportformat", () => {
@@ -31,5 +31,23 @@ describe("context export/import", () => {
     expect(html).toContain("https://cost-control-beige.vercel.app/");
     expect(html).toContain("cost-control-handoff");
     expect(html).toContain("cost-control-app-state");
+  });
+
+  it("kan ladda ner Vercel-handoff som HTML-fil", () => {
+    const originalCreateObjectUrl = URL.createObjectURL;
+    const originalRevokeObjectUrl = URL.revokeObjectURL;
+    const clicks: string[] = [];
+    URL.createObjectURL = () => "blob:test";
+    URL.revokeObjectURL = () => undefined;
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
+      clicks.push(this.download);
+    });
+
+    downloadVercelHandoffFile(createInitialState());
+
+    expect(clicks).toEqual(["MinaUtgifter-vercel.html"]);
+    clickSpy.mockRestore();
+    URL.createObjectURL = originalCreateObjectUrl;
+    URL.revokeObjectURL = originalRevokeObjectUrl;
   });
 });

@@ -85,12 +85,12 @@ import {
   simulatedMonthlyTotals,
   simulatedRemovalMonth,
 } from "../domain/calculations";
-import { toIsoDate } from "../domain/date";
+import { toIsoDate, toMonthKey } from "../domain/date";
 import type { Attachment, Category, Expense, ExpenseCostPeriod, NecessityLevel, Person, PurchaseFlag, PurchaseTransaction, Recurrence, Supplier, TimelineMonth } from "../domain/types";
 import { necessityLabels, recurrenceLabels } from "../domain/types";
 import { parseBankStatementFile, type BankStatementImportResult } from "../storage/bankStatementImport";
 import { parseDataFile } from "../storage/dataFile";
-import { exportCsv, exportJson, exportPdf, exportRemindersIcs, exportZip, importAsNewContext, shareDataFile, validateImportPayload } from "../storage/exportImport";
+import { downloadVercelHandoffFile, exportCsv, exportJson, exportPdf, exportRemindersIcs, exportZip, importAsNewContext, shareDataFile, validateImportPayload } from "../storage/exportImport";
 
 const iconMap = {
   home: Home,
@@ -173,6 +173,20 @@ type TransactionCountRow = {
   total: number;
   average: number;
   color?: string;
+};
+type BudgetOutcomeRow = {
+  month: TimelineMonth;
+  budget: number;
+  recurring: number;
+  purchases: number;
+  total: number;
+  outcome: number;
+  isFuture: boolean;
+};
+type BudgetContributor = {
+  id: string;
+  name: string;
+  amount: number;
 };
 type DecisionInsight = {
   title: string;
@@ -1670,34 +1684,37 @@ function Timeline(props: {
                     );
                   })}
                 </div>
-                {expandedTransactions.map((transaction) => (
-                  <div className="timelineRow purchaseDetail" key={`${row.key}-${expandedMonthKey}-${transaction.id}`} style={{ display: "contents" }}>
-                    <button
-                      type="button"
-                      className="expenseLabel stickyCol purchaseDetailLabel"
-                      onClick={() => props.onSelectPurchase?.(transaction.id)}
-                      aria-label={`Visa köp ${transaction.merchantRaw} ${formatMoney(transaction.amount, props.contextCurrency)}`}
-                    >
-                      <span className="purchaseDetailDate">{transaction.date.slice(5)}</span>
-                      <span className="purchaseDetailMain">
-                        <strong>{transaction.merchantRaw}</strong>
-                        <small>{transaction.location ?? transaction.source}</small>
-                      </span>
-                    </button>
-                    {props.months.map((month) => (
+                {expandedTransactions.map((transaction) => {
+                  const subtitle = transactionSecondaryText(transaction);
+                  return (
+                    <div className="timelineRow purchaseDetail" key={`${row.key}-${expandedMonthKey}-${transaction.id}`} style={{ display: "contents" }}>
                       <button
                         type="button"
-                        className="monthCell purchaseDetailCell"
-                        key={`${transaction.id}-${month.key}`}
-                        onClick={() => month.key === expandedMonthKey && props.onSelectPurchase?.(transaction.id)}
-                        disabled={month.key !== expandedMonthKey}
-                        aria-label={month.key === expandedMonthKey ? `Visa köp ${transaction.merchantRaw} ${formatMoney(transaction.amount, props.contextCurrency)}` : undefined}
+                        className="expenseLabel stickyCol purchaseDetailLabel"
+                        onClick={() => props.onSelectPurchase?.(transaction.id)}
+                        aria-label={`Visa köp ${transaction.merchantRaw} ${formatMoney(transaction.amount, props.contextCurrency)}`}
                       >
-                        {month.key === expandedMonthKey ? formatMoney(transaction.amount, props.contextCurrency) : ""}
+                        <span className="purchaseDetailDate">{transaction.date.slice(5)}</span>
+                        <span className="purchaseDetailMain">
+                          <strong>{transaction.merchantRaw}</strong>
+                          {subtitle && <small>{subtitle}</small>}
+                        </span>
                       </button>
-                    ))}
-                  </div>
-                ))}
+                      {props.months.map((month) => (
+                        <button
+                          type="button"
+                          className="monthCell purchaseDetailCell"
+                          key={`${transaction.id}-${month.key}`}
+                          onClick={() => month.key === expandedMonthKey && props.onSelectPurchase?.(transaction.id)}
+                          disabled={month.key !== expandedMonthKey}
+                          aria-label={month.key === expandedMonthKey ? `Visa köp ${transaction.merchantRaw} ${formatMoney(transaction.amount, props.contextCurrency)}` : undefined}
+                        >
+                          {month.key === expandedMonthKey ? formatMoney(transaction.amount, props.contextCurrency) : ""}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })}
               </Fragment>
             );
           })}
@@ -1839,11 +1856,11 @@ function Registers({ people, suppliers, categories, attachments, showLists, setS
       <div className="registerSideColumn">
         <RegisterForm
           className="personRegisterForm"
-          title="Personer & inkomst"
+          title="Personer & månadsbudget"
           fields={[
             { key: "firstName", placeholder: "Förnamn", value: editingPerson?.firstName ?? "" },
             { key: "lastName", placeholder: "Efternamn", value: editingPerson?.lastName ?? "" },
-            { key: "monthlyAvailableIncome", placeholder: "Disponibel inkomst", value: editingPerson?.monthlyAvailableIncome ? String(editingPerson.monthlyAvailableIncome) : "" }
+            { key: "monthlyAvailableIncome", placeholder: "Månadsbudget", value: editingPerson?.monthlyAvailableIncome ? String(editingPerson.monthlyAvailableIncome) : "" }
           ]}
           submitLabel={editingPerson ? "Spara person" : "Lägg till person"}
           onCancel={editingPerson ? () => setEditingPerson(undefined) : undefined}
@@ -1858,7 +1875,7 @@ function Registers({ people, suppliers, categories, attachments, showLists, setS
                 <EditableRow
                   key={person.id}
                   primary={`${person.firstName} ${person.lastName}`}
-                  secondary={person.monthlyAvailableIncome ? formatMoney(person.monthlyAvailableIncome) : "Ingen inkomst"}
+                  secondary={person.monthlyAvailableIncome ? formatMoney(person.monthlyAvailableIncome) : "Ingen månadsbudget"}
                   onEdit={() => setEditingPerson(person as Person)}
                   onDelete={() => setState((current) => removePerson(current, person.id))}
                 />
@@ -1949,7 +1966,7 @@ const helpViewCards: Array<{ icon: typeof Wallet; title: string; text: string; i
     icon: Users,
     title: "Register",
     text: "Basdata som gör resten av appen begriplig: personer, leverantörer och kategorier.",
-    items: ["Lägg till betalare och disponibel inkomst.", "Spara leverantörer med uppsägningsinfo.", "Håll kategorierna få och tydliga för bättre statistik."]
+    items: ["Lägg till betalare och månadsbudget.", "Spara leverantörer med uppsägningsinfo.", "Håll kategorierna få och tydliga för bättre statistik."]
   },
   {
     icon: ShieldCheck,
@@ -2367,12 +2384,13 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
           {visible.map((transaction) => {
             const category = categories.find((item) => item.id === transaction.categoryId);
             const supplier = suppliers.find((item) => item.id === transaction.supplierId);
+            const subtitle = transactionSecondaryText(transaction, supplier);
             return (
               <div className="transactionRow" key={transaction.id} style={{ display: "contents" }}>
                 <button type="button" className="transactionCellButton" onClick={() => onEdit(transaction.id)}>{transaction.date}</button>
                 <button type="button" className="transactionCellButton merchant" onClick={() => onEdit(transaction.id)}>
                   <strong>{transaction.merchantRaw}</strong>
-                  <small>{supplier?.name ?? transaction.location ?? transaction.source}</small>
+                  {subtitle && <small>{subtitle}</small>}
                 </button>
                 <button type="button" className="transactionCellButton" onClick={() => onEdit(transaction.id)}>{category?.name ?? "Okategoriserat"}</button>
                 <span className="transactionSignals">
@@ -2408,6 +2426,7 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
           {visible.map((transaction) => {
             const category = categories.find((item) => item.id === transaction.categoryId);
             const supplier = suppliers.find((item) => item.id === transaction.supplierId);
+            const subtitle = transactionSecondaryText(transaction, supplier);
             return (
               <article className="mobileTransactionCard" key={`mobile-${transaction.id}`}>
                 <button type="button" className="mobileTransactionMain" onClick={() => onEdit(transaction.id)}>
@@ -2418,7 +2437,7 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
                   <b>{formatMoney(transaction.amount, transaction.currency)}</b>
                 </button>
                 <div className="mobileTransactionMeta">
-                  <small>{supplier?.name ?? transaction.location ?? transaction.source}</small>
+                  {subtitle && <small>{subtitle}</small>}
                   <span className="transactionSignals">
                     {(Object.keys(purchaseFlagMeta) as PurchaseFlag[]).map((flag) => {
                       const meta = purchaseFlagMeta[flag];
@@ -2526,6 +2545,10 @@ const analyticsColors = ["#1f4a8a", "#0f766e", "#9c7439", "#b75159", "#52787d", 
 
 function transactionMerchantLabel(transaction: PurchaseTransaction): string {
   return transaction.merchantNormalized || transaction.merchantRaw || "Okänd handlare";
+}
+
+function transactionSecondaryText(transaction: PurchaseTransaction, supplier?: Supplier): string {
+  return transaction.notes?.trim() || supplier?.name || transaction.location || "";
 }
 
 function buildMerchantInsightRows(transactions: PurchaseTransaction[], months: TimelineMonth[]): MerchantInsightRow[] {
@@ -2879,6 +2902,29 @@ function Statistics({ state, setState, expenses, allExpenses, categories, people
     .filter((row) => row.value > 0);
   const discretionaryPeriodTotal = recurringNecessityRows.filter((row) => row.label === "Lyxigt" || row.label === "Onödigt").reduce((sum, row) => sum + row.value, 0);
   const purchaseMonthTotals = Object.fromEntries(months.map((month) => [month.key, periodTransactions.filter((transaction) => transactionPeriodMonth(transaction) === month.key).reduce((sum, transaction) => sum + transaction.amount, 0)]));
+  const currentMonthKey = toMonthKey(new Date());
+  const budgetContributors: BudgetContributor[] = people
+    .filter((person) => person.active !== false && (person.monthlyAvailableIncome ?? 0) > 0)
+    .map((person) => ({
+      id: person.id,
+      name: `${person.firstName} ${person.lastName}`.trim(),
+      amount: person.monthlyAvailableIncome ?? 0
+    }));
+  const monthlyBudget = budgetContributors.reduce((sum, person) => sum + person.amount, 0);
+  const budgetOutcomeRows: BudgetOutcomeRow[] = months.map((month) => {
+    const recurring = accrued[month.key] ?? 0;
+    const purchases = purchaseMonthTotals[month.key] ?? 0;
+    const total = recurring + purchases;
+    return {
+      month,
+      budget: monthlyBudget,
+      recurring,
+      purchases,
+      total,
+      outcome: monthlyBudget - total,
+      isFuture: month.key > currentMonthKey
+    };
+  });
   const purchasePeakMonth = [...months].sort((a, b) => (purchaseMonthTotals[b.key] ?? 0) - (purchaseMonthTotals[a.key] ?? 0))[0];
   const repeatedMerchant = merchantInsights.find((row) => row.count >= 3) ?? merchantInsights[0];
   const influenceExpenses = baseExpenses
@@ -3025,6 +3071,7 @@ function Statistics({ state, setState, expenses, allExpenses, categories, people
         </div>
       )}
       <DecisionInsightsPanel insights={decisionInsights} />
+      <BudgetOutcomePanel rows={budgetOutcomeRows} budgetContributors={budgetContributors} monthlyBudget={monthlyBudget} currency={currency} />
 
       <div className="panel recurringAnalyticsPanel">
         <div className="panelHeader">
@@ -3344,6 +3391,97 @@ function DecisionInsightsPanel({ insights }: { insights: DecisionInsight[] }) {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function BudgetOutcomePanel({ rows, budgetContributors, monthlyBudget, currency }: { rows: BudgetOutcomeRow[]; budgetContributors: BudgetContributor[]; monthlyBudget: number; currency: string }) {
+  const actualRows = rows.filter((row) => !row.isFuture);
+  const summaryRows = actualRows.length > 0 ? actualRows : rows;
+  const totalBudget = summaryRows.reduce((sum, row) => sum + row.budget, 0);
+  const totalSpend = summaryRows.reduce((sum, row) => sum + row.total, 0);
+  const totalOutcome = totalBudget - totalSpend;
+  const averageOutcome = summaryRows.length ? totalOutcome / summaryRows.length : 0;
+  const bestMonth = summaryRows.length ? [...summaryRows].sort((a, b) => b.outcome - a.outcome)[0] : undefined;
+  const maxValue = Math.max(1, monthlyBudget, ...rows.map((row) => row.total));
+  const budgetMarker = monthlyBudget > 0 ? Math.min(100, (monthlyBudget / maxValue) * 100) : 0;
+  const futureCount = rows.filter((row) => row.isFuture).length;
+  const signedMoney = (value: number) => `${value >= 0 ? "+" : ""}${formatMoney(value, currency)}`;
+  return (
+    <div className="panel budgetOutcomePanel">
+      <div className="panelHeader">
+        <h2>Månadsbudget och utfall</h2>
+        <span>Utfall hittills · framtid som budget</span>
+      </div>
+      <div className="budgetOutcomeSummary">
+        <span className={totalOutcome >= 0 ? "positive" : "negative"}>
+          <small>Utfall hittills</small>
+          <strong>{signedMoney(totalOutcome)}</strong>
+        </span>
+        <span>
+          <small>Månadsbudget</small>
+          <strong>{monthlyBudget > 0 ? formatMoney(monthlyBudget, currency) : "Saknas"}</strong>
+        </span>
+        <span className={averageOutcome >= 0 ? "positive" : "negative"}>
+          <small>Snitt hittills</small>
+          <strong>{signedMoney(averageOutcome)}</strong>
+        </span>
+        <span>
+          <small>Bästa månad hittills</small>
+          <strong>{bestMonth ? `${bestMonth.month.label}: ${signedMoney(bestMonth.outcome)}` : "-"}</strong>
+        </span>
+      </div>
+      <div className="budgetContributors">
+        <strong>Budget består av</strong>
+        {budgetContributors.length > 0 ? (
+          <span>
+            {budgetContributors.map((person) => (
+              <em key={person.id}>{person.name}: {formatMoney(person.amount, currency)}</em>
+            ))}
+          </span>
+        ) : (
+          <small>Ingen månadsbudget registrerad.</small>
+        )}
+      </div>
+      {monthlyBudget <= 0 && <p className="note">Lägg till månadsbudget på personer i Register för att se plus eller minus mot budget.</p>}
+      <details className="budgetOutcomeDetails">
+        <summary>
+          <span>Visa månader</span>
+          <small>{actualRows.length} utfall · {futureCount} budget</small>
+          <ChevronDown size={16} />
+        </summary>
+        <div className="budgetOutcomeChart" aria-label="Månadsutfall mot budget">
+          {rows.map((row) => {
+            const spendWidth = Math.min(100, (row.total / maxValue) * 100);
+            const recurringShare = row.total > 0 ? (row.recurring / row.total) * 100 : 0;
+            const purchaseShare = row.total > 0 ? (row.purchases / row.total) * 100 : 0;
+            const positive = row.outcome >= 0;
+            return (
+              <div className={`budgetMonthRow ${row.isFuture ? "future" : ""}`} key={row.month.key}>
+                <span className="budgetMonthLabel">
+                  <strong>{row.month.label}</strong>
+                  <small>{formatMoney(row.total, currency)} {row.isFuture ? "budgeterat" : "använt"}</small>
+                </span>
+                <div className="budgetBarArea">
+                  {monthlyBudget > 0 && <i className="budgetMarker" style={{ left: `${budgetMarker}%` }} />}
+                  <div className="budgetBarTrack">
+                    <span className="budgetSpendBar" style={{ width: `${spendWidth}%` }}>
+                      <i className="recurring" style={{ width: `${recurringShare}%` }} />
+                      <i className="purchases" style={{ width: `${purchaseShare}%` }} />
+                    </span>
+                  </div>
+                </div>
+                <b className={positive ? "positive" : "negative"}>{signedMoney(row.outcome)}</b>
+              </div>
+            );
+          })}
+        </div>
+        <div className="budgetLegend" aria-hidden="true">
+          <span><i className="recurring" /> Återkommande</span>
+          <span><i className="purchases" /> Enskilda köp</span>
+          <span><i className="marker" /> Budget</span>
+        </div>
+      </details>
     </div>
   );
 }
@@ -3869,6 +4007,9 @@ function Admin({
               </button>
               <button onClick={() => void saveAsDataFile()} disabled={!dataFile.supported}>
                 <FileJson size={17} /> Spara som ny datafil
+              </button>
+              <button onClick={() => downloadVercelHandoffFile(state)}>
+                <Download size={17} /> Ladda ner Vercel-fil
               </button>
               <button className="ghostBtn" onClick={() => void disconnectDataFile()} disabled={!dataFile.fileName}>
                 Koppla loss datafil

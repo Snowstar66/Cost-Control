@@ -1317,6 +1317,10 @@ button.radarCard.green.active {
   grid-column: 1 / -1;
 }
 
+.budgetOutcomePanel {
+  grid-column: 1 / -1;
+}
+
 .decisionGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1562,6 +1566,263 @@ button.radarCard.green.active {
   color: #111827;
   font-size: 19px;
   font-variant-numeric: tabular-nums;
+}
+
+.budgetOutcomeSummary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.budgetOutcomeSummary span {
+  min-width: 0;
+  min-height: 62px;
+  padding: 10px 12px;
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.budgetOutcomeSummary small,
+.budgetLegend {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 760;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.budgetOutcomeSummary strong {
+  overflow: hidden;
+  color: #111827;
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.budgetOutcomeSummary .positive strong,
+.budgetMonthRow b.positive {
+  color: #0f766e;
+}
+
+.budgetOutcomeSummary .negative strong,
+.budgetMonthRow b.negative {
+  color: #b75159;
+}
+
+.budgetContributors {
+  display: flex;
+  align-items: center;
+  gap: 8px 10px;
+  min-height: 34px;
+  margin-bottom: 10px;
+  padding: 7px 9px;
+  border: 1px solid #e5e9ef;
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.budgetContributors strong,
+.budgetContributors small {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 760;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.budgetContributors span {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.budgetContributors em {
+  min-height: 24px;
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #d9e2ec;
+  border-radius: 999px;
+  background: #fff;
+  color: #111827;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 680;
+}
+
+.budgetOutcomeDetails {
+  border-top: 1px solid #edf0f4;
+  padding-top: 8px;
+}
+
+.budgetOutcomeDetails summary {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  list-style: none;
+  color: #111827;
+  font-size: 12px;
+  font-weight: 740;
+}
+
+.budgetOutcomeDetails summary::-webkit-details-marker {
+  display: none;
+}
+
+.budgetOutcomeDetails summary small {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 760;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.budgetOutcomeDetails summary svg {
+  color: var(--muted);
+  transition: transform 140ms ease;
+}
+
+.budgetOutcomeDetails[open] summary svg {
+  transform: rotate(180deg);
+}
+
+.budgetOutcomeChart {
+  display: grid;
+  gap: 7px;
+  padding-top: 6px;
+}
+
+.budgetMonthRow {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.55fr) minmax(0, 1.8fr) minmax(88px, auto);
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 6px 0;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.budgetMonthRow:last-child {
+  border-bottom: 0;
+}
+
+.budgetMonthRow.future {
+  opacity: 0.72;
+}
+
+.budgetMonthLabel {
+  min-width: 0;
+}
+
+.budgetMonthLabel strong,
+.budgetMonthLabel small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.budgetMonthLabel strong {
+  color: #111827;
+  font-size: 12px;
+}
+
+.budgetMonthLabel small {
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+.budgetBarArea {
+  position: relative;
+  padding: 7px 0;
+}
+
+.budgetBarTrack {
+  height: 12px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgba(17,24,39,0.055) 1px, transparent 1px) 0 0 / 25% 100%,
+    #eef3f2;
+  overflow: hidden;
+}
+
+.budgetSpendBar {
+  height: 100%;
+  min-width: 2px;
+  display: flex;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.budgetSpendBar i {
+  display: block;
+  height: 100%;
+}
+
+.budgetSpendBar .recurring,
+.budgetLegend .recurring {
+  background: #1f4a8a;
+}
+
+.budgetSpendBar .purchases,
+.budgetLegend .purchases {
+  background: #0f766e;
+}
+
+.budgetMarker {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  width: 2px;
+  border-radius: 999px;
+  background: #b75159;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
+}
+
+.budgetMonthRow b {
+  color: #111827;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.budgetLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.budgetLegend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.budgetLegend i {
+  width: 18px;
+  height: 6px;
+  display: inline-block;
+  border-radius: 999px;
+}
+
+.budgetLegend .marker {
+  width: 2px;
+  height: 14px;
+  border-radius: 999px;
+  background: #b75159;
 }
 
 .merchantAnalyticsGrid {
@@ -5493,7 +5754,8 @@ textarea {
   }
 
   .necessitySummaryGrid,
-  .financeKpis {
+  .financeKpis,
+  .budgetOutcomeSummary {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 5px;
   }
@@ -6284,6 +6546,59 @@ textarea {
   .mobileFilterControls .historyControl input {
     width: 72px;
     min-height: 30px;
+  }
+
+  .budgetOutcomeSummary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .budgetOutcomeSummary span {
+    min-height: 54px;
+    padding: 8px 9px;
+  }
+
+  .budgetOutcomeSummary strong {
+    font-size: 15px;
+  }
+
+  .budgetContributors {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .budgetContributors span {
+    width: 100%;
+  }
+
+  .budgetOutcomeDetails summary {
+    min-height: 32px;
+  }
+
+  .budgetOutcomeDetails summary small {
+    margin-left: 0;
+  }
+
+  .budgetMonthRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 5px 8px;
+  }
+
+  .budgetBarArea {
+    grid-column: 1 / -1;
+    order: 3;
+    padding: 2px 0 5px;
+  }
+
+  .budgetMonthRow b {
+    align-self: start;
+    font-size: 11.5px;
+  }
+
+  .budgetLegend {
+    gap: 7px;
+    font-size: 9px;
   }
 
   .necessitySummaryGrid {

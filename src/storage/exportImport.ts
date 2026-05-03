@@ -143,6 +143,10 @@ export async function shareDataFile(state: AppState): Promise<void> {
   download(filename, file);
 }
 
+export function downloadVercelHandoffFile(state: AppState): void {
+  download("MinaUtgifter-vercel.html", new Blob([buildHandoffHtml(state, appHandoffUrl)], { type: "text/html" }));
+}
+
 export function buildHandoffHtml(state: AppState, appUrl = appHandoffUrl): string {
   const payload = JSON.stringify(buildDataFilePayload(state)).replace(/</g, "\\u003c");
   const escapedAppUrl = JSON.stringify(appUrl);
