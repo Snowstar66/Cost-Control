@@ -126,6 +126,13 @@ describe("importTransactions", () => {
 
     expect(context?.monthsBack).toBeGreaterThanOrEqual(5);
   });
+  it("visar historik igen nar importerade kop ligger bakat i tiden", () => {
+    const next = importTransactions({ ...state, hidePastMonths: true }, [
+      { date: "2026-04-18", bookedDate: "2026-04-19", statementMonth: "2026-04", merchantRaw: "ICA", amount: 95.85, currency: "SEK" }
+    ]);
+
+    expect(next.hidePastMonths).toBe(false);
+  });
 });
 
 describe("removeContext", () => {

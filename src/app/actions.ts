@@ -97,16 +97,22 @@ function expandContextWindowForTransactions(state: AppState, transactions: Upser
   const currentMonthIndex = now.getFullYear() * 12 + now.getMonth();
   let monthsBack = context.monthsBack;
   let monthsForward = context.monthsForward;
+  let hasPastTransactions = false;
   for (const transaction of transactions) {
     const [year, month] = transactionPeriodMonthInput(transaction).split("-").map(Number);
     if (!year || !month) continue;
     const diff = year * 12 + (month - 1) - currentMonthIndex;
-    if (diff < 0) monthsBack = Math.max(monthsBack, Math.abs(diff));
+    if (diff < 0) {
+      hasPastTransactions = true;
+      monthsBack = Math.max(monthsBack, Math.abs(diff));
+    }
     if (diff > 0) monthsForward = Math.max(monthsForward, diff);
   }
-  if (monthsBack === context.monthsBack && monthsForward === context.monthsForward) return state;
+  const shouldShowHistory = state.hidePastMonths && hasPastTransactions;
+  if (monthsBack === context.monthsBack && monthsForward === context.monthsForward && !shouldShowHistory) return state;
   return {
     ...state,
+    hidePastMonths: shouldShowHistory ? false : state.hidePastMonths,
     contexts: state.contexts.map((item) => (item.id === context.id ? { ...item, monthsBack, monthsForward, updatedAt: stamp() } : item))
   };
 }
