@@ -3368,7 +3368,7 @@ function buildDecisionInsights({
 }): DecisionInsight[] {
   const insights: DecisionInsight[] = [
     {
-      title: "Återkommande bas",
+      title: "Fasta utgifter",
       value: formatMoney(recurringMonthlyAverage, currency),
       detail: `Din löpande nivå motsvarar ${formatMoney(recurringAnnualRunRate, currency)}/år innan enskilda köp.`,
       tone: "blue",
