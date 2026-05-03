@@ -284,8 +284,10 @@ describe("App", () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole("button", { name: /Register/i }));
-    const supplierForm = screen.getByText("Leverantörer").closest("form")!;
-    fireEvent.change(within(supplierForm).getByPlaceholderText("Namn"), { target: { value: "Spotify" } });
+    const supplierForm = screen.getByText("Leverantörer / företag").closest("form")!;
+    expect(within(supplierForm).getByText(/Kategori och uppsägningstid sätts på själva utgiften/i)).toBeInTheDocument();
+    expect(within(supplierForm).queryByPlaceholderText("Uppsägning")).not.toBeInTheDocument();
+    fireEvent.change(within(supplierForm).getByPlaceholderText("Företagsnamn"), { target: { value: "Spotify" } });
     fireEvent.change(within(supplierForm).getByLabelText("Ikon"), { target: { value: "music" } });
     fireEvent.change(within(supplierForm).getByLabelText("Ikonfärg"), { target: { value: "#6b5ca5" } });
     fireEvent.click(within(supplierForm).getByRole("button", { name: /Lägg till leverantör/i }));

@@ -1131,7 +1131,7 @@ function ExpenseModal({ expense, costPeriod, categories, people, suppliers, onSa
           <div>
             <p className="eyebrow">{expense ? "Uppdatera" : "Ny utgift"}</p>
             <h2>{expense ? "Uppdatera utgift" : "Lägg till utgift"}</h2>
-            <span>Ofullständig data sparas som utkast.</span>
+            <span>En utgift är en tjänst eller ett avtal. Här väljer du kategori och uppsägningstid.</span>
           </div>
           <button type="button" className="iconBtn" onClick={onClose} title="Stäng">
             <X size={18} />
@@ -1140,8 +1140,8 @@ function ExpenseModal({ expense, costPeriod, categories, people, suppliers, onSa
 
         <div className="formSection">
           <label>
-            <span>Namn</span>
-            <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Namn, t.ex. Netflix" autoFocus />
+            <span>Tjänst/utgift</span>
+            <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Tjänst/utgift, t.ex. Netflix" autoFocus />
           </label>
           <label>
             <span>Belopp</span>
@@ -1161,9 +1161,9 @@ function ExpenseModal({ expense, costPeriod, categories, people, suppliers, onSa
 
         <div className="formSection split">
           <label>
-            <span>Leverantör</span>
+            <span>Leverantör (företag)</span>
             <select value={form.supplierId} onChange={(event) => setForm({ ...form, supplierId: event.target.value, newSupplierName: event.target.value ? "" : form.newSupplierName })}>
-              <option value="">Välj leverantör</option>
+              <option value="">Välj företag/leverantör</option>
               {suppliers.map((supplier) => (
                 <option key={supplier.id} value={supplier.id}>
                   {supplier.name}
@@ -1172,8 +1172,8 @@ function ExpenseModal({ expense, costPeriod, categories, people, suppliers, onSa
             </select>
           </label>
           <label>
-            <span>Ny leverantör</span>
-            <input value={form.newSupplierName} onChange={(event) => setForm({ ...form, newSupplierName: event.target.value, supplierId: event.target.value ? "" : form.supplierId })} placeholder="Eller skriv ny" />
+            <span>Nytt företag</span>
+            <input value={form.newSupplierName} onChange={(event) => setForm({ ...form, newSupplierName: event.target.value, supplierId: event.target.value ? "" : form.supplierId })} placeholder="Eller skriv nytt företag" />
           </label>
         </div>
 
@@ -1194,7 +1194,7 @@ function ExpenseModal({ expense, costPeriod, categories, people, suppliers, onSa
 
         <div className="formSection split">
           <label>
-            <span>Typ</span>
+            <span>Prioritet</span>
             <select value={form.necessityLevel} onChange={(event) => setForm({ ...form, necessityLevel: event.target.value as NecessityLevel })}>
               {Object.entries(necessityLabels).map(([value, label]) => (
                 <option key={value} value={value}>
@@ -1215,7 +1215,7 @@ function ExpenseModal({ expense, costPeriod, categories, people, suppliers, onSa
             <input type="number" min="1" max="31" value={form.chargeDay} onChange={(event) => setForm({ ...form, chargeDay: event.target.value })} placeholder="1" />
           </label>
           <label>
-            <span>Uppsägning</span>
+            <span>Uppsägningstid</span>
             <input type="number" min="0" value={form.noticePeriodValue} onChange={(event) => setForm({ ...form, noticePeriodValue: event.target.value })} placeholder="0" />
           </label>
           <label>
@@ -1494,18 +1494,18 @@ function ExpenseComposer({ categories, people, suppliers, onSave, compact = fals
     <form className={`composer ${compact ? "compact" : ""}`} onSubmit={submit}>
       <div className="panelHeader">
         <h2>Lägg till utgift</h2>
-        <span>Ofullständig data sparas som utkast</span>
+        <span>Tjänst eller avtal. Kategori och uppsägningstid hör hemma här.</span>
       </div>
-      <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Namn, t.ex. Netflix" />
+      <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Tjänst/utgift, t.ex. Netflix" />
       <select value={form.supplierId} onChange={(event) => setForm({ ...form, supplierId: event.target.value })}>
-        <option value="">Välj leverantör</option>
+        <option value="">Välj företag/leverantör</option>
         {suppliers.map((supplier) => (
           <option key={supplier.id} value={supplier.id}>
             {supplier.name}
           </option>
         ))}
       </select>
-      <input value={form.newSupplierName} onChange={(event) => setForm({ ...form, newSupplierName: event.target.value })} placeholder="Eller ny leverantör" />
+      <input value={form.newSupplierName} onChange={(event) => setForm({ ...form, newSupplierName: event.target.value })} placeholder="Eller nytt företag" />
       <input type="number" min="0" value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} placeholder="Belopp" />
       <select value={form.recurrence} onChange={(event) => setForm({ ...form, recurrence: event.target.value as Recurrence })}>
         {Object.entries(recurrenceLabels).map(([value, label]) => (
@@ -1892,18 +1892,18 @@ function Registers({ people, suppliers, categories, attachments, showLists, setS
     <div className="registerGrid">
       <RegisterForm
         className="supplierRegisterForm"
-        title="Leverantörer"
+        title="Leverantörer / företag"
+        description="Företaget bakom en eller flera utgifter. Kategori och uppsägningstid sätts på själva utgiften."
         fields={[
-          { key: "name", placeholder: "Namn", value: editingSupplier?.name ?? "" },
-          { key: "serviceType", placeholder: "Typ", value: editingSupplier?.serviceType ?? "" },
+          { key: "name", placeholder: "Företagsnamn", value: editingSupplier?.name ?? "" },
+          { key: "serviceType", placeholder: "Bransch/typ (valfritt)", value: editingSupplier?.serviceType ?? "" },
           { key: "icon", placeholder: "Ikon", value: editingSupplier?.icon ?? "tag", options: iconOptions },
-          { key: "color", placeholder: "Ikonfärg", value: editingSupplier?.color ?? "#4fc4bd", type: "color" },
-          { key: "cancellationInstructions", placeholder: "Uppsägning", value: editingSupplier?.cancellationInstructions ?? "" }
+          { key: "color", placeholder: "Ikonfärg", value: editingSupplier?.color ?? "#4fc4bd", type: "color" }
         ]}
         submitLabel={editingSupplier ? "Spara leverantör" : "Lägg till leverantör"}
         onCancel={editingSupplier ? () => setEditingSupplier(undefined) : undefined}
         onSubmit={(values) => {
-          setState((current) => upsertSupplier(current, { id: editingSupplier?.id, name: values.name, serviceType: values.serviceType, cancellationInstructions: values.cancellationInstructions, icon: values.icon || "tag", color: values.color || "#4fc4bd", website: editingSupplier?.website }));
+          setState((current) => upsertSupplier(current, { id: editingSupplier?.id, name: values.name, serviceType: values.serviceType, cancellationInstructions: editingSupplier?.cancellationInstructions, icon: values.icon || "tag", color: values.color || "#4fc4bd", website: editingSupplier?.website }));
           setEditingSupplier(undefined);
         }}
       >
@@ -1913,7 +1913,7 @@ function Registers({ people, suppliers, categories, attachments, showLists, setS
               <EditableRow
                 key={supplier.id}
                 primary={<SupplierBadge supplier={supplier} />}
-                secondary={`${supplier.serviceType ?? "Leverantör"} · ${supplier.cancellationInstructions ? "Instruktion" : "Saknas"}`}
+                secondary={`${supplier.serviceType?.trim() || "Företag/avtalsmotpart"} · kategori på utgift`}
                 onEdit={() => setEditingSupplier(supplier)}
                 onDelete={() => setState((current) => removeSupplier(current, supplier.id))}
               />
@@ -2033,8 +2033,8 @@ const helpViewCards: Array<{ icon: typeof Wallet; title: string; text: string; i
   {
     icon: Users,
     title: "Register",
-    text: "Basdata som gör resten av appen begriplig: personer, leverantörer och kategorier.",
-    items: ["Lägg till betalare och månadsbudget.", "Spara leverantörer med uppsägningsinfo.", "Håll kategorierna få och tydliga för bättre statistik."]
+    text: "Basdata som gör resten av appen begriplig: personer, företag och kategorier.",
+    items: ["Lägg till betalare och månadsbudget.", "Spara företag som kan återanvändas på flera utgifter.", "Håll kategorierna få och tydliga för bättre statistik."]
   },
   {
     icon: ShieldCheck,
@@ -2178,7 +2178,7 @@ function HelpMini({ icon: Icon, title, text }: { icon: typeof Wallet; title: str
   );
 }
 
-function RegisterForm({ title, fields, submitLabel, onSubmit, onCancel, children, className = "" }: { title: string; fields: Array<{ key: string; placeholder: string; value: string; type?: "text" | "color"; options?: Array<{ value: string; label: string }> }>; submitLabel: string; onSubmit: (values: Record<string, string>) => void; onCancel?: () => void; children?: ReactNode; className?: string }) {
+function RegisterForm({ title, description, fields, submitLabel, onSubmit, onCancel, children, className = "" }: { title: string; description?: string; fields: Array<{ key: string; placeholder: string; value: string; type?: "text" | "color"; options?: Array<{ value: string; label: string }> }>; submitLabel: string; onSubmit: (values: Record<string, string>) => void; onCancel?: () => void; children?: ReactNode; className?: string }) {
   const [values, setValues] = useState<Record<string, string>>(() => Object.fromEntries(fields.map((field) => [field.key, field.value])));
   const signature = fields.map((field) => `${field.key}:${field.value}`).join("|");
   useEffect(() => {
@@ -2190,11 +2190,12 @@ function RegisterForm({ title, fields, submitLabel, onSubmit, onCancel, children
       onSubmit={(event) => {
         event.preventDefault();
         onSubmit(values);
-        setValues(Object.fromEntries(fields.map((field) => [field.key, ""])));
+        setValues(Object.fromEntries(fields.map((field) => [field.key, field.value])));
       }}
     >
       <div className="panelHeader">
         <h2>{title}</h2>
+        {description && <span>{description}</span>}
       </div>
       <div className="registerFields">
         {fields.map((field) =>
@@ -3219,7 +3220,7 @@ function Statistics({ state, setState, expenses, allExpenses, categories, people
 
       <div className="panel">
         <div className="panelHeader">
-          <h2>Leverantörer</h2>
+          <h2>Leverantörer / företag</h2>
           <span>Återkommande · {periodContext}</span>
         </div>
         <BarList rows={supplierRows.map((row) => ({ label: row.supplier.name, value: row.total, color: row.supplier.color ?? "#0f766e" }))} monthsCount={monthsCount} currency={currency} annualize />
