@@ -5935,18 +5935,19 @@ textarea {
 
   .necessitySummary {
     min-height: 50px;
-    padding: 7px;
+    padding: 7px 3px;
     align-items: center;
-    gap: 2px;
+    gap: 4px;
     text-align: center;
   }
 
   .summaryTop {
-    grid-template-columns: auto minmax(0, auto);
-    gap: 4px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
     justify-content: center;
   }
 
+  .summaryTop svg,
   .summaryTop em {
     display: none;
   }
@@ -5958,13 +5959,23 @@ textarea {
     text-align: center;
   }
 
+  .summaryTop span {
+    font-family: "Aptos Narrow", "Arial Narrow", "Roboto Condensed", Inter, "Segoe UI", sans-serif;
+    font-size: 8.5px;
+    font-stretch: condensed;
+    font-weight: 620;
+    letter-spacing: 0;
+    line-height: 1.05;
+  }
+
   .necessitySummary strong {
-    font-size: 13px;
+    font-size: 12px;
+    font-weight: 620;
+    line-height: 1.1;
   }
 
   .necessitySummary small {
-    font-size: 9.5px;
-    line-height: 1.2;
+    display: none;
   }
 
   .purchaseMetric,
@@ -6801,8 +6812,12 @@ textarea {
     padding: 5px 3px;
   }
 
+  .summaryTop span {
+    font-size: 7.7px;
+  }
+
   .necessitySummary strong {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .necessitySummary small {
