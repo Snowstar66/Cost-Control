@@ -126,6 +126,16 @@ describe("importTransactions", () => {
 
     expect(context?.monthsBack).toBeGreaterThanOrEqual(5);
   });
+
+  it("expanderar tidsfonstret fran kopdatum aven nar kontoutdraget avser manaden efter", () => {
+    const next = importTransactions(state, [
+      { date: "2026-03-30", bookedDate: "2026-03-31", statementMonth: "2026-04", importId: "april 2026.pdf-123", merchantRaw: "ICA", amount: 95.85, currency: "SEK" }
+    ]);
+    const context = next.contexts.find((item) => item.id === "ctx-1");
+
+    expect(context?.monthsBack).toBeGreaterThanOrEqual(2);
+  });
+
   it("visar historik igen nar importerade kop ligger bakat i tiden", () => {
     const next = importTransactions({ ...state, hidePastMonths: true }, [
       { date: "2026-04-18", bookedDate: "2026-04-19", statementMonth: "2026-04", merchantRaw: "ICA", amount: 95.85, currency: "SEK" }

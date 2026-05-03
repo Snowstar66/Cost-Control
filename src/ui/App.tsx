@@ -2440,9 +2440,9 @@ function buildPurchaseRadar(transactions: PurchaseTransaction[], currency: strin
       },
       {
         flag: "recurringCandidate" as const,
-        title: "Kandidater",
-        value: String(recurringGroups.length),
-        detail: `${candidateCount} köp ser ut som vanor.`,
+        title: "Vanor",
+        value: String(candidateCount),
+        detail: `${recurringGroups.length} handlare med minst 3 köp. Klicka för att visa köp.`,
         tone: "amber" as const,
         icon: RefreshCcw
       },
@@ -2482,7 +2482,8 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
       : activeRadarFlag
         ? (transaction.flags?.includes(activeRadarFlag) ?? false)
         : false;
-  const visible = [...baseVisible].sort((a, b) => {
+  const radarVisible = activeRadarFlag ? baseVisible.filter(isRadarMatch) : baseVisible;
+  const visible = [...radarVisible].sort((a, b) => {
     if (activeRadarFlag) {
       const matchDiff = Number(isRadarMatch(b)) - Number(isRadarMatch(a));
       if (matchDiff !== 0) return matchDiff;
@@ -2493,7 +2494,7 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
   const total = summaryTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
   const merchantRows = topTransactionRows(summaryTransactions, (transaction) => transaction.merchantNormalized || transaction.merchantRaw).slice(0, 6);
   const categoryRows = topTransactionRows(summaryTransactions, (transaction) => categories.find((category) => category.id === transaction.categoryId)?.name ?? "Okategoriserat").slice(0, 6);
-  const activeRadarLabel = activeRadarFlag ? purchaseFlagMeta[activeRadarFlag].label : undefined;
+  const activeRadarLabel = activeRadarFlag === "recurringCandidate" ? "Vanor" : activeRadarFlag ? purchaseFlagMeta[activeRadarFlag].label : undefined;
   const activeRadarCount = activeRadarFlag ? visible.filter(isRadarMatch).length : 0;
   const importPreviewTotal = importPreview?.transactions.reduce((sum, transaction) => sum + transaction.amount, 0) ?? 0;
 
@@ -2571,7 +2572,7 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
                 key={card.title}
                 onClick={() => setActiveRadarFlag((current) => (current === card.flag ? undefined : card.flag))}
                 aria-pressed={active}
-                title={`${active ? "Återställ sortering" : "Sortera kassaboken efter"} ${card.title.toLowerCase()}`}
+                title={`${active ? "Visa alla köp igen" : "Visa köp för"} ${card.title.toLowerCase()}`}
               >
                 <Icon size={17} />
                 <span>{card.title}</span>
@@ -2602,7 +2603,7 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
       <div className="panel purchaseLedger">
         <div className="panelHeader">
           <h2>Köplista</h2>
-          <span>{activeRadarLabel ? `${activeRadarLabel} först · ${activeRadarCount} träffar` : `${visible.length} köp`}</span>
+          <span>{activeRadarLabel ? `${activeRadarLabel} · ${activeRadarCount} träffar` : `${visible.length} köp`}</span>
         </div>
         <div className="transactionTable" role="table" aria-label="Köplista">
           <div className="transactionHead">Datum</div>
@@ -2725,9 +2726,7 @@ function transactionPeriodMonth(transaction: PurchaseTransaction): string {
   const fileMonth = monthKeyFromText(transaction.importId ?? "");
   const statementMonth = transaction.statementMonth?.slice(0, 7);
   const fallbackMonth = (transaction.bookedDate ?? transaction.date).slice(0, 7);
-  if (fileMonth) return fileMonth;
-  if (statementMonth && Math.abs(monthDistance(statementMonth, fallbackMonth)) <= 2) return statementMonth;
-  return fallbackMonth;
+  return fallbackMonth || statementMonth || fileMonth || toIsoDate(new Date()).slice(0, 7);
 }
 
 function monthKeyFromText(value: string): string | undefined {
@@ -2739,13 +2738,6 @@ function monthKeyFromText(value: string): string | undefined {
     if (match) return `${match[1]}-${monthNumber}`;
   }
   return undefined;
-}
-
-function monthDistance(a: string, b: string): number {
-  const [yearA, monthA] = a.split("-").map(Number);
-  const [yearB, monthB] = b.split("-").map(Number);
-  if (!yearA || !monthA || !yearB || !monthB) return 0;
-  return yearA * 12 + monthA - (yearB * 12 + monthB);
 }
 
 function topTransactionRows(transactions: PurchaseTransaction[], groupBy: (transaction: PurchaseTransaction) => string): Array<{ label: string; value: number }> {

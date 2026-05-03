@@ -84,8 +84,8 @@ function stateWithPurchaseCategoryRows(): AppState {
       {
         id: "txn-1",
         contextId: "ctx-1",
-        date: "2026-01-10",
-        bookedDate: "2026-01-11",
+        date: "2026-02-10",
+        bookedDate: "2026-02-11",
         importId: "februari 2026.xlsx-123",
         amount: 125,
         currency: "SEK",
@@ -111,8 +111,8 @@ function stateWithManyPurchaseRows(): AppState {
       merchantRaw: `ICA ${index + 1}`,
       merchantNormalized: `ICA ${index + 1}`,
       amount: 10 + index,
-      date: `2026-01-${String(10 + index).padStart(2, "0")}`,
-      bookedDate: `2026-01-${String(11 + index).padStart(2, "0")}`
+      date: `2026-02-${String(10 + index).padStart(2, "0")}`,
+      bookedDate: `2026-02-${String(11 + index).padStart(2, "0")}`
     }))
   };
 }
@@ -134,15 +134,68 @@ function stateWithHistoricalPurchaseRows(): AppState {
   };
 }
 
+function stateWithStatementOffsetPurchaseRows(): AppState {
+  const state = stateWithPurchaseCategoryRows();
+  return {
+    ...state,
+    transactions: [
+      {
+        ...state.transactions[0],
+        id: "txn-march-statement-april",
+        date: "2026-03-30",
+        bookedDate: "2026-03-31",
+        statementMonth: "2026-04",
+        importId: "april 2026.pdf-123",
+        amount: 321
+      }
+    ]
+  };
+}
+
+function stateWithRadarCandidateRows(): AppState {
+  const state = stateWithPurchaseCategoryRows();
+  const merchantRows = [
+    ["ICA", 3],
+    ["LIDL", 4]
+  ] as const;
+  return {
+    ...state,
+    transactions: [
+      ...merchantRows.flatMap(([merchant, count], merchantIndex) =>
+        Array.from({ length: count }, (_, index) => ({
+          ...state.transactions[0],
+          id: `txn-${merchant}-${index + 1}`,
+          merchantRaw: merchant,
+          merchantNormalized: merchant,
+          amount: 20 + index,
+          date: `2026-02-${String(10 + merchantIndex * 5 + index).padStart(2, "0")}`,
+          bookedDate: `2026-02-${String(11 + merchantIndex * 5 + index).padStart(2, "0")}`
+        }))
+      ),
+      {
+        ...state.transactions[0],
+        id: "txn-single",
+        merchantRaw: "PRESSBYRAN",
+        merchantNormalized: "PRESSBYRAN",
+        amount: 49,
+        date: "2026-02-24",
+        bookedDate: "2026-02-25"
+      }
+    ]
+  };
+}
+
 function stateWithBusinessPurchaseRows(): AppState {
   const state = stateWithPurchaseCategoryRows();
   return {
     ...state,
     transactions: [
-      ...state.transactions.map((transaction) => ({ ...transaction, importId: "maj 2026.xlsx-123", flags: ["business" as PurchaseFlag] })),
+      ...state.transactions.map((transaction) => ({ ...transaction, date: "2026-05-10", bookedDate: "2026-05-11", importId: "maj 2026.xlsx-123", flags: ["business" as PurchaseFlag] })),
       {
         ...state.transactions[0],
         id: "txn-2",
+        date: "2026-05-12",
+        bookedDate: "2026-05-13",
         importId: "maj 2026.xlsx-456",
         merchantRaw: "PRESSBYRAN",
         merchantNormalized: "PRESSBYRAN",
@@ -309,6 +362,14 @@ describe("App", () => {
     expect(transportCard?.querySelector(".mobileExpenseAmount")).toHaveTextContent("777 kr");
   });
 
+  it("placerar importerade kop pa kopdatumets manad i oversikten", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithStatementOffsetPurchaseRows()));
+    render(<App />);
+
+    expect(screen.getByRole("button", { name: /Transport mars 2026: 321/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Transport apr 2026: 321/i })).not.toBeInTheDocument();
+  });
+
   it("visar businesskop i oversikten och kopradarn", () => {
     localStorage.setItem(storageKey, JSON.stringify(stateWithBusinessPurchaseRows()));
     render(<App />);
@@ -341,6 +402,24 @@ describe("App", () => {
     expect(screen.getByText("Köpintelligens")).toBeInTheDocument();
     expect(screen.getAllByText("ICA").length).toBeGreaterThan(0);
     expect(screen.getByText(/Medelköp/i)).toBeInTheDocument();
+  });
+
+  it("visar kopvanor som antal kop och filtrerar fram traffarna", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithRadarCandidateRows()));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^Ink.p$/i }));
+
+    const habitCard = screen.getByRole("button", { name: /Vanor7.*2 handlare/i });
+    expect(habitCard).toBeInTheDocument();
+    expect(screen.getAllByText("PRESSBYRAN").length).toBeGreaterThan(0);
+
+    fireEvent.click(habitCard);
+
+    expect(screen.getByText(/7 tr.ffar/i)).toBeInTheDocument();
+    expect(screen.queryByText("PRESSBYRAN")).not.toBeInTheDocument();
+    expect(screen.getAllByText("ICA").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("LIDL").length).toBeGreaterThan(0);
   });
 
   it("kan flagga ett enstaka kop fran kassaboken", () => {
@@ -474,7 +553,7 @@ describe("App", () => {
     expect(within(categoryForm).queryByText("F58E92")).not.toBeInTheDocument();
   });
 
-  it("sorterar kassaboken nar ett radarkort valjs", () => {
+  it("filtrerar kassaboken nar ett radarkort valjs", () => {
     const state = stateWithPurchaseCategoryRows();
     localStorage.setItem(storageKey, JSON.stringify({
       ...state,
@@ -502,12 +581,11 @@ describe("App", () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole("button", { name: /^Inköp$/i }));
-    fireEvent.click(screen.getByTitle("Sortera kassaboken efter onödigt"));
+    fireEvent.click(screen.getByTitle(/Visa köp för onödigt/i));
 
     const table = within(screen.getByRole("table", { name: /Köplista/i }));
-    const vinted = table.getByText("VINTED");
-    const ica = table.getByText("ICA");
-    expect(vinted.compareDocumentPosition(ica) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(table.getByText("VINTED")).toBeInTheDocument();
+    expect(table.queryByText("ICA")).not.toBeInTheDocument();
   });
 
   it("kan uppdatera kategori for alla kop fran samma handlare", () => {

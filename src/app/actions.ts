@@ -87,7 +87,8 @@ function monthKeyFromText(value?: string): string | undefined {
 }
 
 function transactionPeriodMonthInput(transaction: Pick<UpsertTransactionInput, "date" | "bookedDate" | "statementMonth" | "importId">): string {
-  return monthKeyFromText(transaction.importId) ?? transaction.statementMonth?.slice(0, 7) ?? (normalizeDateInput(transaction.bookedDate) ?? normalizeDateInput(transaction.date) ?? new Date().toISOString().slice(0, 10)).slice(0, 7);
+  const transactionMonth = (normalizeDateInput(transaction.bookedDate) ?? normalizeDateInput(transaction.date))?.slice(0, 7);
+  return transactionMonth ?? transaction.statementMonth?.slice(0, 7) ?? monthKeyFromText(transaction.importId) ?? new Date().toISOString().slice(0, 7);
 }
 
 function expandContextWindowForTransactions(state: AppState, transactions: UpsertTransactionInput[]): AppState {
