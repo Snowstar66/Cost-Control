@@ -133,6 +133,30 @@ describe("importTransactions", () => {
 
     expect(next.hidePastMonths).toBe(false);
   });
+
+  it("rensar filter som kan dölja importerade köp", () => {
+    const next = importTransactions(
+      {
+        ...state,
+        filters: {
+          ...state.filters,
+          categoryIds: ["cat-1"],
+          necessityLevels: ["luxury"],
+          purchaseFlags: ["business"],
+          search: "business"
+        }
+      },
+      [{ date: "2026-04-18", bookedDate: "2026-04-19", statementMonth: "2026-04", merchantRaw: "ICA", amount: 95.85, currency: "SEK" }]
+    );
+
+    expect(next.filters).toMatchObject({
+      categoryIds: [],
+      payerIds: [],
+      necessityLevels: [],
+      purchaseFlags: [],
+      search: ""
+    });
+  });
 });
 
 describe("removeContext", () => {

@@ -2494,6 +2494,7 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
   const categoryRows = topTransactionRows(summaryTransactions, (transaction) => categories.find((category) => category.id === transaction.categoryId)?.name ?? "Okategoriserat").slice(0, 6);
   const activeRadarLabel = activeRadarFlag ? purchaseFlagMeta[activeRadarFlag].label : undefined;
   const activeRadarCount = activeRadarFlag ? visible.filter(isRadarMatch).length : 0;
+  const importPreviewTotal = importPreview?.transactions.reduce((sum, transaction) => sum + transaction.amount, 0) ?? 0;
 
   return (
     <div className="purchaseGrid">
@@ -2510,7 +2511,7 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
             <h2>Importförhandsgranskning</h2>
             <span>{importPreview.fileName}</span>
           </div>
-          <p className="note">Hittade {importPreview.transactions.length} enskilda köp. Ignorerade {importPreview.ignoredRows} rubriker, summeringar eller ej relevanta rader.</p>
+          <p className="note">Hittade {importPreview.transactions.length} enskilda köp på totalt {formatMoney(importPreviewTotal, context.currency)}. Ignorerade {importPreview.ignoredRows} rubriker, summeringar eller ej relevanta rader.</p>
           <div className="importPreviewList">
             {importPreview.transactions.slice(0, 8).map((transaction, index) => (
               <span key={`${transaction.date}-${transaction.merchantRaw}-${index}`}>

@@ -400,7 +400,15 @@ export function importTransactions(state: AppState, transactions: UpsertTransact
     });
   }
   const expandedState = expandContextWindowForTransactions(state, transactions);
-  return { ...expandedState, purchasesEnabled: true, transactions: [...expandedState.transactions, ...nextTransactions] };
+  return {
+    ...expandedState,
+    purchasesEnabled: true,
+    filters:
+      nextTransactions.length > 0
+        ? { ...expandedState.filters, categoryIds: [], payerIds: [], necessityLevels: [], purchaseFlags: [], search: "" }
+        : expandedState.filters,
+    transactions: [...expandedState.transactions, ...nextTransactions]
+  };
 }
 
 export function toggleTransactionFlag(state: AppState, transactionId: string, flag: PurchaseFlag): AppState {
