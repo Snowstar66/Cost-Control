@@ -9,6 +9,8 @@ type ShareNavigator = Navigator & {
   share?: (data: { title?: string; text?: string; files?: File[] }) => Promise<void>;
 };
 
+const appHandoffUrl = "https://cost-control-beige.vercel.app/";
+
 export function buildExportPayload(state: AppState, includeFiles: boolean): ExportPayload {
   const context = currentContext(state);
   return {
@@ -127,8 +129,8 @@ export async function exportJson(state: AppState, includeFiles: boolean): Promis
 }
 
 export async function shareDataFile(state: AppState): Promise<void> {
-  const filename = "MinaUtgifter.json";
-  const file = new File([JSON.stringify(buildDataFilePayload(state), null, 2)], filename, { type: "application/json" });
+  const filename = "MinaUtgifter-oppna-i-app.html";
+  const file = new File([buildHandoffHtml(state, appHandoffUrl)], filename, { type: "text/html" });
   const shareNavigator = navigator as ShareNavigator;
   if (shareNavigator.share && (!shareNavigator.canShare || shareNavigator.canShare({ files: [file] }))) {
     await shareNavigator.share({
@@ -139,6 +141,63 @@ export async function shareDataFile(state: AppState): Promise<void> {
     return;
   }
   download(filename, file);
+}
+
+export function buildHandoffHtml(state: AppState, appUrl = appHandoffUrl): string {
+  const payload = JSON.stringify(buildDataFilePayload(state)).replace(/</g, "\\u003c");
+  const escapedAppUrl = JSON.stringify(appUrl);
+  return `<!doctype html>
+<html lang="sv">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oppna Mina Utgifter</title>
+<style>
+  :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #111827; background: #f3f6f8; }
+  body { min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 24px; }
+  main { width: min(440px, 100%); display: grid; gap: 14px; padding: 24px; border: 1px solid #d9e2ec; border-radius: 18px; background: white; box-shadow: 0 18px 44px rgba(15, 23, 42, .12); }
+  h1 { margin: 0; font-size: 22px; line-height: 1.2; }
+  p { margin: 0; color: #526072; line-height: 1.45; }
+  button, a { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; font: inherit; font-weight: 750; text-decoration: none; }
+  button { border: 0; color: white; background: #1f4a8a; cursor: pointer; }
+  a { color: #1f4a8a; }
+  small { color: #667085; }
+</style>
+<main>
+  <h1>Oppna i Mina Utgifter</h1>
+  <p>Den har filen innehaller en kopia av datan. Oppna webbappen for att lasa in den pa den har enheten.</p>
+  <button id="open-app" type="button">Oppna webbappen</button>
+  <a id="fallback-link" href=${escapedAppUrl}>Oppna utan import</a>
+  <small id="status">Om inget hander automatiskt, tryck pa knappen.</small>
+</main>
+<script id="cost-control-data" type="application/json">${payload}</script>
+<script>
+  const appUrl = ${escapedAppUrl};
+  const appOrigin = new URL(appUrl).origin;
+  const payload = JSON.parse(document.getElementById("cost-control-data").textContent);
+  const status = document.getElementById("status");
+  function openApp() {
+    const target = window.open(appUrl, "_blank");
+    if (!target) {
+      status.textContent = "Webblasaren blockerade oppningen. Tillat popup eller oppna webbappen via lanken.";
+      return;
+    }
+    status.textContent = "Webbappen oppnas. Bekrafta importen dar.";
+    let attempts = 0;
+    const timer = window.setInterval(() => {
+      attempts += 1;
+      target.postMessage({ kind: "cost-control-handoff", payload }, appOrigin);
+      if (attempts > 24) window.clearInterval(timer);
+    }, 500);
+  }
+  window.addEventListener("message", (event) => {
+    if (event.origin === appOrigin && event.data && event.data.kind === "cost-control-handoff-accepted") {
+      status.textContent = "Datan ar inlast i webbappen.";
+    }
+  });
+  document.getElementById("open-app").addEventListener("click", openApp);
+  window.setTimeout(openApp, 250);
+</script>
+</html>`;
 }
 
 export async function exportZip(state: AppState, includeFiles: boolean): Promise<void> {

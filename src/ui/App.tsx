@@ -89,6 +89,7 @@ import { toIsoDate } from "../domain/date";
 import type { Attachment, Category, Expense, ExpenseCostPeriod, NecessityLevel, Person, PurchaseFlag, PurchaseTransaction, Recurrence, Supplier, TimelineMonth } from "../domain/types";
 import { necessityLabels, recurrenceLabels } from "../domain/types";
 import { parseBankStatementFile, type BankStatementImportResult } from "../storage/bankStatementImport";
+import { parseDataFile } from "../storage/dataFile";
 import { exportCsv, exportJson, exportPdf, exportRemindersIcs, exportZip, importAsNewContext, shareDataFile, validateImportPayload } from "../storage/exportImport";
 
 const iconMap = {
@@ -250,6 +251,30 @@ export function App() {
     document.querySelector(".main")?.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [activeView]);
 
+  useEffect(() => {
+    const receiveHandoff = (event: MessageEvent) => {
+      const message = event.data as { kind?: string; payload?: unknown } | undefined;
+      if (message?.kind !== "cost-control-handoff") return;
+      try {
+        const nextState = parseDataFile(JSON.stringify(message.payload));
+        const nextContext = nextState.contexts.find((item) => item.id === nextState.activeContextId) ?? nextState.contexts[0];
+        const shouldImport = window.confirm(`Läs in datan "${nextContext?.name ?? "Mina Utgifter"}" och ersätt lokal data i den här webbläsaren?`);
+        if (!shouldImport) return;
+        setState(nextState);
+        setImportErrors([]);
+        setActiveView("overview");
+        if (event.source && "postMessage" in event.source) {
+          (event.source as WindowProxy).postMessage({ kind: "cost-control-handoff-accepted" }, "*");
+        }
+      } catch {
+        setImportErrors(["Den delade datafilen kunde inte läsas."]);
+        setActiveView("admin");
+      }
+    };
+    window.addEventListener("message", receiveHandoff);
+    return () => window.removeEventListener("message", receiveHandoff);
+  }, [setState]);
+
   const openExpenseForm = (expenseId?: string) => {
     setSelectedExpenseId(undefined);
     setEditingExpenseId(expenseId);
@@ -326,6 +351,17 @@ export function App() {
     const file = event.target.files?.[0];
     if (!file) return;
     const text = await file.text();
+    try {
+      const importedState = parseDataFile(text);
+      const importedContext = importedState.contexts.find((item) => item.id === importedState.activeContextId) ?? importedState.contexts[0];
+      const shouldImport = window.confirm(`Läs in datafilen "${importedContext?.name ?? file.name}" och ersätt lokal data i den här webbläsaren?`);
+      if (!shouldImport) return;
+      setState(importedState);
+      setImportErrors([]);
+      return;
+    } catch {
+      // Not a full data file. Fall through to context import below.
+    }
     try {
       const parsed = JSON.parse(text);
       const validation = validateImportPayload(parsed);
@@ -3813,14 +3849,14 @@ function Admin({
               <Upload size={18} />
               <span>
                 <strong>Dela till annan enhet</strong>
-                <small>Skicka en datafil med AirDrop, mail eller annan delning.</small>
+                <small>Skicka en öppningsfil som läser in datan i webbappen.</small>
               </span>
             </button>
             <label className="fileButton dataAction">
               <Import size={18} />
               <span>
                 <strong>Importera från fil</strong>
-                <small>Läs in en datafil som ny kontext.</small>
+                <small>Läs in datafil eller kontext-export.</small>
               </span>
               <input type="file" accept="application/json" onChange={importFile} />
             </label>
