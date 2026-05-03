@@ -462,6 +462,7 @@ export function App() {
             </div>
             <div>
               <strong>{activeViewLabel}</strong>
+              <span>{context.name}</span>
             </div>
           </div>
           <div className="headerActions">

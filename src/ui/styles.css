@@ -6816,3 +6816,25 @@ textarea {
     display: none !important;
   }
 }
+
+@media (max-width: 720px) and (display-mode: standalone) {
+  .sidebar,
+  .sidebarCollapsed .sidebar {
+    right: 8px;
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    left: 8px;
+    height: 52px;
+    padding: 5px 7px;
+    border: 1px solid #dfe3ea;
+    border-radius: 16px;
+    box-shadow: 0 12px 30px rgba(16, 24, 40, 0.14);
+  }
+
+  .main {
+    padding-bottom: calc(86px + env(safe-area-inset-bottom));
+  }
+
+  .mobileFab {
+    bottom: calc(74px + env(safe-area-inset-bottom));
+  }
+}
