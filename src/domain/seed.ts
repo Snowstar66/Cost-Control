@@ -147,6 +147,34 @@ export function createInitialState(): AppState {
   };
 }
 
+export function createEmptyState(): AppState {
+  return {
+    version: 1,
+    activeContextId: "",
+    contexts: [],
+    people: [],
+    suppliers: [],
+    categories: [],
+    expenses: [],
+    costPeriods: [],
+    attachments: [],
+    reminders: [],
+    transactions: [],
+    merchantRules: [],
+    onboardingComplete: false,
+    hidePastMonths: false,
+    purchasesEnabled: true,
+    filters: {
+      categoryIds: [],
+      payerIds: [],
+      necessityLevels: [],
+      search: "",
+      simulationExcludedExpenseIds: [],
+      budgetOutcomeStartMonth: undefined
+    }
+  };
+}
+
 export function enrichStateWithBaselineData(state: AppState): AppState {
   let suppliers = state.suppliers.map((supplier) => {
     const template = defaultSupplierTemplates.find((item) => item.name.toLowerCase() === supplier.name.toLowerCase());

@@ -4158,8 +4158,8 @@ function Admin({
   reset: () => void;
 }) {
   const resetLocalData = () => {
-    if (!window.confirm("Rensa lokal cache? En ansluten datafil kopplas loss och skrivs inte over.")) return;
-    if (window.confirm("Sista kontrollen: rensa endast den lokala browsercachen?")) void reset();
+    if (!window.confirm("Rensa all lokal data och börja om utan någon kontext? En ansluten datafil kopplas loss och det här går inte att ångra.")) return;
+    if (window.confirm("Sista kontrollen: rensa alla kontexter, utgifter, register och köp från den här enheten?")) void reset();
   };
   const dataFileTitle = dataFile.fileName ?? "Sparas i den här webbläsaren";
   const dataFileDetail = dataFile.supported
@@ -4324,7 +4324,7 @@ function Admin({
           <div className="advancedDataBody">
             <p className="note">Grundversionen skickar ingen data till en server. Kryptering är markerad som exploration tills nyckelhantering är granskad.</p>
             <button className="danger" onClick={resetLocalData}>
-              <Trash2 size={17} /> Rensa lokal data
+              <Trash2 size={17} /> Rensa all data och börja om
             </button>
           </div>
         </details>

@@ -1,4 +1,4 @@
-import { createInitialState, enrichStateWithBaselineData } from "../domain/seed";
+import { createEmptyState, createInitialState, enrichStateWithBaselineData } from "../domain/seed";
 import type { AppState } from "../domain/types";
 
 const STORAGE_KEY = "cost-control.state.v1";
@@ -20,6 +20,7 @@ export function saveState(state: AppState): void {
 }
 
 export function clearState(): AppState {
-  localStorage.removeItem(STORAGE_KEY);
-  return enrichStateWithBaselineData(createInitialState());
+  const emptyState = createEmptyState();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(emptyState));
+  return emptyState;
 }

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AppState } from "../domain/types";
 import { toIsoDate } from "../domain/date";
@@ -150,6 +150,24 @@ describe("App", () => {
     expect(saved.contexts).toHaveLength(1);
     expect(saved.contexts[0].name).toBe("Tom start");
     expect(saved.activeContextId).toBe(saved.contexts[0].id);
+  });
+
+  it("kan rensa all data och borja om utan kontext", async () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    localStorage.setItem(storageKey, JSON.stringify(stateWithCarWash()));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Data/i }));
+    fireEvent.click(screen.getByText("Säkerhet & integritet"));
+    fireEvent.click(screen.getByRole("button", { name: /Rensa all data och börja om/i }));
+
+    expect(confirm).toHaveBeenCalledTimes(2);
+    expect(await screen.findByRole("heading", { name: /Vill du starta en ny kontext/i })).toBeInTheDocument();
+    await waitFor(() => {
+      const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
+      expect(saved.contexts).toHaveLength(0);
+      expect(saved.activeContextId).toBe("");
+    });
   });
 
   it("visar hjalpvyn fran navigationen", () => {
