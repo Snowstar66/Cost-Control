@@ -259,6 +259,16 @@ describe("App", () => {
     expect(JSON.parse(localStorage.getItem(storageKey) ?? "{}").transactions[0].flags).toContain("review");
   });
 
+  it("kan markera ett enstaka kop som business", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithPurchaseCategoryRows()));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^Inköp$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Business: ICA/i }));
+
+    expect(JSON.parse(localStorage.getItem(storageKey) ?? "{}").transactions[0].flags).toContain("business");
+  });
+
   it("lagger till manuellt kop med dagens datum och forslag pa handlare", () => {
     localStorage.setItem(storageKey, JSON.stringify(stateWithPurchaseCategoryRows()));
     render(<App />);

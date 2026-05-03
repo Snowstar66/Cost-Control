@@ -5,7 +5,7 @@ export type ExpenseStatus = "active" | "draft" | "cancelled";
 export type PlanCode = "free" | "premium";
 export type TransactionSource = "manual" | "import";
 export type TransactionType = "one-off" | "recurring-payment" | "transfer" | "ignored";
-export type PurchaseFlag = "review" | "unnecessary" | "recurringCandidate" | "worthIt";
+export type PurchaseFlag = "review" | "unnecessary" | "recurringCandidate" | "worthIt" | "business";
 
 export type Context = {
   id: string;

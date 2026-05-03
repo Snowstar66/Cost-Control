@@ -3,6 +3,7 @@
   BadgeDollarSign,
   BarChart3,
   BookOpen,
+  BriefcaseBusiness,
   CalendarDays,
   CheckCircle2,
   ChevronDown,
@@ -169,7 +170,8 @@ const purchaseFlagMeta: Record<PurchaseFlag, { label: string; shortLabel: string
   review: { label: "Granska", shortLabel: "Granska", tone: "blue", icon: ShieldCheck },
   unnecessary: { label: "Onödigt", shortLabel: "Onödigt", tone: "red", icon: Flag },
   recurringCandidate: { label: "Återkommande kandidat", shortLabel: "Kandidat", tone: "amber", icon: RefreshCcw },
-  worthIt: { label: "Värt det", shortLabel: "Värt", tone: "green", icon: CheckCircle2 }
+  worthIt: { label: "Värt det", shortLabel: "Värt", tone: "green", icon: CheckCircle2 },
+  business: { label: "Business", shortLabel: "Business", tone: "blue", icon: BriefcaseBusiness }
 };
 type ExpenseFormInput = Parameters<typeof upsertExpense>[1];
 type PurchaseImportPreview = BankStatementImportResult & {
