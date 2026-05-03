@@ -1241,12 +1241,23 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, transacti
     }
     return [...labels.values()].sort((a, b) => a.localeCompare(b, "sv"));
   }, [expenses, suppliers, transactions]);
+  const merchantCategorySuggestions = useMemo(() => {
+    const latest = new Map<string, PurchaseTransaction>();
+    for (const transaction of transactions) {
+      if (transaction.type === "ignored" || !transaction.categoryId) continue;
+      const key = normalizeSuggestionKey(transaction.merchantRaw);
+      const current = latest.get(key);
+      if (!current || compareTransactionRecency(transaction, current) > 0) latest.set(key, transaction);
+    }
+    return new Map([...latest.entries()].map(([key, transaction]) => [key, transaction.categoryId!]));
+  }, [transactions]);
   const [form, setForm] = useState({
     date: toIsoDate(new Date()),
     bookedDate: "",
     merchantRaw: "",
     amount: "",
     categoryId: "",
+    categorySuggestedFromMerchantKey: "",
     supplierId: "",
     recurringExpenseId: "",
     type: "one-off" as PurchaseTransaction["type"],
@@ -1257,7 +1268,7 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, transacti
 
   useEffect(() => {
     if (!transaction) {
-      setForm({ date: toIsoDate(new Date()), bookedDate: "", merchantRaw: "", amount: "", categoryId: "", supplierId: "", recurringExpenseId: "", type: "one-off", flags: [], applyCategoryToSameMerchant: false, notes: "" });
+      setForm({ date: toIsoDate(new Date()), bookedDate: "", merchantRaw: "", amount: "", categoryId: "", categorySuggestedFromMerchantKey: "", supplierId: "", recurringExpenseId: "", type: "one-off", flags: [], applyCategoryToSameMerchant: false, notes: "" });
       return;
     }
     setForm({
@@ -1266,6 +1277,7 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, transacti
       merchantRaw: transaction.merchantRaw,
       amount: String(transaction.amount),
       categoryId: transaction.categoryId ?? "",
+      categorySuggestedFromMerchantKey: "",
       supplierId: transaction.supplierId ?? "",
       recurringExpenseId: transaction.recurringExpenseId ?? "",
       type: transaction.type,
@@ -1282,10 +1294,19 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, transacti
     }));
   };
 
-  const canonicalizeMerchant = () => {
+  const applyMerchantDefaults = (merchantRaw: string, canonicalize = false) => {
     setForm((current) => {
-      const suggestion = merchantSuggestions.find((merchant) => normalizeSuggestionKey(merchant) === normalizeSuggestionKey(current.merchantRaw));
-      return suggestion && suggestion !== current.merchantRaw ? { ...current, merchantRaw: suggestion } : current;
+      const key = normalizeSuggestionKey(merchantRaw);
+      const suggestion = merchantSuggestions.find((merchant) => normalizeSuggestionKey(merchant) === key);
+      const categoryId = merchantCategorySuggestions.get(key) ?? "";
+      const shouldSuggestCategory = Boolean(categoryId) && (!current.categoryId || Boolean(current.categorySuggestedFromMerchantKey));
+      const shouldClearPreviousSuggestion = !categoryId && Boolean(current.categorySuggestedFromMerchantKey);
+      return {
+        ...current,
+        merchantRaw: canonicalize && suggestion ? suggestion : merchantRaw,
+        categoryId: shouldSuggestCategory ? categoryId : shouldClearPreviousSuggestion ? "" : current.categoryId,
+        categorySuggestedFromMerchantKey: shouldSuggestCategory ? key : shouldClearPreviousSuggestion ? "" : current.categorySuggestedFromMerchantKey
+      };
     });
   };
 
@@ -1332,7 +1353,7 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, transacti
         <div className="formSection split">
           <label>
             <span>Handlare</span>
-            <input value={form.merchantRaw} onChange={(event) => setForm({ ...form, merchantRaw: event.target.value })} onBlur={canonicalizeMerchant} placeholder="ICA, Apple, OKQ8..." list="merchant-suggestions" autoFocus />
+            <input value={form.merchantRaw} onChange={(event) => applyMerchantDefaults(event.target.value)} onBlur={() => applyMerchantDefaults(form.merchantRaw, true)} placeholder="ICA, Apple, OKQ8..." list="merchant-suggestions" autoFocus />
             <datalist id="merchant-suggestions">
               {merchantSuggestions.map((merchant) => <option key={merchant} value={merchant} />)}
             </datalist>
@@ -1343,7 +1364,7 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, transacti
           </label>
         </div>
         <div className="formSection single">
-          <CategoryField categories={categories} value={form.categoryId} onChange={(categoryId) => setForm({ ...form, categoryId })} />
+          <CategoryField categories={categories} value={form.categoryId} onChange={(categoryId) => setForm({ ...form, categoryId, categorySuggestedFromMerchantKey: "" })} />
         </div>
         {transaction && (
           <label className="inlineCheck purchaseApplyRule">
@@ -2580,6 +2601,10 @@ function normalizeSuggestionKey(value: string): string {
     .replace(/\s+(AB|HB)$/i, "")
     .toLocaleLowerCase("sv")
     .replace(/[^0-9a-zåäö]/gi, "");
+}
+
+function compareTransactionRecency(a: PurchaseTransaction, b: PurchaseTransaction): number {
+  return a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt);
 }
 
 function transactionSecondaryText(transaction: PurchaseTransaction, supplier?: Supplier): string {

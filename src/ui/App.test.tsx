@@ -223,13 +223,18 @@ describe("App", () => {
     fireEvent.change(merchant, { target: { value: "okq8" } });
     fireEvent.blur(merchant);
     expect(merchant).toHaveValue("OK Q8");
+    fireEvent.change(merchant, { target: { value: "ica" } });
+    fireEvent.blur(merchant);
+    expect(merchant).toHaveValue("ICA");
+    expect(screen.getByLabelText(/^Kategori$/i)).toHaveValue("cat-1");
     fireEvent.change(screen.getByLabelText(/^Belopp$/i), { target: { value: "89" } });
     fireEvent.click(screen.getByRole("button", { name: /Spara/i }));
 
     const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
     expect(saved.transactions.at(-1)).toMatchObject({
       date: toIsoDate(new Date()),
-      merchantRaw: "OK Q8",
+      merchantRaw: "ICA",
+      categoryId: "cat-1",
       amount: 89,
       source: "manual",
       type: "one-off"
