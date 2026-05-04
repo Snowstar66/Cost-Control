@@ -115,7 +115,16 @@ describe("importTransactions", () => {
     ]);
 
     expect(next.transactions).toHaveLength(1);
-    expect(next.transactions[0]).toMatchObject({ merchantRaw: "ICA", amount: 125, type: "one-off", source: "import" });
+    expect(next.transactions[0]).toMatchObject({ merchantRaw: "ICA", amount: 125, type: "one-off", source: "import", flags: ["review"] });
+  });
+
+  it("markerar importerade kop utan annan signal som granska", () => {
+    const next = importTransactions(state, [
+      { date: "2026-02-01", bookedDate: "2026-02-02", merchantRaw: "ICA", amount: 125, currency: "SEK" },
+      { date: "2026-02-03", bookedDate: "2026-02-04", merchantRaw: "HOTELL", amount: 300, currency: "SEK", flags: ["business"] }
+    ]);
+
+    expect(next.transactions.map((transaction) => transaction.flags)).toEqual([["review"], ["business"]]);
   });
 
   it("expanderar tidsfönstret när importerade köp ligger i äldre kontoutdrag", () => {

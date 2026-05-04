@@ -283,7 +283,7 @@ describe("App", () => {
     expect(screen.getByText("Om Mina Utgifter")).toBeInTheDocument();
     expect(screen.getByText("Rekommenderat arbetssätt")).toBeInTheDocument();
     expect(screen.getByText("Undvik dubbelräkning")).toBeInTheDocument();
-    expect(screen.getByText(/business-märkta köp/i)).toBeInTheDocument();
+    expect(screen.getByText(/köpsignaler som granska/i)).toBeInTheDocument();
     expect(screen.getByText(/Rensa all data och börja om/i)).toBeInTheDocument();
   });
 
@@ -318,15 +318,15 @@ describe("App", () => {
     expect(screen.queryByRole("button", { name: /Redigera/i })).not.toBeInTheDocument();
   });
 
-  it("filtrerar oversikten nar en summering valjs", () => {
-    localStorage.setItem(storageKey, JSON.stringify(stateWithMixedNecessity()));
+  it("filtrerar oversikten nar en kopssignal valjs", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithBusinessPurchaseRows()));
     render(<App />);
 
-    expect(screen.getAllByRole("button", { name: /ElVattenfall/i }).length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole("button", { name: /Lyxigt:/i }));
+    expect(screen.getByRole("button", { name: /Transport maj 2026: 174/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Granska: 49/i }));
 
-    expect(screen.getAllByRole("button", { name: /BiltvattOK Q8/i }).length).toBeGreaterThan(0);
-    expect(screen.queryAllByRole("button", { name: /ElVattenfall/i })).toHaveLength(0);
+    expect(screen.getByRole("button", { name: /Transport maj 2026: 49/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Transport maj 2026: 174/i })).not.toBeInTheDocument();
   });
 
   it("visar enstaka kop som kategorirader i oversikten", () => {
@@ -377,12 +377,13 @@ describe("App", () => {
     expect(screen.getAllByText("Business").length).toBeGreaterThan(0);
     const businessSummary = screen.getByRole("button", { name: /Business: 125.*vald period/i });
     expect(businessSummary).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Transport maj 2026: 49/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Transport maj 2026: 174/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Business maj 2026: 125/i })).not.toBeInTheDocument();
     fireEvent.click(businessSummary);
     expect(businessSummary).toHaveAttribute("aria-pressed", "true");
-    expect(screen.queryByRole("button", { name: /Transport maj 2026: 49/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Transport maj 2026: 125/i })).toBeInTheDocument();
     expect(screen.queryAllByRole("button", { name: /BiltvattOK Q8/i })).toHaveLength(0);
-    fireEvent.click(screen.getByRole("button", { name: /Business maj 2026: 125/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Transport maj 2026: 125/i }));
     expect(screen.getByLabelText(/Signaler: Business/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /^Inköp$/i }));
 

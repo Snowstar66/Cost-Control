@@ -376,6 +376,8 @@ export function importTransactions(state: AppState, transactions: UpsertTransact
     if (existingFingerprints.has(fingerprint)) continue;
     existingFingerprints.add(fingerprint);
     const merchantRaw = input.merchantRaw.trim() || input.description?.trim() || "Okänt köp";
+    const transactionType = input.recurringExpenseId && !input.type ? "recurring-payment" : input.type ?? "one-off";
+    const flags = input.flags && input.flags.length > 0 ? input.flags : transactionType === "one-off" ? (["review"] as PurchaseFlag[]) : [];
     nextTransactions.push({
       id: id("txn"),
       contextId: state.activeContextId,
@@ -393,8 +395,8 @@ export function importTransactions(state: AppState, transactions: UpsertTransact
       recurringExpenseId: input.recurringExpenseId,
       source: input.source ?? "import",
       importId: input.importId,
-      type: input.recurringExpenseId && !input.type ? "recurring-payment" : input.type ?? "one-off",
-      flags: input.flags ?? [],
+      type: transactionType,
+      flags,
       notes: input.notes,
       createdAt: stamp(),
       updatedAt: stamp()

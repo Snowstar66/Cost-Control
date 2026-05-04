@@ -160,12 +160,6 @@ const overviewNecessityLabels: Record<NecessityLevel, string> = {
   comfortable: "Bekvämt",
   unnecessary: "Onödigt"
 };
-const overviewNecessityIcons: Record<NecessityLevel, typeof Wallet> = {
-  luxury: Sparkles,
-  necessary: ShieldCheck,
-  comfortable: CheckCircle2,
-  unnecessary: Flag
-};
 const purchaseFlagMeta: Record<PurchaseFlag, { label: string; shortLabel: string; tone: "blue" | "green" | "amber" | "red"; icon: typeof Wallet }> = {
   review: { label: "Granska", shortLabel: "Granska", tone: "blue", icon: ShieldCheck },
   unnecessary: { label: "Onödigt", shortLabel: "Onödigt", tone: "red", icon: Flag },
@@ -173,6 +167,7 @@ const purchaseFlagMeta: Record<PurchaseFlag, { label: string; shortLabel: string
   worthIt: { label: "Värt det", shortLabel: "Värt", tone: "green", icon: CheckCircle2 },
   business: { label: "Business", shortLabel: "Business", tone: "blue", icon: BriefcaseBusiness }
 };
+const overviewPurchaseSignalOrder: PurchaseFlag[] = ["review", "unnecessary", "recurringCandidate", "worthIt", "business"];
 type ExpenseFormInput = Parameters<typeof upsertExpense>[1];
 type PurchaseImportPreview = BankStatementImportResult & {
   fileName: string;
@@ -298,6 +293,10 @@ export function App() {
   const months = useMemo(() => getVisibleTimelineMonths(context, state.hidePastMonths), [context, state.hidePastMonths]);
   const totals = useMemo(() => monthlyTotals(expenses, state.costPeriods, months), [expenses, state.costPeriods, months]);
   const purchaseCategoryRows = useMemo(() => buildPurchaseCategoryRows(transactions, categories, months, state), [transactions, categories, months, state]);
+  const summaryPurchaseCategoryRows = useMemo(
+    () => buildPurchaseCategoryRows(transactions, categories, months, { ...state, filters: { ...state.filters, purchaseFlags: [] } }),
+    [transactions, categories, months, state]
+  );
   const combinedTotals = useMemo(() => combineRecurringAndPurchaseTotals(totals, purchaseCategoryRows, months), [totals, purchaseCategoryRows, months]);
   const selectedExpense = selectedExpenseId ? state.expenses.find((expense) => expense.id === selectedExpenseId) : undefined;
   const editingExpense = editingExpenseId ? state.expenses.find((expense) => expense.id === editingExpenseId) : undefined;
@@ -533,6 +532,7 @@ export function App() {
               months={months}
               totals={combinedTotals}
               purchaseRows={purchaseCategoryRows}
+              summaryPurchaseRows={summaryPurchaseCategoryRows}
               categories={categories}
               people={people}
               suppliers={suppliers}
@@ -916,6 +916,7 @@ function Overview(props: {
   months: TimelineMonth[];
   totals: Record<string, number>;
   purchaseRows: PurchaseCategoryRow[];
+  summaryPurchaseRows: PurchaseCategoryRow[];
   categories: Category[];
   people: Person[];
   suppliers: Supplier[];
@@ -924,22 +925,15 @@ function Overview(props: {
   setState: ReturnType<typeof useAppState>["setState"];
   state: ReturnType<typeof useAppState>["state"];
 }) {
-  const currentMonth = props.months.find((month) => month.isCurrentMonth) ?? props.months[0];
-  const activeNecessity = props.state.filters.necessityLevels.length === 1 ? props.state.filters.necessityLevels[0] : undefined;
-  const businessSelected = props.state.filters.purchaseFlags.length === 1 && props.state.filters.purchaseFlags[0] === "business";
-  const summaryExpenses = filterExpenses({ ...props.state, filters: { ...props.state.filters, necessityLevels: [], purchaseFlags: [] } }, props.expenses);
-  const necessitySummaries = overviewNecessityOrder.map((level) => ({
-    level,
-    total: currentMonth
-      ? summaryExpenses
-          .filter((expense) => expense.necessityLevel === level)
-          .reduce((sum, expense) => sum + expenseAmountForMonth(expense, props.state.costPeriods, currentMonth).amount, 0)
-      : 0,
-    count: summaryExpenses.filter((expense) => expense.necessityLevel === level && expense.status !== "cancelled").length
-  }));
-  const businessPurchaseRow = props.purchaseRows.find((row) => row.key === "business");
-  const businessTotal = businessPurchaseRow ? purchaseRowTotal(businessPurchaseRow) : 0;
-  const businessCount = businessPurchaseRow?.count ?? 0;
+  const activePurchaseFlag = props.state.filters.purchaseFlags.length === 1 ? props.state.filters.purchaseFlags[0] : undefined;
+  const signalSummaries = overviewPurchaseSignalOrder.map((flag) => {
+    const transactions = purchaseRowsTransactions(props.summaryPurchaseRows).filter((transaction) => transactionMatchesPurchaseFlag(transaction, flag));
+    return {
+      flag,
+      total: transactions.reduce((sum, transaction) => sum + transaction.amount, 0),
+      count: transactions.length
+    };
+  });
   return (
     <div className="overviewGrid">
       <div className="panel wide">
@@ -958,62 +952,39 @@ function Overview(props: {
           onSelectPurchase={props.onSelectPurchase}
         />
       </div>
-      <div className="necessitySummaryGrid" aria-label="Summering per utgiftstyp">
-        {necessitySummaries.map((summary) => {
-          const selected = activeNecessity === summary.level;
-          const Icon = overviewNecessityIcons[summary.level];
+      <div className="necessitySummaryGrid" aria-label="Summering per köpsignal">
+        {signalSummaries.map((summary) => {
+          const selected = activePurchaseFlag === summary.flag;
+          const meta = purchaseFlagMeta[summary.flag];
+          const Icon = meta.icon;
           return (
             <button
-              key={summary.level}
+              key={summary.flag}
               type="button"
-              className={`necessitySummary ${summary.level} ${selected ? "selected" : ""}`}
-              aria-label={`${overviewNecessityLabels[summary.level]}: ${formatMoney(summary.total, props.currency)} per månad, ${formatMoney(summary.total * 12, props.currency)} per år, ${summary.count} utgifter`}
+              className={`necessitySummary ${summary.flag} ${selected ? "selected" : ""}`}
+              aria-label={`${meta.label}: ${formatMoney(summary.total, props.currency)} under vald period, ${summary.count} köp`}
               aria-pressed={selected}
               onClick={() =>
                 props.setState((current) => ({
                   ...current,
                   filters: {
                     ...current.filters,
-                    necessityLevels: selected ? [] : [summary.level],
-                    purchaseFlags: []
+                    necessityLevels: [],
+                    purchaseFlags: selected ? [] : [summary.flag]
                   }
                 }))
               }
             >
               <span className="summaryTop">
                 <Icon size={15} />
-                <span>{overviewNecessityLabels[summary.level]}</span>
-                <em>Månad</em>
+                <span>{meta.label}</span>
+                <em>Köp</em>
               </span>
               <strong>{formatMoney(summary.total, props.currency)}</strong>
-              <small>{summary.count} utgifter · år {formatMoney(summary.total * 12, props.currency)}</small>
+              <small>{summary.count} köp · signal</small>
             </button>
           );
         })}
-        <button
-          type="button"
-          className={`necessitySummary business ${businessSelected ? "selected" : ""}`}
-          aria-label={`Business: ${formatMoney(businessTotal, props.currency)} under vald period, ${businessCount} köp`}
-          aria-pressed={businessSelected}
-          onClick={() =>
-            props.setState((current) => ({
-              ...current,
-              filters: {
-                ...current.filters,
-                necessityLevels: [],
-                purchaseFlags: businessSelected ? [] : ["business"]
-              }
-            }))
-          }
-        >
-          <span className="summaryTop">
-            <BriefcaseBusiness size={15} />
-            <span>Business</span>
-            <em>Köp</em>
-          </span>
-          <strong>{formatMoney(businessTotal, props.currency)}</strong>
-          <small>{businessCount} köp · markerade som arbete</small>
-        </button>
       </div>
     </div>
   );
@@ -1038,7 +1009,8 @@ function Metric({ title, value, icon: Icon, hint, onClick }: { title: string; va
 }
 
 function PurchaseSignalBadges({ flags }: { flags?: PurchaseFlag[] }) {
-  const activeFlags = (Object.keys(purchaseFlagMeta) as PurchaseFlag[]).filter((flag) => flags?.includes(flag));
+  const effectiveFlags = flags && flags.length > 0 ? flags : (["review"] as PurchaseFlag[]);
+  const activeFlags = (Object.keys(purchaseFlagMeta) as PurchaseFlag[]).filter((flag) => effectiveFlags.includes(flag));
   if (activeFlags.length === 0) return null;
   return (
     <span className="purchaseSignalBadges" aria-label={`Signaler: ${activeFlags.map((flag) => purchaseFlagMeta[flag].label).join(", ")}`}>
@@ -1053,6 +1025,22 @@ function PurchaseSignalBadges({ flags }: { flags?: PurchaseFlag[] }) {
       })}
     </span>
   );
+}
+
+function transactionMatchesPurchaseFlag(transaction: PurchaseTransaction, flag: PurchaseFlag): boolean {
+  const flags = transaction.flags ?? [];
+  if (flag === "review") return flags.length === 0 || flags.includes("review");
+  return flags.includes(flag);
+}
+
+function purchaseRowsTransactions(rows: PurchaseCategoryRow[]): PurchaseTransaction[] {
+  const transactions = new Map<string, PurchaseTransaction>();
+  for (const row of rows) {
+    for (const transaction of Object.values(row.transactionsByMonth).flat()) {
+      transactions.set(transaction.id, transaction);
+    }
+  }
+  return [...transactions.values()];
 }
 
 function purchaseRowTotal(row: PurchaseCategoryRow): number {
@@ -2137,7 +2125,7 @@ const helpViewCards: Array<{ icon: typeof Wallet; title: string; text: string; i
     icon: BarChart3,
     title: "Översikt",
     text: "Här ser du återkommande kostnader och enskilda köp i samma månadsbild.",
-    items: ["Sök, filtrera och göm historik i verktygsraden.", "Tryck på en utgift för detaljer, filer och åtgärder.", "Summeringskorten visar utgiftstyper och business-märkta köp."]
+    items: ["Sök, filtrera och göm historik i verktygsraden.", "Tryck på en utgift för detaljer, filer och åtgärder.", "Summeringskorten visar köpsignaler som granska, onödigt, vanor, värt det och business."]
   },
   {
     icon: ShoppingBag,
@@ -2409,7 +2397,7 @@ function categoryColorName(color: string): string {
 }
 
 function buildPurchaseRadar(transactions: PurchaseTransaction[], currency: string) {
-  const byFlag = (flag: PurchaseFlag) => transactions.filter((transaction) => transaction.flags?.includes(flag));
+  const byFlag = (flag: PurchaseFlag) => transactions.filter((transaction) => transactionMatchesPurchaseFlag(transaction, flag));
   const totalFor = (rows: PurchaseTransaction[]) => rows.reduce((sum, transaction) => sum + transaction.amount, 0);
   const recurringGroups = topTransactionCountRows(transactions, transactionMerchantLabel)
     .filter((row) => row.count >= 3 || transactions.some((transaction) => transactionMerchantLabel(transaction) === row.label && transaction.flags?.includes("recurringCandidate")))
@@ -2478,9 +2466,9 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
   const candidateMerchants = new Set(radar.habits.map((habit) => habit.label));
   const isRadarMatch = (transaction: PurchaseTransaction) =>
     activeRadarFlag === "recurringCandidate"
-      ? (transaction.flags?.includes("recurringCandidate") ?? false) || candidateMerchants.has(transactionMerchantLabel(transaction))
+      ? transactionMatchesPurchaseFlag(transaction, "recurringCandidate") || candidateMerchants.has(transactionMerchantLabel(transaction))
       : activeRadarFlag
-        ? (transaction.flags?.includes(activeRadarFlag) ?? false)
+        ? transactionMatchesPurchaseFlag(transaction, activeRadarFlag)
         : false;
   const radarVisible = activeRadarFlag ? baseVisible.filter(isRadarMatch) : baseVisible;
   const visible = [...radarVisible].sort((a, b) => {
@@ -2628,7 +2616,7 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
                   {(Object.keys(purchaseFlagMeta) as PurchaseFlag[]).map((flag) => {
                     const meta = purchaseFlagMeta[flag];
                     const Icon = meta.icon;
-                    const active = transaction.flags?.includes(flag) ?? false;
+                    const active = transactionMatchesPurchaseFlag(transaction, flag);
                     return (
                       <button
                         className={`signalToggle ${meta.tone} ${active ? "active" : ""}`}
@@ -2673,7 +2661,7 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
                     {(Object.keys(purchaseFlagMeta) as PurchaseFlag[]).map((flag) => {
                       const meta = purchaseFlagMeta[flag];
                       const Icon = meta.icon;
-                      const active = transaction.flags?.includes(flag) ?? false;
+                      const active = transactionMatchesPurchaseFlag(transaction, flag);
                       return (
                         <button
                           className={`signalToggle ${meta.tone} ${active ? "active" : ""}`}
@@ -2881,14 +2869,13 @@ function buildPurchaseCategoryRows(transactions: PurchaseTransaction[], categori
 
   for (const transaction of transactions) {
     if (transaction.type !== "one-off" || transaction.amount <= 0) continue;
-    if (purchaseFlags.size > 0 && !(transaction.flags ?? []).some((flag) => purchaseFlags.has(flag))) continue;
+    if (purchaseFlags.size > 0 && ![...purchaseFlags].some((flag) => transactionMatchesPurchaseFlag(transaction, flag))) continue;
     const monthKey = transactionPeriodMonth(transaction);
     if (!monthKeys.has(monthKey)) continue;
     const category = categories.find((item) => item.id === transaction.categoryId);
-    const isBusiness = transaction.flags?.includes("business") ?? false;
-    const categoryKey = isBusiness ? "business" : transaction.categoryId ?? "uncategorized";
-    const categoryLabel = isBusiness ? "Business" : category?.name ?? "Okategoriserat";
-    const categoryColor = isBusiness ? "#1f4a8a" : category?.color ?? "#7c8a9c";
+    const categoryKey = transaction.categoryId ?? "uncategorized";
+    const categoryLabel = category?.name ?? "Okategoriserat";
+    const categoryColor = category?.color ?? "#7c8a9c";
     if (categoryIds.size > 0 && (!transaction.categoryId || !categoryIds.has(transaction.categoryId))) continue;
     if (search && ![transaction.merchantRaw, transaction.merchantNormalized, transaction.location, categoryLabel].join(" ").toLowerCase().includes(search)) continue;
 

@@ -3379,6 +3379,10 @@ body {
   background: #4f7b5b;
 }
 
+.necessitySummary.review::before {
+  background: #2f6fdf;
+}
+
 .necessitySummary.necessary::before {
   background: #b75159;
 }
@@ -3389,6 +3393,14 @@ body {
 
 .necessitySummary.unnecessary::before {
   background: #52787d;
+}
+
+.necessitySummary.recurringCandidate::before {
+  background: #9c7439;
+}
+
+.necessitySummary.worthIt::before {
+  background: #0f766e;
 }
 
 .necessitySummary.business::before {
