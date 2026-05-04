@@ -2506,12 +2506,7 @@ button.radarCard.green.active {
   display: contents;
 }
 
-.mobileFilterButton,
-.mobileFilterOverlay {
-  display: none;
-}
-
-.historyControl {
+.filterField {
   min-height: 34px;
   display: inline-flex;
   align-items: center;
@@ -2520,6 +2515,33 @@ button.radarCard.green.active {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
+}
+
+.filterField > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 680;
+  white-space: nowrap;
+}
+
+.filterField select {
+  min-height: 30px;
+  padding: 0 24px 0 0;
+  border: 0;
+  background-color: transparent;
+}
+
+.filterButton {
+  min-height: 34px;
+}
+
+.mobileFilterButton,
+.mobileFilterOverlay {
+  display: none;
+}
+
+.historyControl {
+  min-width: 0;
 }
 
 .historyControl span,
@@ -4635,6 +4657,15 @@ textarea {
   grid-column: auto;
 }
 
+.dataSectionLabel {
+  margin: 2px 0 -2px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 780;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .dataFileStatus {
   display: flex;
   align-items: center;
@@ -4708,6 +4739,12 @@ textarea {
   transition: background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
 }
 
+.dataAction:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+  transform: none;
+}
+
 .dataAction > svg {
   width: 18px;
   height: 18px;
@@ -4724,9 +4761,14 @@ textarea {
 
 .dataAction span,
 .dataAction strong,
-.dataAction small {
+.dataAction small,
+.dataAction em {
   display: block;
   min-width: 0;
+}
+
+.dataAction span {
+  flex: 1 1 auto;
 }
 
 .dataAction strong {
@@ -4742,6 +4784,20 @@ textarea {
   line-height: 1.25;
 }
 
+.dataAction em {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border: 1px solid #d8e0e8;
+  border-radius: 999px;
+  color: #174a8b;
+  background: #f4f8fd;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 780;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .primaryDataAction,
 .adminGrid .panel.stack > .primaryDataAction:not(.danger) {
   border-color: #174a8b;
@@ -4754,12 +4810,18 @@ textarea {
 }
 
 .primaryDataAction strong,
-.primaryDataAction small {
+.primaryDataAction small,
+.primaryDataAction em {
   color: #fff;
 }
 
 .primaryDataAction small {
   opacity: 0.86;
+}
+
+.primaryDataAction em {
+  border-color: rgba(255,255,255,0.36);
+  background: rgba(255,255,255,0.14);
 }
 
 .primaryDataAction:hover,
@@ -6741,10 +6803,10 @@ textarea {
   .mobileFilterSheet {
     width: min(100%, 420px);
     display: grid;
-    gap: 8px;
-    padding: 8px 10px 10px;
+    gap: 10px;
+    padding: 8px 12px 12px;
     border: 1px solid rgba(203, 213, 225, 0.9);
-    border-radius: 18px;
+    border-radius: 20px 20px 16px 16px;
     background: rgba(255, 255, 255, 0.98);
     box-shadow: 0 18px 38px rgba(15, 23, 42, 0.18);
   }
@@ -6761,33 +6823,94 @@ textarea {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 34px;
+    min-height: 40px;
   }
 
   .mobileFilterHeader strong {
-    font-size: 13px;
+    display: block;
+    color: var(--ink);
+    font-size: 15px;
+  }
+
+  .mobileFilterHeader span {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 11px;
   }
 
   .mobileFilterControls {
     display: grid;
-    gap: 7px;
+    gap: 9px;
   }
 
-  .mobileFilterControls .historyControl,
-  .mobileFilterControls select,
-  .mobileFilterControls button {
+  .mobileFilterControls .filterField,
+  .mobileFilterControls .filterButton,
+  .mobileFilterControls .filterResetButton {
     width: 100%;
-    min-height: 38px;
+    min-height: 48px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: #f8fafc;
+    font-size: 13px;
+  }
+
+  .mobileFilterControls .filterField > span,
+  .mobileFilterControls .historyControl small {
+    color: #667085;
+    font-size: 11px;
+    font-weight: 780;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .mobileFilterControls .selectFilter {
+    grid-template-columns: 92px minmax(0, 1fr);
+  }
+
+  .mobileFilterControls .selectFilter select {
+    width: 100%;
+    min-height: 32px;
+    padding: 0 24px 0 8px;
+    border: 1px solid #d8e0e8;
+    border-radius: 9px;
+    background-color: #fff;
     font-size: 12px;
   }
 
   .mobileFilterControls .historyControl {
-    justify-content: space-between;
+    grid-template-columns: minmax(0, 1fr) 74px auto;
   }
 
   .mobileFilterControls .historyControl input {
-    width: 72px;
-    min-height: 30px;
+    width: 74px;
+    min-height: 32px;
+    border-radius: 9px;
+  }
+
+  .mobileFilterControls .filterButton,
+  .mobileFilterControls .filterResetButton,
+  .mobileFilterDone {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .mobileFilterControls .filterButton {
+    grid-template-columns: auto auto;
+    background: #fff;
+  }
+
+  .mobileFilterControls .filterResetButton {
+    grid-template-columns: auto auto;
+    border-style: dashed;
+  }
+
+  .mobileFilterDone {
+    min-height: 44px;
+    border-radius: 12px;
   }
 
   .budgetOutcomeSummary {

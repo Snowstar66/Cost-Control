@@ -1679,7 +1679,7 @@ function TimelineToolbar({ context, state, setState, categories, people }: { con
     (state.hidePastMonths ? 1 : 0);
   const filterControls = (variant: "desktop" | "mobile") => (
     <>
-      <label className="historyControl">
+      <label className="filterField historyControl">
         <span>Historik</span>
         <input
           type="number"
@@ -1697,28 +1697,34 @@ function TimelineToolbar({ context, state, setState, categories, people }: { con
         />
         <small>mån bakåt</small>
       </label>
-      <button type="button" className={state.hidePastMonths ? "selected" : ""} onClick={() => setState((current) => ({ ...current, hidePastMonths: !current.hidePastMonths }))}>
+      <button type="button" className={`filterButton ${state.hidePastMonths ? "selected" : ""}`} onClick={() => setState((current) => ({ ...current, hidePastMonths: !current.hidePastMonths }))}>
         <CalendarDays size={17} /> {state.hidePastMonths ? "Visa historik" : "Göm historik"}
       </button>
-      <select value={state.filters.categoryIds[0] ?? ""} onChange={(event) => setState((current) => ({ ...current, filters: { ...current.filters, categoryIds: event.target.value ? [event.target.value] : [] } }))}>
-        <option value="">Alla kategorier</option>
-        {categories.map((category) => (
-          <option key={category.id} value={category.id}>
-            {category.name}
-          </option>
-        ))}
-      </select>
-      <select value={state.filters.payerIds[0] ?? ""} onChange={(event) => setState((current) => ({ ...current, filters: { ...current.filters, payerIds: event.target.value ? [event.target.value] : [] } }))}>
-        <option value="">Alla betalare</option>
-        {people.map((person) => (
-          <option key={person.id} value={person.id}>
-            {person.firstName}
-          </option>
-        ))}
-      </select>
+      <label className="filterField selectFilter">
+        <span>Kategori</span>
+        <select value={state.filters.categoryIds[0] ?? ""} onChange={(event) => setState((current) => ({ ...current, filters: { ...current.filters, categoryIds: event.target.value ? [event.target.value] : [] } }))}>
+          <option value="">Alla kategorier</option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="filterField selectFilter">
+        <span>Betalare</span>
+        <select value={state.filters.payerIds[0] ?? ""} onChange={(event) => setState((current) => ({ ...current, filters: { ...current.filters, payerIds: event.target.value ? [event.target.value] : [] } }))}>
+          <option value="">Alla betalare</option>
+          {people.map((person) => (
+            <option key={person.id} value={person.id}>
+              {person.firstName}
+            </option>
+          ))}
+        </select>
+      </label>
       <button
         type="button"
-        className="ghostBtn"
+        className="ghostBtn filterResetButton"
         onClick={() => {
           setState((current) => ({ ...current, filters: { ...current.filters, categoryIds: [], payerIds: [], necessityLevels: [], purchaseFlags: [], search: "" } }));
           if (variant === "mobile") setMobileFiltersOpen(false);
@@ -1745,12 +1751,18 @@ function TimelineToolbar({ context, state, setState, categories, people }: { con
           <div className="mobileFilterSheet" role="dialog" aria-modal="true" aria-label="Filter för översikt">
             <span className="mobileFilterHandle" aria-hidden="true" />
             <div className="mobileFilterHeader">
-              <strong>Filter</strong>
+              <div>
+                <strong>Filter</strong>
+                {activeMobileFilterCount > 0 && <span>{activeMobileFilterCount} aktiva</span>}
+              </div>
               <button type="button" className="iconBtn" onClick={() => setMobileFiltersOpen(false)} title="Stäng filter">
                 <X size={17} />
               </button>
             </div>
             <div className="mobileFilterControls">{filterControls("mobile")}</div>
+            <button type="button" className="primary mobileFilterDone" onClick={() => setMobileFiltersOpen(false)}>
+              Klart
+            </button>
           </div>
         </div>
       )}
@@ -4224,7 +4236,7 @@ function Admin({
     if (!window.confirm("Rensa all lokal data och börja om utan någon kontext? En ansluten datafil kopplas loss och det här går inte att ångra.")) return;
     if (window.confirm("Sista kontrollen: rensa alla kontexter, utgifter, register och köp från den här enheten?")) void reset();
   };
-  const dataFileTitle = dataFile.fileName ?? "Sparas i den här webbläsaren";
+  const dataFileTitle = dataFile.fileName ?? "Lokal webbläsarlagring";
   const dataFileDetail = dataFile.supported
     ? dataFile.savedAt
       ? `Senast sparad ${new Date(dataFile.savedAt).toLocaleString("sv-SE")}`
@@ -4240,37 +4252,42 @@ function Admin({
             <h2>Din data</h2>
             <span>{dataFile.fileName ? "Datafil" : "Lokalt"}</span>
           </div>
-          <div className={`dataFileStatus ${dataFile.status}`}>
+          <div className="dataSectionLabel">Status</div>
+          <div className={`dataFileStatus ${dataFile.status}`} aria-label="Aktuell datalagring">
             <FileJson size={18} />
             <span>
               <strong>{dataFileTitle}</strong>
               <small>{dataFileDetail}</small>
             </span>
           </div>
-          <div className="dataPrimaryActions">
-            <button className="dataAction primaryDataAction" onClick={() => void saveDataFileNow()} disabled={!dataFile.supported || dataFile.status === "saving"}>
-              <Download size={18} />
+          <div className="dataSectionLabel">Åtgärder</div>
+          <div className="dataPrimaryActions" aria-label="Dataåtgärder">
+              <button className="dataAction primaryDataAction" onClick={() => void saveDataFileNow()} disabled={!dataFile.supported || dataFile.status === "saving"}>
+                <Download size={18} />
+                <span>
+                  <strong>{dataFile.fileName ? "Spara datafil" : "Skapa datafil"}</strong>
+                  <small>{dataFile.fileName ? "Skriv senaste ändringarna till filen." : "Bästa valet för backup på den här enheten."}</small>
+                </span>
+                <em>{dataFile.status === "saving" ? "Sparar" : "Åtgärd"}</em>
+              </button>
+              <button className="dataAction" onClick={() => void shareDataFile(state)}>
+                <Upload size={18} />
               <span>
-                <strong>{dataFile.fileName ? "Spara datafil" : "Skapa datafil"}</strong>
-                <small>{dataFile.fileName ? "Skriv senaste ändringarna till filen." : "Bästa valet för backup på den här enheten."}</small>
-              </span>
-            </button>
-            <button className="dataAction" onClick={() => void shareDataFile(state)}>
-              <Upload size={18} />
+                  <strong>Dela till annan enhet</strong>
+                  <small>Skicka en öppningsfil som läser in datan i webbappen.</small>
+                </span>
+                <em>Åtgärd</em>
+              </button>
+              <label className="fileButton dataAction">
+                <Import size={18} />
               <span>
-                <strong>Dela till annan enhet</strong>
-                <small>Skicka en öppningsfil som läser in datan i webbappen.</small>
-              </span>
-            </button>
-            <label className="fileButton dataAction">
-              <Import size={18} />
-              <span>
-                <strong>Importera från fil</strong>
-                <small>Läs in datafil, kontext-export eller kontoutdrag.</small>
-              </span>
-              <input type="file" accept="application/json,.json,.csv,.xlsx,.pdf,text/csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={importFile} />
-            </label>
-          </div>
+                  <strong>Importera från fil</strong>
+                  <small>Läs in datafil, kontext-export eller kontoutdrag.</small>
+                </span>
+                <em>Välj fil</em>
+                <input type="file" accept="application/json,.json,.csv,.xlsx,.pdf,text/csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={importFile} />
+              </label>
+            </div>
           <details className="inlineAdvanced">
             <summary>Fler filval</summary>
             <div>
