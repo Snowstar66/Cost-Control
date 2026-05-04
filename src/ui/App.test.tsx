@@ -436,6 +436,21 @@ describe("App", () => {
     expect(screen.getByRole("form", { name: /Uppdatera enskilt köp/i })).toBeInTheDocument();
   });
 
+  it("visar aterkommande mobilrubrik som manadssumma inte periodsumma", () => {
+    const state = stateWithCarWash();
+    localStorage.setItem(storageKey, JSON.stringify({
+      ...state,
+      contexts: [{ ...state.contexts[0], monthsBack: 0, monthsForward: 11 }],
+      expenses: [{ ...state.expenses[0], name: "Aftonbladet Hierta AB" }],
+      costPeriods: [{ ...state.costPeriods[0], amount: 29, startDate: toIsoDate(new Date()) }]
+    }));
+    render(<App />);
+
+    expect(screen.getByText(/Fasta och planerade per m.nad/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/29\s*kr/i).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/348\s*kr/i)).not.toBeInTheDocument();
+  });
+
   it("kan expandera alla kop i en kategori och fortfarande valja en enskild manad", () => {
     const state = stateWithPurchaseCategoryRows();
     localStorage.setItem(storageKey, JSON.stringify({

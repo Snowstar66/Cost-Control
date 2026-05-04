@@ -2055,6 +2055,8 @@ function Timeline(props: {
   }, {});
   const recurringPeriodTotal = props.months.reduce((sum, month) => sum + (recurringTotalsByMonth[month.key] ?? 0), 0);
   const purchasePeriodTotal = props.months.reduce((sum, month) => sum + (purchaseTotalsByMonth[month.key] ?? 0), 0);
+  const mobileFocusMonth = props.months.find((month) => month.isCurrentMonth) ?? props.months[0];
+  const recurringMonthlyTotal = mobileFocusMonth ? recurringTotalsByMonth[mobileFocusMonth.key] ?? 0 : 0;
   const togglePurchaseMonth = (rowKey: string, monthKey: string) => {
     const key = `${rowKey}:${monthKey}`;
     setExpandedPurchaseAllKey(undefined);
@@ -2240,9 +2242,9 @@ function Timeline(props: {
         <div className="mobileSectionHeader">
           <span>
             <strong>Återkommande utgifter</strong>
-            <small>Fasta och planerade kostnader</small>
+            <small>Fasta och planerade per månad</small>
           </span>
-          <b>{formatMoney(recurringPeriodTotal, props.contextCurrency)}</b>
+          <b>{formatMoney(recurringMonthlyTotal, props.contextCurrency)}</b>
         </div>
         {props.expenses.length === 0 && <p className="note mobileSectionNote">Inga återkommande utgifter ännu.</p>}
         {props.expenses.map((expense) => {
@@ -2275,8 +2277,8 @@ function Timeline(props: {
         })}
         {props.expenses.length > 0 && (
           <div className="mobileSectionTotal">
-            <span>Summa återkommande</span>
-            <strong>{formatMoney(recurringPeriodTotal, props.contextCurrency)}</strong>
+            <span>Summa återkommande / mån</span>
+            <strong>{formatMoney(recurringMonthlyTotal, props.contextCurrency)}</strong>
           </div>
         )}
         {purchaseRows.length > 0 && (
