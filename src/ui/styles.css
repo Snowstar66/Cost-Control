@@ -808,7 +808,7 @@ button.radarCard.green.active {
 
 .transactionTable {
   display: grid;
-  grid-template-columns: 110px minmax(220px, 1.2fr) minmax(150px, 0.75fr) 132px 120px 86px;
+  grid-template-columns: 110px minmax(220px, 1.2fr) minmax(150px, 0.75fr) 180px 120px 86px;
   overflow: auto;
 }
 
@@ -894,39 +894,68 @@ button.radarCard.green.active {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  border: 1px solid #d8e0ea;
   border-radius: 999px;
-  background: #fff;
   color: #475467;
 }
 
+.flagChip {
+  border: 1px solid #d8e0ea;
+  background: #fff;
+}
+
 .signalToggle {
-  width: 28px;
-  min-height: 28px;
+  width: 32px;
+  min-height: 32px;
+  border: 1px solid transparent;
+  background: transparent;
   padding: 0;
   line-height: 0;
 }
 
-.signalToggle.active,
+.signalToggle:hover {
+  border-color: transparent;
+  background: #f7fafc;
+}
+
+.signalToggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.signalToggle.active {
+  color: #174a8b;
+  border-color: transparent;
+  background: transparent;
+}
+
 .flagChip.active {
   color: #111827;
   border-color: #9fb4ce;
   background: #eef4ff;
 }
 
-.signalToggle.red.active,
+.signalToggle.red.active {
+  color: #b4232d;
+}
+
 .flagChip.red.active {
   border-color: #f0b4b7;
   background: #fff1f1;
 }
 
-.signalToggle.amber.active,
+.signalToggle.amber.active {
+  color: #99610a;
+}
+
 .flagChip.amber.active {
   border-color: #edcf96;
   background: #fff7e8;
 }
 
-.signalToggle.green.active,
+.signalToggle.green.active {
+  color: #0f766e;
+}
+
 .flagChip.green.active {
   border-color: #9dcdbd;
   background: #ecf8f4;
@@ -5569,7 +5598,7 @@ textarea {
   }
 
   .transactionTable {
-    grid-template-columns: 92px minmax(180px, 1fr) minmax(140px, 0.8fr) 126px 108px 76px;
+    grid-template-columns: 92px minmax(180px, 1fr) minmax(140px, 0.8fr) 176px 108px 76px;
   }
 
   .overviewGrid .panel.wide,
@@ -5881,8 +5910,8 @@ textarea {
   }
 
   .signalToggle {
-    width: 28px;
-    min-height: 28px;
+    width: 34px;
+    min-height: 34px;
   }
 
   .main {

@@ -250,7 +250,7 @@ describe("App", () => {
 
     const signal = screen.getByLabelText(/^Signal$/i);
     expect(within(signal).getByRole("option", { name: "Värt det" })).toBeInTheDocument();
-    expect(within(signal).getByRole("option", { name: "Vana" })).toBeInTheDocument();
+    expect(within(signal).getByRole("option", { name: "Återkommande" })).toBeInTheDocument();
     expect(within(signal).getByRole("option", { name: "Business" })).toBeInTheDocument();
     expect(within(signal).getByRole("option", { name: "Onödigt" })).toBeInTheDocument();
     expect(within(signal).queryByRole("option", { name: "Granska" })).not.toBeInTheDocument();
@@ -473,7 +473,7 @@ describe("App", () => {
     expect(screen.queryByText(/St.rsta kategori/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/.terkommande handlare/i)).not.toBeInTheDocument();
 
-    const habitCard = screen.getByRole("button", { name: /Vanor7.*2 handlare/i });
+    const habitCard = screen.getByRole("button", { name: /Återkommande7.*2 handlare/i });
     expect(habitCard).toBeInTheDocument();
     expect(screen.getAllByText("PRESSBYRAN").length).toBeGreaterThan(0);
 

@@ -198,7 +198,7 @@ export type ExpenseMonthValue = {
 
 export const necessityLabels: Record<NecessityLevel, string> = {
   necessary: "Värt det",
-  comfortable: "Vana",
+  comfortable: "Återkommande",
   luxury: "Business",
   unnecessary: "Onödigt"
 };

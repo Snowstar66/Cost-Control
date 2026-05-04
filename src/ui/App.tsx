@@ -157,7 +157,7 @@ const maxFileSize = 10 * 1024 * 1024;
 const overviewNecessityOrder: NecessityLevel[] = ["necessary", "comfortable", "luxury", "unnecessary"];
 const overviewNecessityLabels: Record<NecessityLevel, string> = {
   necessary: "Värt det",
-  comfortable: "Vana",
+  comfortable: "Återkommande",
   luxury: "Business",
   unnecessary: "Onödigt"
 };
@@ -2230,7 +2230,7 @@ const helpViewCards: Array<{ icon: typeof Wallet; title: string; text: string; i
     icon: BarChart3,
     title: "Översikt",
     text: "Här ser du återkommande kostnader och enskilda köp i samma månadsbild.",
-    items: ["Sök, filtrera och göm historik i verktygsraden.", "Tryck på en utgift för detaljer, filer och åtgärder.", "Summeringskorten visar köpsignaler som granska, onödigt, vanor, värt det och business."]
+    items: ["Sök, filtrera och göm historik i verktygsraden.", "Tryck på en utgift för detaljer, filer och åtgärder.", "Summeringskorten visar köpsignaler som granska, onödigt, återkommande, värt det och business."]
   },
   {
     icon: ShoppingBag,
@@ -2533,7 +2533,7 @@ function buildPurchaseRadar(transactions: PurchaseTransaction[], currency: strin
       },
       {
         flag: "recurringCandidate" as const,
-        title: "Vanor",
+        title: "Återkommande",
         value: String(candidateCount),
         detail: `${recurringGroups.length} handlare med minst 3 köp. Klicka för att visa köp.`,
         tone: "amber" as const,
@@ -2584,7 +2584,7 @@ function Purchases({ context, transactions, categories, suppliers, businessSigna
     }
     return b.date.localeCompare(a.date);
   });
-  const activeRadarLabel = activeRadarFlag === "recurringCandidate" ? "Vanor" : activeRadarFlag ? purchaseSignalLabel(activeRadarFlag, businessSignalLabel) : undefined;
+  const activeRadarLabel = activeRadarFlag ? purchaseSignalLabel(activeRadarFlag, businessSignalLabel) : undefined;
   const activeRadarCount = activeRadarFlag ? visible.filter(isRadarMatch).length : 0;
   const importPreviewTotal = importPreview?.transactions.reduce((sum, transaction) => sum + transaction.amount, 0) ?? 0;
 
@@ -2627,7 +2627,7 @@ function Purchases({ context, transactions, categories, suppliers, businessSigna
       <div className="panel purchaseRadarPanel">
         <div className="panelHeader iconPanelHeader">
           <h2><Radar size={16} /> Köpradar</h2>
-          <span>Flaggor · vanor · signaler</span>
+          <span>Flaggor · återkommande · signaler</span>
         </div>
         <div className="radarGrid">
           {radar.cards.map((card) => {
@@ -4086,7 +4086,7 @@ function PurchaseSignalPanel({ radar, currency }: { radar: ReturnType<typeof bui
   return (
     <div className="panel purchaseSignalPanel">
       <div className="panelHeader">
-        <h2>Pengaläckor och vanor</h2>
+        <h2>Pengaläckor och återkommande</h2>
         <span>Flaggade köp · återkommande mönster</span>
       </div>
       <div className="signalInsightGrid">
