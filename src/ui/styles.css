@@ -6742,6 +6742,24 @@ textarea {
     background: #f7fafc;
   }
 
+  .mobileTransactionActions .signalToggle.active {
+    border-color: currentColor;
+    background: #eef4ff;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.65);
+  }
+
+  .mobileTransactionActions .signalToggle.red.active {
+    background: #fff1f1;
+  }
+
+  .mobileTransactionActions .signalToggle.amber.active {
+    background: #fff4d9;
+  }
+
+  .mobileTransactionActions .signalToggle.green.active {
+    background: #e4f5ee;
+  }
+
   .mobileTransactionActions button svg {
     display: block;
     margin: auto;

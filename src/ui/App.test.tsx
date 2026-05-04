@@ -177,7 +177,8 @@ function stateWithRadarCandidateRows(): AppState {
           merchantNormalized: merchant,
           amount: 20 + index,
           date: `2026-02-${String(10 + merchantIndex * 5 + index).padStart(2, "0")}`,
-          bookedDate: `2026-02-${String(11 + merchantIndex * 5 + index).padStart(2, "0")}`
+          bookedDate: `2026-02-${String(11 + merchantIndex * 5 + index).padStart(2, "0")}`,
+          flags: merchant === "ICA" && index < 2 ? (["recurringCandidate"] as PurchaseFlag[]) : []
         }))
       ),
       {
@@ -574,7 +575,7 @@ describe("App", () => {
     expect(screen.getByText(/Medelköp/i)).toBeInTheDocument();
   });
 
-  it("visar kopvanor som antal kop och filtrerar fram traffarna", () => {
+  it("visar aterkommande radarkort som signal och filtrerar pa signalen", () => {
     localStorage.setItem(storageKey, JSON.stringify(stateWithRadarCandidateRows()));
     render(<App />);
 
@@ -586,15 +587,19 @@ describe("App", () => {
     expect(screen.queryByText(/St.rsta kategori/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/.terkommande handlare/i)).not.toBeInTheDocument();
 
-    const habitCard = screen.getByRole("button", { name: /Återkommande7.*2 handlare/i });
-    expect(habitCard).toBeInTheDocument();
+    const recurringCard = screen.getByRole("button", { name: /terkommande41\s*kr.*2\s*k.p markerade med signalen/i });
+    expect(recurringCard).toBeInTheDocument();
     expect(screen.getAllByText("PRESSBYRAN").length).toBeGreaterThan(0);
 
-    fireEvent.click(habitCard);
+    fireEvent.click(recurringCard);
 
-    expect(screen.getByText(/7 tr.ffar/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 tr.ffar/i)).toBeInTheDocument();
     expect(screen.queryByText("PRESSBYRAN")).not.toBeInTheDocument();
     expect(screen.getAllByText("ICA").length).toBeGreaterThan(0);
+    expect(screen.queryByText("LIDL")).not.toBeInTheDocument();
+
+    fireEvent.click(recurringCard);
+    expect(screen.queryByText(/2 tr.ffar/i)).not.toBeInTheDocument();
     expect(screen.getAllByText("LIDL").length).toBeGreaterThan(0);
   });
 

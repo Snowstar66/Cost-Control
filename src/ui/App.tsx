@@ -2793,9 +2793,9 @@ function buildPurchaseRadar(transactions: PurchaseTransaction[], currency: strin
     .slice(0, 5);
   const reviewRows = byFlag("review");
   const unnecessaryRows = byFlag("unnecessary");
+  const recurringRows = byFlag("recurringCandidate");
   const worthRows = byFlag("worthIt");
   const businessRows = byFlag("business");
-  const candidateCount = recurringGroups.reduce((sum, row) => sum + row.count, 0);
   return {
     cards: [
       {
@@ -2817,8 +2817,8 @@ function buildPurchaseRadar(transactions: PurchaseTransaction[], currency: strin
       {
         flag: "recurringCandidate" as const,
         title: "Återkommande",
-        value: String(candidateCount),
-        detail: `${recurringGroups.length} handlare med minst 3 köp. Klicka för att visa köp.`,
+        value: formatMoney(totalFor(recurringRows), currency),
+        detail: `${recurringRows.length} köp markerade med signalen.`,
         tone: "amber" as const,
         icon: RefreshCcw
       },
@@ -2851,13 +2851,10 @@ function Purchases({ context, transactions, categories, people, suppliers, busin
     .filter((transaction) => [transaction.merchantRaw, transaction.merchantNormalized, transaction.location].join(" ").toLowerCase().includes(search.toLowerCase()));
   const summaryTransactions = baseVisible.filter((transaction) => transaction.type === "one-off");
   const radar = buildPurchaseRadar(summaryTransactions, context.currency, businessSignalLabel);
-  const candidateMerchants = new Set(radar.habits.map((habit) => habit.label));
   const isRadarMatch = (transaction: PurchaseTransaction) =>
-    activeRadarFlag === "recurringCandidate"
-      ? transactionMatchesPurchaseFlag(transaction, "recurringCandidate") || candidateMerchants.has(transactionMerchantLabel(transaction))
-      : activeRadarFlag
-        ? transactionMatchesPurchaseFlag(transaction, activeRadarFlag)
-        : false;
+    activeRadarFlag
+      ? transactionMatchesPurchaseFlag(transaction, activeRadarFlag)
+      : false;
   const radarVisible = activeRadarFlag ? baseVisible.filter(isRadarMatch) : baseVisible;
   const visible = [...radarVisible].sort((a, b) => {
     if (activeRadarFlag) {
