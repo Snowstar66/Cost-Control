@@ -3480,7 +3480,7 @@ body {
 .summaryTop {
   min-width: 0;
   display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) auto;
+  grid-template-columns: 18px minmax(0, 1fr);
   align-items: center;
   gap: 6px;
   width: 100%;
@@ -3500,19 +3500,6 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.summaryTop em {
-  padding: 2px 6px;
-  border: 1px solid #d8e0e8;
-  border-radius: 999px;
-  color: #667085;
-  background: #fff;
-  font-size: 9px;
-  font-style: normal;
-  font-weight: 760;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .necessitySummary strong {
@@ -6086,6 +6073,8 @@ textarea {
     min-height: 50px;
     padding: 7px 3px;
     align-items: center;
+    align-content: center;
+    justify-items: center;
     gap: 4px;
     text-align: center;
   }
@@ -6094,10 +6083,10 @@ textarea {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
     justify-content: center;
+    justify-items: center;
   }
 
-  .summaryTop svg,
-  .summaryTop em {
+  .summaryTop svg {
     display: none;
   }
 
@@ -7020,6 +7009,8 @@ textarea {
   .necessitySummary {
     min-height: 42px;
     padding: 5px 3px;
+    align-content: center;
+    justify-items: center;
   }
 
   .summaryTop span {

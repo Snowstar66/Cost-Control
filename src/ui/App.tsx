@@ -164,7 +164,7 @@ const overviewNecessityLabels: Record<NecessityLevel, string> = {
 const purchaseFlagMeta: Record<PurchaseFlag, { label: string; shortLabel: string; tone: "blue" | "green" | "amber" | "red"; icon: typeof Wallet }> = {
   review: { label: "Granska", shortLabel: "Granska", tone: "blue", icon: CircleAlert },
   unnecessary: { label: "Onödigt", shortLabel: "Onödigt", tone: "red", icon: ThumbsDown },
-  recurringCandidate: { label: "Återkommande kandidat", shortLabel: "Kandidat", tone: "amber", icon: RefreshCcw },
+  recurringCandidate: { label: "Återkommande", shortLabel: "Återkommande", tone: "amber", icon: RefreshCcw },
   worthIt: { label: "Värt det", shortLabel: "Värt", tone: "green", icon: ThumbsUp },
   business: { label: "Business", shortLabel: "Business", tone: "blue", icon: BriefcaseBusiness }
 };
@@ -994,7 +994,6 @@ function Overview(props: {
               <span className="summaryTop">
                 <Icon size={15} />
                 <span>{label}</span>
-                <em>Köp</em>
               </span>
               <strong>{formatMoney(summary.total, props.currency)}</strong>
               <small>{summary.count} köp · signal</small>
