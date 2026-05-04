@@ -2334,6 +2334,39 @@ function HelpGuide() {
         </div>
       </section>
 
+      <section className="helpSection helpSignalPanel">
+        <div className="helpSectionHeader">
+          <h2>Signaler</h2>
+          <span>Snabb kontroll efter import</span>
+        </div>
+        <p>
+          När du importerar kontoutdrag sätts nya enskilda köp i granska-läge. Tanken är att du går igenom dem, kontrollerar kategori och belopp, och sedan väljer den signal som bäst beskriver köpet.
+        </p>
+        <div className="helpSignalGrid">
+          {(Object.keys(purchaseFlagMeta) as PurchaseFlag[]).map((flag) => {
+            const meta = purchaseFlagMeta[flag];
+            const Icon = meta.icon;
+            const label = purchaseSignalLabel(flag);
+            const text = flag === "review"
+              ? "Att kontrollera efter import."
+              : flag === "unnecessary"
+                ? "Något du kanske vill minska."
+                : flag === "recurringCandidate"
+                  ? "Köp som ser ut att återkomma."
+                  : flag === "worthIt"
+                    ? "Ett köp som kändes värt det."
+                    : "Köp kopplade till arbete eller utlägg.";
+            return (
+              <span className={`helpSignal ${meta.tone}`} key={flag}>
+                <Icon size={18} aria-hidden="true" />
+                <strong>{label}</strong>
+                <small>{text}</small>
+              </span>
+            );
+          })}
+        </div>
+      </section>
+
       <section className="helpSection">
         <div className="helpSectionHeader">
           <h2>Funktioner</h2>

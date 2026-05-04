@@ -316,6 +316,8 @@ describe("App", () => {
     expect(screen.getByText(/köpsignaler som granska/i)).toBeInTheDocument();
     expect(screen.getByText(/Klicka på en köpkategori/i)).toBeInTheDocument();
     expect(screen.getByText(/egna sektioner, delsummor och en totalsumma/i)).toBeInTheDocument();
+    expect(screen.getByText(/När du importerar kontoutdrag/i)).toBeInTheDocument();
+    expect(screen.getByText(/Att kontrollera efter import/i)).toBeInTheDocument();
     expect(screen.getByText(/Rensa all data och börja om/i)).toBeInTheDocument();
   });
 
