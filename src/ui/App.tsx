@@ -52,6 +52,7 @@ import {
   addAttachment,
   addContext,
   cancelExpense,
+  convertTransactionToRecurring,
   duplicateCurrentContext,
   removeCategory,
   removeAttachment,
@@ -69,6 +70,7 @@ import {
   upsertSupplier,
   upsertTransaction,
   importTransactions,
+  type ConvertTransactionToRecurringInput,
   type UpsertTransactionInput
 } from "../app/actions";
 import { useAppState } from "../app/useAppState";
@@ -179,6 +181,11 @@ function displayText(value?: string): string {
   return value?.normalize("NFC") ?? "";
 }
 type ExpenseFormInput = Parameters<typeof upsertExpense>[1];
+type RecurringConversionFormInput = Omit<ConvertTransactionToRecurringInput, "transactionId" | "amount" | "chargeDay" | "noticePeriodValue"> & {
+  amount: string;
+  chargeDay: string;
+  noticePeriodValue: string;
+};
 type PurchaseImportPreview = BankStatementImportResult & {
   fileName: string;
   transactions: UpsertTransactionInput[];
@@ -387,6 +394,10 @@ export function App() {
         )
       };
     });
+    closePurchaseForm();
+  };
+  const convertPurchaseToRecurring = (input: ConvertTransactionToRecurringInput) => {
+    setState((current) => convertTransactionToRecurring(current, input));
     closePurchaseForm();
   };
   const importPurchaseFile = async (file: File) => {
@@ -673,6 +684,7 @@ export function App() {
           businessSignalLabel={purchaseBusinessLabel(state)}
           onClose={closePurchaseForm}
           onSave={saveTransaction}
+          onConvertToRecurring={convertPurchaseToRecurring}
         />
       )}
       <input
@@ -1383,7 +1395,7 @@ function ExpenseModal({ expense, costPeriod, categories, people, suppliers, onSa
   );
 }
 
-function PurchaseModal({ transaction, categories, people, suppliers, expenses, transactions, currency, businessSignalLabel, onSave, onClose }: { transaction?: PurchaseTransaction; categories: Category[]; people: Array<{ id: string; firstName: string; lastName: string }>; suppliers: Supplier[]; expenses: Expense[]; transactions: PurchaseTransaction[]; currency: string; businessSignalLabel: string; onSave: (input: UpsertTransactionInput, options?: PurchaseSaveOptions) => void; onClose: () => void }) {
+function PurchaseModal({ transaction, categories, people, suppliers, expenses, transactions, currency, businessSignalLabel, onSave, onConvertToRecurring, onClose }: { transaction?: PurchaseTransaction; categories: Category[]; people: Array<{ id: string; firstName: string; lastName: string }>; suppliers: Supplier[]; expenses: Expense[]; transactions: PurchaseTransaction[]; currency: string; businessSignalLabel: string; onSave: (input: UpsertTransactionInput, options?: PurchaseSaveOptions) => void; onConvertToRecurring: (input: ConvertTransactionToRecurringInput) => void; onClose: () => void }) {
   const defaultPayerPersonId = people.length === 1 ? people[0].id : "";
   const merchantSuggestions = useMemo(() => {
     const labels = new Map<string, string>();
@@ -1424,12 +1436,33 @@ function PurchaseModal({ transaction, categories, people, suppliers, expenses, t
     applyCategoryToSameMerchant: false,
     notes: ""
   });
+  const emptyRecurringForm = (): RecurringConversionFormInput => ({
+    name: "",
+    supplierId: "",
+    newSupplierName: "",
+    categoryId: "",
+    payerPersonId: defaultPayerPersonId,
+    amount: "",
+    recurrence: "monthly",
+    necessityLevel: "comfortable",
+    startDate: toIsoDate(new Date()),
+    chargeDay: "27",
+    noticePeriodValue: "",
+    noticePeriodUnit: "months",
+    notes: ""
+  });
+  const [recurringConversionOpen, setRecurringConversionOpen] = useState(false);
+  const [recurringForm, setRecurringForm] = useState<RecurringConversionFormInput>(emptyRecurringForm);
   const [merchantSuggestionsEnabled, setMerchantSuggestionsEnabled] = useState(false);
+  const canConvertToRecurring = Boolean(transaction && !form.recurringExpenseId);
+  const showRecurringConversion = canConvertToRecurring && (recurringConversionOpen || form.type === "recurring-payment");
 
   useEffect(() => {
     setMerchantSuggestionsEnabled(false);
+    setRecurringConversionOpen(false);
     if (!transaction) {
       setForm({ date: toIsoDate(new Date()), bookedDate: "", merchantRaw: "", amount: "", categoryId: "", categorySuggestedFromMerchantKey: "", payerPersonId: defaultPayerPersonId, supplierId: "", recurringExpenseId: "", type: "one-off", flags: [], applyCategoryToSameMerchant: false, notes: "" });
+      setRecurringForm(emptyRecurringForm());
       return;
     }
     setForm({
@@ -1447,7 +1480,53 @@ function PurchaseModal({ transaction, categories, people, suppliers, expenses, t
       applyCategoryToSameMerchant: true,
       notes: transaction.notes ?? ""
     });
+    const paymentDate = transaction.date || toIsoDate(new Date());
+    const supplier = transaction.supplierId
+      ? suppliers.find((item) => item.id === transaction.supplierId)
+      : suppliers.find((item) => normalizeSuggestionKey(item.name) === normalizeSuggestionKey(transaction.merchantRaw));
+    setRecurringForm({
+      name: transaction.merchantRaw,
+      supplierId: supplier?.id ?? "",
+      newSupplierName: supplier ? "" : transaction.merchantRaw,
+      categoryId: transaction.categoryId ?? "",
+      payerPersonId: transaction.payerPersonId ?? defaultPayerPersonId,
+      amount: String(transaction.amount),
+      recurrence: "monthly",
+      necessityLevel: "comfortable",
+      startDate: paymentDate,
+      chargeDay: String(Number(paymentDate.slice(8, 10)) || 27),
+      noticePeriodValue: "",
+      noticePeriodUnit: "months",
+      notes: transaction.notes ?? ""
+    });
   }, [transaction, defaultPayerPersonId]);
+
+  const openRecurringConversion = () => {
+    if (!transaction) return;
+    const paymentDate = form.date || transaction.date || toIsoDate(new Date());
+    const supplier = form.supplierId
+      ? suppliers.find((item) => item.id === form.supplierId)
+      : suppliers.find((item) => normalizeSuggestionKey(item.name) === normalizeSuggestionKey(form.merchantRaw));
+    setRecurringForm((current) => ({
+      ...current,
+      name: form.merchantRaw || current.name,
+      supplierId: supplier?.id ?? "",
+      newSupplierName: supplier ? "" : form.merchantRaw || current.newSupplierName,
+      categoryId: form.categoryId || current.categoryId,
+      payerPersonId: form.payerPersonId || current.payerPersonId,
+      amount: form.amount || current.amount,
+      startDate: paymentDate,
+      chargeDay: String(Number(paymentDate.slice(8, 10)) || Number(current.chargeDay) || 27),
+      notes: form.notes || current.notes
+    }));
+    setForm((current) => ({ ...current, flags: current.flags.includes("recurringCandidate") ? current.flags : ["recurringCandidate"] }));
+    setRecurringConversionOpen(true);
+  };
+
+  const changeTransactionType = (type: PurchaseTransaction["type"]) => {
+    setForm((current) => ({ ...current, type }));
+    if (type === "recurring-payment" && canConvertToRecurring) openRecurringConversion();
+  };
 
   const toggleFlag = (flag: PurchaseFlag) => {
     setForm((current) => ({
@@ -1474,6 +1553,10 @@ function PurchaseModal({ transaction, categories, people, suppliers, expenses, t
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
+    if (transaction && form.type === "recurring-payment" && !form.recurringExpenseId) {
+      submitRecurringConversion();
+      return;
+    }
     onSave({
       id: transaction?.id,
       date: form.date,
@@ -1494,6 +1577,22 @@ function PurchaseModal({ transaction, categories, people, suppliers, expenses, t
       notes: form.notes || undefined
     }, {
       applyCategoryToSameMerchant: form.applyCategoryToSameMerchant
+    });
+  };
+
+  const submitRecurringConversion = () => {
+    if (!transaction) return;
+    onConvertToRecurring({
+      transactionId: transaction.id,
+      ...recurringForm,
+      supplierId: recurringForm.supplierId || undefined,
+      newSupplierName: recurringForm.newSupplierName || undefined,
+      categoryId: recurringForm.categoryId || undefined,
+      payerPersonId: recurringForm.payerPersonId || undefined,
+      amount: recurringForm.amount ? Number(recurringForm.amount) : undefined,
+      chargeDay: recurringForm.chargeDay ? Number(recurringForm.chargeDay) : undefined,
+      noticePeriodValue: recurringForm.noticePeriodValue ? Number(recurringForm.noticePeriodValue) : undefined,
+      notes: recurringForm.notes || undefined
     });
   };
 
@@ -1565,17 +1664,115 @@ function PurchaseModal({ transaction, categories, people, suppliers, expenses, t
           <div>
             {(Object.keys(purchaseFlagMeta) as PurchaseFlag[]).map((flag) => {
               const meta = purchaseFlagMeta[flag];
-              const label = purchaseSignalLabel(flag, businessSignalLabel);
+              const label = flag === "recurringCandidate" && canConvertToRecurring ? "Skapa återkommande" : purchaseSignalLabel(flag, businessSignalLabel);
               const Icon = meta.icon;
-              const active = form.flags.includes(flag);
+              const active = form.flags.includes(flag) || (flag === "recurringCandidate" && showRecurringConversion);
               return (
-                <button type="button" key={flag} className={`flagChip ${meta.tone} ${active ? "active" : ""}`} onClick={() => toggleFlag(flag)} aria-pressed={active}>
+                <button
+                  type="button"
+                  key={flag}
+                  className={`flagChip ${meta.tone} ${active ? "active" : ""}`}
+                  onClick={() => (flag === "recurringCandidate" && canConvertToRecurring ? openRecurringConversion() : toggleFlag(flag))}
+                  aria-pressed={active}
+                >
                   <Icon size={14} /> {label}
                 </button>
               );
             })}
           </div>
         </div>
+        {showRecurringConversion && (
+          <section className="purchaseRecurringConversion" aria-label="Skapa återkommande">
+            <div className="conversionHeader">
+              <strong>Skapa återkommande utgift från köpet</strong>
+              <span>Detta skapar en återkommande utgift och kopplar originalköpet som första betalning.</span>
+            </div>
+            <div className="formSection split">
+              <label>
+                <span>Tjänst/utgift</span>
+                <input value={recurringForm.name} onChange={(event) => setRecurringForm({ ...recurringForm, name: event.target.value })} />
+              </label>
+              <label>
+                <span>Belopp</span>
+                <input type="number" min="0" step="0.01" value={recurringForm.amount} onChange={(event) => setRecurringForm({ ...recurringForm, amount: event.target.value })} />
+              </label>
+            </div>
+            <div className="formSection split">
+              <label>
+                <span>Period</span>
+                <select value={recurringForm.recurrence} onChange={(event) => setRecurringForm({ ...recurringForm, recurrence: event.target.value as Recurrence })}>
+                  {Object.entries(recurrenceLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>Första betalningsdatum</span>
+                <input
+                  type="date"
+                  value={recurringForm.startDate}
+                  onChange={(event) => setRecurringForm({ ...recurringForm, startDate: event.target.value, chargeDay: String(Number(event.target.value.slice(8, 10)) || recurringForm.chargeDay) })}
+                />
+              </label>
+            </div>
+            <div className="formSection three">
+              <label>
+                <span>Dras dag</span>
+                <input type="number" min="1" max="31" value={recurringForm.chargeDay} onChange={(event) => setRecurringForm({ ...recurringForm, chargeDay: event.target.value })} />
+              </label>
+              <label>
+                <span>Leverantör</span>
+                <select value={recurringForm.supplierId} onChange={(event) => setRecurringForm({ ...recurringForm, supplierId: event.target.value, newSupplierName: event.target.value ? "" : recurringForm.newSupplierName })}>
+                  <option value="">Ny leverantör</option>
+                  {suppliers.map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>Nytt företag</span>
+                <input value={recurringForm.newSupplierName} onChange={(event) => setRecurringForm({ ...recurringForm, newSupplierName: event.target.value, supplierId: event.target.value ? "" : recurringForm.supplierId })} />
+              </label>
+            </div>
+            <div className="formSection split">
+              <CategoryField categories={categories} value={recurringForm.categoryId ?? ""} onChange={(categoryId) => setRecurringForm({ ...recurringForm, categoryId })} />
+              <label>
+                <span>Betalas av</span>
+                <select value={recurringForm.payerPersonId ?? ""} onChange={(event) => setRecurringForm({ ...recurringForm, payerPersonId: event.target.value })}>
+                  <option value="">Betalas av</option>
+                  {people.map((person) => (
+                    <option key={person.id} value={person.id}>
+                      {person.firstName} {person.lastName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <label className="notesField">
+              <span>Anteckning</span>
+              <textarea value={recurringForm.notes ?? ""} onChange={(event) => setRecurringForm({ ...recurringForm, notes: event.target.value })} />
+            </label>
+            <div className="conversionActions">
+              <button
+                type="button"
+                className="ghostBtn"
+                onClick={() => {
+                  setRecurringConversionOpen(false);
+                  setForm((current) => ({ ...current, type: current.recurringExpenseId ? current.type : "one-off" }));
+                }}
+              >
+                Avbryt
+              </button>
+              <button type="button" className="primary" onClick={submitRecurringConversion}>
+                <RefreshCcw size={17} /> Skapa återkommande köp
+              </button>
+            </div>
+          </section>
+        )}
         <details className="purchaseAdvancedFields">
           <summary>
             <span>Avancerat</span>
@@ -1601,7 +1798,7 @@ function PurchaseModal({ transaction, categories, people, suppliers, expenses, t
           <div className="formSection split">
             <label>
               <span>Typ</span>
-              <select value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value as PurchaseTransaction["type"] })}>
+              <select value={form.type} onChange={(event) => changeTransactionType(event.target.value as PurchaseTransaction["type"])}>
                 <option value="one-off">Enskilt köp</option>
                 <option value="recurring-payment">Återkommande betalning</option>
                 <option value="transfer">Överföring</option>
@@ -1611,7 +1808,7 @@ function PurchaseModal({ transaction, categories, people, suppliers, expenses, t
           </div>
           <label>
             <span>Koppla till återkommande utgift</span>
-            <select value={form.recurringExpenseId} onChange={(event) => setForm({ ...form, recurringExpenseId: event.target.value })}>
+            <select value={form.recurringExpenseId} onChange={(event) => setForm({ ...form, recurringExpenseId: event.target.value, type: event.target.value ? "recurring-payment" : form.type })}>
               <option value="">Ingen koppling</option>
               {expenses.map((expense) => <option key={expense.id} value={expense.id}>{expense.name}</option>)}
             </select>

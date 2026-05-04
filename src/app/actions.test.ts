@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { expenseAmountForMonth } from "../domain/calculations";
 import { buildTimelineMonths } from "../domain/date";
 import type { AppState } from "../domain/types";
-import { importTransactions, removeContext, toggleTransactionFlag, upsertExpense } from "./actions";
+import { convertTransactionToRecurring, importTransactions, removeContext, toggleTransactionFlag, upsertExpense } from "./actions";
 
 const state: AppState = {
   version: 1,
@@ -103,6 +103,59 @@ describe("upsertExpense", () => {
       amount: 299,
       recurringExpenseId: "exp-1",
       type: "recurring-payment"
+    });
+  });
+});
+
+describe("convertTransactionToRecurring", () => {
+  it("creates a recurring expense and links the purchase as the first payment", () => {
+    const next = convertTransactionToRecurring(
+      {
+        ...state,
+        transactions: [
+          {
+            id: "txn-1",
+            contextId: "ctx-1",
+            date: "2026-02-10",
+            amount: 125,
+            currency: "SEK",
+            merchantRaw: "PODME",
+            merchantNormalized: "PODME",
+            categoryId: "cat-1",
+            source: "manual",
+            type: "one-off",
+            flags: ["recurringCandidate"],
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z"
+          }
+        ]
+      },
+      {
+        transactionId: "txn-1",
+        name: "PODME",
+        newSupplierName: "PODME",
+        categoryId: "cat-1",
+        amount: 125,
+        recurrence: "monthly",
+        chargeDay: 10,
+        necessityLevel: "comfortable",
+        startDate: "2026-02-10"
+      }
+    );
+    const createdExpense = next.expenses.find((expense) => expense.name === "PODME");
+    const createdPeriod = next.costPeriods.find((period) => period.expenseId === createdExpense?.id);
+
+    expect(createdExpense).toMatchObject({
+      categoryId: "cat-1",
+      necessityLevel: "comfortable",
+      startDate: "2026-02-10",
+      status: "active"
+    });
+    expect(createdPeriod).toMatchObject({ amount: 125, recurrence: "monthly", startDate: "2026-02-10", chargeDay: 10 });
+    expect(next.transactions[0]).toMatchObject({
+      recurringExpenseId: createdExpense?.id,
+      type: "recurring-payment",
+      flags: []
     });
   });
 });

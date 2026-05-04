@@ -2,7 +2,7 @@ import { createContext as makeContext, createDefaultCategories, createDefaultSup
 import type { AppState, Attachment, Category, Context, Expense, ExpenseCostPeriod, NecessityLevel, Person, PurchaseFlag, PurchaseTransaction, Recurrence, Reminder, Supplier, TransactionType } from "../domain/types";
 import { createReminderForExpense } from "../domain/calculations";
 
-type UpsertExpenseInput = {
+export type UpsertExpenseInput = {
   id?: string;
   name: string;
   supplierId?: string;
@@ -40,6 +40,10 @@ export type UpsertTransactionInput = {
   type?: TransactionType;
   flags?: PurchaseFlag[];
   notes?: string;
+};
+
+export type ConvertTransactionToRecurringInput = UpsertExpenseInput & {
+  transactionId: string;
 };
 
 const stamp = () => new Date().toISOString();
@@ -314,6 +318,34 @@ export function upsertExpense(state: AppState, input: UpsertExpenseInput): AppSt
     expenses: existing ? state.expenses.map((item) => (item.id === expenseId ? expense : item)) : [...state.expenses, expense],
     costPeriods: period ? [...state.costPeriods.filter((item) => item.expenseId !== expenseId), period] : state.costPeriods,
     reminders: reminder ? [...reminders, reminder] : reminders
+  };
+}
+
+export function convertTransactionToRecurring(state: AppState, input: ConvertTransactionToRecurringInput): AppState {
+  const transaction = state.transactions.find((item) => item.id === input.transactionId);
+  if (!transaction) return state;
+
+  const expenseId = input.id ?? id("exp");
+  const withExpense = upsertExpense(state, { ...input, id: expenseId });
+  const expense = withExpense.expenses.find((item) => item.id === expenseId);
+  const nextFlags = normalizePurchaseFlags((transaction.flags ?? []).filter((flag) => flag !== "recurringCandidate"));
+
+  return {
+    ...withExpense,
+    transactions: withExpense.transactions.map((item) =>
+      item.id === transaction.id
+        ? {
+            ...item,
+            categoryId: input.categoryId ?? item.categoryId,
+            supplierId: expense?.supplierId ?? input.supplierId ?? item.supplierId,
+            payerPersonId: input.payerPersonId ?? item.payerPersonId,
+            recurringExpenseId: expenseId,
+            type: "recurring-payment",
+            flags: nextFlags,
+            updatedAt: stamp()
+          }
+        : item
+    )
   };
 }
 

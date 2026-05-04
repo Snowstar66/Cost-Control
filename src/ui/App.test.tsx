@@ -620,6 +620,25 @@ describe("App", () => {
     });
   });
 
+  it("kan gora ett enskilt kop aterkommande med kopdatum som forsta betalning", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithPurchaseCategoryRows()));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Transport feb 2026: 125/i }));
+    fireEvent.click(screen.getAllByRole("button", { name: /Visa k.p ICA/i })[0]);
+    fireEvent.click(screen.getByRole("button", { name: /^Skapa .terkommande$/i }));
+
+    expect(screen.getByLabelText(/F.rsta betalningsdatum/i)).toHaveValue("2026-02-10");
+    fireEvent.click(screen.getByRole("button", { name: /Skapa .terkommande k.p/i }));
+
+    const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
+    const createdExpense = saved.expenses.find((expense) => expense.name === "ICA");
+    const createdPeriod = saved.costPeriods.find((period) => period.expenseId === createdExpense?.id);
+    expect(createdExpense).toMatchObject({ categoryId: "cat-1", necessityLevel: "comfortable", startDate: "2026-02-10" });
+    expect(createdPeriod).toMatchObject({ amount: 125, recurrence: "monthly", startDate: "2026-02-10", chargeDay: 10 });
+    expect(saved.transactions[0]).toMatchObject({ recurringExpenseId: createdExpense?.id, type: "recurring-payment" });
+  });
+
   it("visar hela importforhandsgranskningen innan importbeslut", async () => {
     localStorage.setItem(storageKey, JSON.stringify(stateWithCarWash()));
     render(<App />);

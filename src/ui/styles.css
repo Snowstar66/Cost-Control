@@ -1026,6 +1026,37 @@ button.radarCard.green.active {
   font-weight: 680;
 }
 
+.purchaseRecurringConversion {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #edcf96;
+  border-radius: 8px;
+  background: #fffaf0;
+}
+
+.conversionHeader {
+  display: grid;
+  gap: 3px;
+}
+
+.conversionHeader strong {
+  color: #1d2939;
+  font-size: 14px;
+}
+
+.conversionHeader span {
+  color: #5f6f86;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.conversionActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .purchaseAdvancedFields {
   margin-top: 12px;
   padding-top: 10px;
@@ -6762,6 +6793,7 @@ textarea {
 
   .modalActions,
   .formActions,
+  .conversionActions,
   .drawerActions {
     display: grid;
     grid-template-columns: 1fr;
@@ -6770,6 +6802,7 @@ textarea {
 
   .modalActions button,
   .formActions button,
+  .conversionActions button,
   .drawerActions button,
   .flagChip {
     width: 100%;
