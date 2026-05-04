@@ -144,7 +144,7 @@ const categoryColorOptions = [
 
 const emptyContextFallback: Context = {
   id: "__empty-context__",
-  name: "Ingen kontext",
+  name: "Ingen plånbok",
   currency: "SEK",
   monthsBack: 3,
   monthsForward: 9,
@@ -815,7 +815,7 @@ function QuickAddMenu({
 function EmptyContextStart({ onCreate }: { onCreate: (name: string, includeDefaultSuppliers: boolean) => void }) {
   const [name, setName] = useState("Min ekonomi");
   const createContext = () => {
-    const includeDefaultSuppliers = window.confirm("Vill du lägga in vanliga standardföretag som Netflix, Spotify och Vattenfall i den nya kontexten?");
+    const includeDefaultSuppliers = window.confirm("Vill du lägga in vanliga standardföretag som Netflix, Spotify och Vattenfall i den nya plånboken?");
     onCreate(name, includeDefaultSuppliers);
   };
   return (
@@ -825,16 +825,16 @@ function EmptyContextStart({ onCreate }: { onCreate: (name: string, includeDefau
           <Wallet size={26} />
         </div>
         <div>
-          <p className="eyebrow">Ingen kontext hittades</p>
-          <h1 id="empty-context-title">Vill du starta en ny kontext?</h1>
-          <p className="note">Skapa en arbetsyta för dina utgifter och börja med en tom lista.</p>
+          <p className="eyebrow">Ingen plånbok hittades</p>
+          <h1 id="empty-context-title">Vill du starta en ny plånbok?</h1>
+          <p className="note">Skapa en plånbok för dina utgifter och börja med en tom lista.</p>
         </div>
         <label>
-          <span>Namn på ny kontext</span>
+          <span>Namn på ny plånbok</span>
           <input value={name} onChange={(event) => setName(event.target.value)} />
         </label>
         <button className="primary" onClick={createContext}>
-          <Plus size={18} /> Starta ny kontext
+          <Plus size={18} /> Starta ny plånbok
         </button>
       </section>
     </main>
@@ -845,23 +845,23 @@ function ContextSwitcher({ state, setState, activeContextId }: { state: ReturnTy
   const activeContext = state.contexts.find((context) => context.id === activeContextId) ?? state.contexts[0];
   const canDeleteContext = state.contexts.length > 1 && Boolean(activeContext);
   const createContext = () => {
-    const name = window.prompt("Vad ska den nya kontexten heta?");
+    const name = window.prompt("Vad ska den nya plånboken heta?");
     if (!name?.trim()) return;
-    const includeDefaultSuppliers = window.confirm("Vill du lägga in vanliga standardföretag som Netflix, Spotify och Vattenfall i den nya kontexten?");
+    const includeDefaultSuppliers = window.confirm("Vill du lägga in vanliga standardföretag som Netflix, Spotify och Vattenfall i den nya plånboken?");
     setState((current) => addContext(current, name.trim(), "SEK", undefined, includeDefaultSuppliers));
   };
   const deleteContext = () => {
     if (!activeContext || !canDeleteContext) return;
-    const confirmed = window.confirm(`Radera kontexten "${activeContext.name}" och all data som hör till den? Det går inte att ångra.`);
+    const confirmed = window.confirm(`Radera plånboken "${activeContext.name}" och all data som hör till den? Det går inte att ångra.`);
     if (confirmed) setState((current) => removeContext(current, activeContext.id));
   };
   return (
     <div className="contextBox adminContextPanel">
       <div className="panelHeader">
-        <h2>Kontext</h2>
-        <span>Aktiv arbetsyta</span>
+        <h2>Plånbok</h2>
+        <span>Aktiv plånbok</span>
       </div>
-      <label>Byt kontext</label>
+      <label>Byt plånbok</label>
       <div className="selectWrap">
         <select value={activeContextId} onChange={(event) => setState((current) => ({ ...current, activeContextId: event.target.value }))}>
           {state.contexts.map((context) => (
@@ -872,17 +872,17 @@ function ContextSwitcher({ state, setState, activeContextId }: { state: ReturnTy
         </select>
         <ChevronDown size={16} />
       </div>
-      <label>Döp om aktiv kontext</label>
+      <label>Döp om aktiv plånbok</label>
       <input value={activeContext?.name ?? ""} onChange={(event) => activeContext && setState((current) => updateContext(current, { id: activeContext.id, name: event.target.value }))} />
       <div className="contextActions">
         <button className="ghostBtn" onClick={createContext}>
-          <Plus size={16} /> Ny kontext
+          <Plus size={16} /> Ny plånbok
         </button>
-        <button className="ghostBtn" onClick={() => setState((current) => duplicateCurrentContext(current, `${current.contexts.find((context) => context.id === activeContextId)?.name ?? "Kontext"} mall`))}>
+        <button className="ghostBtn" onClick={() => setState((current) => duplicateCurrentContext(current, `${current.contexts.find((context) => context.id === activeContextId)?.name ?? "Plånbok"} mall`))}>
           <FolderPlus size={16} /> Duplicera som mall
         </button>
-        <button className="ghostBtn dangerText contextDeleteButton" onClick={deleteContext} disabled={!canDeleteContext} title={canDeleteContext ? "Radera aktiv kontext" : "Minst en kontext måste finnas kvar"}>
-          <Trash2 size={16} /> Radera kontext
+        <button className="ghostBtn dangerText contextDeleteButton" onClick={deleteContext} disabled={!canDeleteContext} title={canDeleteContext ? "Radera aktiv plånbok" : "Minst en plånbok måste finnas kvar"}>
+          <Trash2 size={16} /> Radera plånbok
         </button>
       </div>
     </div>
@@ -896,7 +896,7 @@ function Onboarding({ onCreate, onSkip }: { onCreate: (name: string, template?: 
     <section className="onboarding">
       <div>
         <p className="eyebrow">Första användning</p>
-        <h2>Skapa första kontexten och gå vidare till första utgiften.</h2>
+        <h2>Skapa första plånboken och gå vidare till första utgiften.</h2>
       </div>
       <input value={name} onChange={(event) => setName(event.target.value)} />
       <div className="segmented">
@@ -2197,7 +2197,7 @@ const helpFunctionCards: Array<{ icon: typeof Wallet; title: string; text: strin
   { icon: Upload, title: "Importera kontoutdrag", text: "Läs in bankrader från CSV, Excel eller PDF som enskilda köp. Appen försöker koppla kända abonnemangsdragningar till rätt återkommande utgift." },
   { icon: RefreshCcw, title: "Undvik dubbelräkning", text: "Återkommande utgift är plan eller avtal. Banktransaktionen är faktisk dragning. Matchade dragningar blir återkommande betalning, inte extra köp." },
   { icon: Paperclip, title: "Bifoga underlag", text: "Spara kvitton, avtal eller uppsägningsunderlag på en utgift. Filer följer med i export med filer." },
-  { icon: Download, title: "Flytta mellan enheter", text: "Använd Dela datafil eller exportera JSON. På den andra enheten importerar du filen som ny kontext." },
+  { icon: Download, title: "Flytta mellan enheter", text: "Använd Dela datafil eller exportera JSON. På den andra enheten importerar du filen som ny plånbok." },
   { icon: Cloud, title: "Molnsync", text: "För test eller egen drift kan appen synka hela state mot en endpoint. Lokal data finns kvar även om nätet saknas." }
 ];
 
@@ -4265,8 +4265,8 @@ function Admin({
 }) {
   const [dataNotice, setDataNotice] = useState<string>();
   const resetLocalData = () => {
-    if (!window.confirm("Rensa all lokal data och börja om utan någon kontext? En ansluten datafil kopplas loss och det här går inte att ångra.")) return;
-    if (window.confirm("Sista kontrollen: rensa alla kontexter, utgifter, register och köp från den här enheten?")) void reset();
+    if (!window.confirm("Rensa all lokal data och börja om utan någon plånbok? En ansluten datafil kopplas loss och det här går inte att ångra.")) return;
+    if (window.confirm("Sista kontrollen: rensa alla plånböcker, utgifter, register och köp från den här enheten?")) void reset();
   };
   const handlePrimaryDataAction = async () => {
     setDataNotice(undefined);
@@ -4286,6 +4286,7 @@ function Admin({
         : "Du behöver inte välja något. Skapa en ansluten datafil bara om du vill ha en backup som uppdateras automatiskt."
     : "Du behöver inte välja något. Den här webbläsaren kan inte ansluta en levande datafil, men du kan ladda ner en backup.";
   const primaryDataActionLabel = dataFile.fileName ? "Spara ansluten datafil" : dataFile.supported ? "Skapa ansluten datafil" : "Ladda ner backupfil";
+  const primaryDataActionTag = dataFile.status === "saving" ? "Sparar" : dataFile.fileName ? "Spara" : dataFile.supported ? "Skapa" : "Ladda ner";
   const primaryDataActionDetail = dataFile.fileName
     ? "Skriv senaste ändringarna till den valda filen."
     : dataFile.supported
@@ -4315,7 +4316,7 @@ function Admin({
                 <strong>{primaryDataActionLabel}</strong>
                 <small>{primaryDataActionDetail}</small>
               </span>
-              <em>{dataFile.status === "saving" ? "Sparar" : "Knapp"}</em>
+              <em>{primaryDataActionTag}</em>
             </button>
             <button className="dataAction" onClick={() => void shareDataFile(state)}>
               <Upload size={18} />
@@ -4323,13 +4324,13 @@ function Admin({
                 <strong>Dela till annan enhet</strong>
                 <small>Skicka en öppningsfil som läser in datan i webbappen.</small>
               </span>
-              <em>Knapp</em>
+              <em>Dela</em>
             </button>
             <label className="fileButton dataAction">
               <Import size={18} />
               <span>
                 <strong>Importera från fil</strong>
-                <small>Läs in datafil, kontext-export eller kontoutdrag.</small>
+                <small>Läs in datafil, plånboksexport eller kontoutdrag.</small>
               </span>
               <em>Välj fil</em>
               <input type="file" accept="application/json,.json,.csv,.xlsx,.pdf,text/csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={importFile} />

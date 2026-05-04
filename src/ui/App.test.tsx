@@ -257,14 +257,14 @@ describe("App", () => {
     expect(screen.getByLabelText(/Dras dag/i)).toHaveValue(27);
   });
 
-  it("fragar om ny kontext nar ingen kontext finns", () => {
+  it("fragar om ny planbok nar ingen planbok finns", () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
     localStorage.setItem(storageKey, JSON.stringify(stateWithoutContext()));
     render(<App />);
 
-    expect(screen.getByRole("heading", { name: /Vill du starta en ny kontext/i })).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText(/Namn på ny kontext/i), { target: { value: "Tom start" } });
-    fireEvent.click(screen.getByRole("button", { name: /Starta ny kontext/i }));
+    expect(screen.getByRole("heading", { name: /Vill du starta en ny plånbok/i })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/Namn på ny plånbok/i), { target: { value: "Tom start" } });
+    fireEvent.click(screen.getByRole("button", { name: /Starta ny plånbok/i }));
 
     expect(confirm).toHaveBeenCalledWith(expect.stringContaining("standardföretag"));
     const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
@@ -275,7 +275,7 @@ describe("App", () => {
     expect(saved.categories.some((category) => category.name === "Nöje")).toBe(true);
   });
 
-  it("kan rensa all data och borja om utan kontext", async () => {
+  it("kan rensa all data och borja om utan planbok", async () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
     localStorage.setItem(storageKey, JSON.stringify(stateWithCarWash()));
     render(<App />);
@@ -285,7 +285,7 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: /Rensa all data och börja om/i }));
 
     expect(confirm).toHaveBeenCalledTimes(2);
-    expect(await screen.findByRole("heading", { name: /Vill du starta en ny kontext/i })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /Vill du starta en ny plånbok/i })).toBeInTheDocument();
     await waitFor(() => {
       const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
       expect(saved.contexts).toHaveLength(0);
@@ -540,7 +540,7 @@ describe("App", () => {
     expect(screen.getByText("HANDLARE 12")).toBeInTheDocument();
   });
 
-  it("fragar innan aktiv kontext raderas", () => {
+  it("fragar innan aktiv planbok raderas", () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
     localStorage.setItem(storageKey, JSON.stringify({
       ...stateWithCarWash(),
@@ -554,25 +554,25 @@ describe("App", () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole("button", { name: /Data/i }));
-    fireEvent.click(screen.getByRole("button", { name: /^Radera kontext$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^Radera plånbok$/i }));
 
-    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Radera kontexten "Resa"'));
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Radera plånboken "Resa"'));
     const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
     expect(saved.activeContextId).toBe("ctx-1");
     expect(saved.contexts.map((context) => context.id)).toEqual(["ctx-1"]);
     expect(saved.categories.some((category) => category.contextId === "ctx-2")).toBe(false);
   });
 
-  it("skapar kontext efter namnfraga", () => {
+  it("skapar planbok efter namnfraga", () => {
     const prompt = vi.spyOn(window, "prompt").mockReturnValue("Semester");
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     localStorage.setItem(storageKey, JSON.stringify(stateWithCarWash()));
     render(<App />);
 
     fireEvent.click(screen.getByRole("button", { name: /Data/i }));
-    fireEvent.click(screen.getByRole("button", { name: /^Ny kontext$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^Ny plånbok$/i }));
 
-    expect(prompt).toHaveBeenCalledWith("Vad ska den nya kontexten heta?");
+    expect(prompt).toHaveBeenCalledWith("Vad ska den nya plånboken heta?");
     expect(confirm).toHaveBeenCalledWith(expect.stringContaining("standardföretag"));
     const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
     expect(saved.activeContextId).not.toBe("ctx-1");

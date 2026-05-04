@@ -185,6 +185,11 @@ small {
   position: relative;
 }
 
+.selectWrap select {
+  appearance: none;
+  padding-right: 34px;
+}
+
 .selectWrap svg {
   position: absolute;
   right: 9px;

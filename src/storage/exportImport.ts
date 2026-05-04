@@ -35,7 +35,7 @@ export function validateImportPayload(value: unknown): { ok: true; payload: Expo
   const payload = value as Partial<ExportPayload>;
   if (!payload || typeof payload !== "object") errors.push("Filen är inte ett giltigt JSON-objekt.");
   if (payload.kind !== "cost-control-context-export") errors.push("Exporttypen saknas eller är fel.");
-  if (!payload.context?.name) errors.push("Kontext saknas.");
+  if (!payload.context?.name) errors.push("Plånbok saknas.");
   for (const key of ["people", "suppliers", "categories", "expenses", "costPeriods", "attachments", "reminders"] as const) {
     if (!Array.isArray(payload[key])) errors.push(`${key} måste vara en lista.`);
   }
@@ -224,7 +224,7 @@ export function exportCsv(state: AppState): void {
   const categories = byContext(state.categories, context.id);
   const people = byContext(state.people, context.id);
   const rows = [
-    ["Kontext", "Utgift", "Leverantör", "Kategori", "Betalare", "Flagga", "Status", "Belopp", "Period", "Dras dag"],
+    ["Plånbok", "Utgift", "Leverantör", "Kategori", "Betalare", "Flagga", "Status", "Belopp", "Period", "Dras dag"],
     ...expenses.flatMap((expense) =>
       state.costPeriods
         .filter((period) => period.expenseId === expense.id)
