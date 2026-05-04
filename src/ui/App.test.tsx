@@ -258,6 +258,7 @@ describe("App", () => {
   });
 
   it("fragar om ny kontext nar ingen kontext finns", () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
     localStorage.setItem(storageKey, JSON.stringify(stateWithoutContext()));
     render(<App />);
 
@@ -265,10 +266,13 @@ describe("App", () => {
     fireEvent.change(screen.getByLabelText(/Namn på ny kontext/i), { target: { value: "Tom start" } });
     fireEvent.click(screen.getByRole("button", { name: /Starta ny kontext/i }));
 
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining("standardföretag"));
     const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
     expect(saved.contexts).toHaveLength(1);
     expect(saved.contexts[0].name).toBe("Tom start");
     expect(saved.activeContextId).toBe(saved.contexts[0].id);
+    expect(saved.suppliers.some((supplier) => supplier.name === "Netflix")).toBe(true);
+    expect(saved.categories.some((category) => category.name === "Nöje")).toBe(true);
   });
 
   it("kan rensa all data och borja om utan kontext", async () => {

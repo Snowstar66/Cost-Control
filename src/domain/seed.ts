@@ -10,6 +10,7 @@ export const defaultCategoryTemplates = [
   { name: "Kommunikation", color: "#b58df1", icon: "wifi" },
   { name: "Hälsa", color: "#a2dba6", icon: "heart" },
   { name: "Underhållning", color: "#f58e92", icon: "sparkles" },
+  { name: "Nöje", color: "#c084fc", icon: "play" },
   { name: "Ljudböcker", color: "#8fb7ff", icon: "book" },
   { name: "Nyheter", color: "#a9b2c4", icon: "newspaper" },
   { name: "Moln & mjukvara", color: "#4fc4bd", icon: "cloud" },

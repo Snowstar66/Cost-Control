@@ -454,7 +454,7 @@ export function App() {
   if (!hasContexts) {
     return (
       <EmptyContextStart
-        onCreate={(name) => setState((current) => addContext(current, name.trim() || "Min ekonomi", "SEK"))}
+        onCreate={(name, includeDefaultSuppliers) => setState((current) => addContext(current, name.trim() || "Min ekonomi", "SEK", undefined, includeDefaultSuppliers))}
       />
     );
   }
@@ -803,8 +803,12 @@ function QuickAddMenu({
   );
 }
 
-function EmptyContextStart({ onCreate }: { onCreate: (name: string) => void }) {
+function EmptyContextStart({ onCreate }: { onCreate: (name: string, includeDefaultSuppliers: boolean) => void }) {
   const [name, setName] = useState("Min ekonomi");
+  const createContext = () => {
+    const includeDefaultSuppliers = window.confirm("Vill du lägga in vanliga standardföretag som Netflix, Spotify och Vattenfall i den nya kontexten?");
+    onCreate(name, includeDefaultSuppliers);
+  };
   return (
     <main className="emptyContextPage">
       <section className="emptyContextPanel" aria-labelledby="empty-context-title">
@@ -820,7 +824,7 @@ function EmptyContextStart({ onCreate }: { onCreate: (name: string) => void }) {
           <span>Namn på ny kontext</span>
           <input value={name} onChange={(event) => setName(event.target.value)} />
         </label>
-        <button className="primary" onClick={() => onCreate(name)}>
+        <button className="primary" onClick={createContext}>
           <Plus size={18} /> Starta ny kontext
         </button>
       </section>
