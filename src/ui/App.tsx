@@ -1816,6 +1816,16 @@ function Timeline(props: {
   const [expandedMobilePurchaseKey, setExpandedMobilePurchaseKey] = useState<string | undefined>();
   const placeholderRows = Array.from({ length: purchaseRows.length > 0 ? 0 : Math.max(0, (props.minRows ?? 0) - props.expenses.length) });
   const mobileMonths = props.months.slice(0, 4);
+  const recurringTotalsByMonth = props.months.reduce<Record<string, number>>((totals, month) => {
+    totals[month.key] = props.expenses.reduce((sum, expense) => sum + expenseAmountForMonth(expense, props.periods, month).amount, 0);
+    return totals;
+  }, {});
+  const purchaseTotalsByMonth = props.months.reduce<Record<string, number>>((totals, month) => {
+    totals[month.key] = purchaseRows.reduce((sum, row) => sum + (row.totals[month.key] ?? 0), 0);
+    return totals;
+  }, {});
+  const recurringPeriodTotal = props.months.reduce((sum, month) => sum + (recurringTotalsByMonth[month.key] ?? 0), 0);
+  const purchasePeriodTotal = props.months.reduce((sum, month) => sum + (purchaseTotalsByMonth[month.key] ?? 0), 0);
   const togglePurchaseMonth = (rowKey: string, monthKey: string) => {
     const key = `${rowKey}:${monthKey}`;
     setExpandedPurchaseKey((current) => (current === key ? undefined : key));
@@ -1834,6 +1844,13 @@ function Timeline(props: {
               {month.label}
             </div>
           ))}
+          <div className="timelineSectionDivider recurringSectionDivider" style={{ gridColumn: "1 / -1" }}>
+            <span>Återkommande utgifter</span>
+            <small>Fasta och planerade kostnader</small>
+          </div>
+          {props.expenses.length === 0 && (
+            <div className="timelineEmptySection" style={{ gridColumn: "1 / -1" }}>Inga återkommande utgifter ännu.</div>
+          )}
           {props.expenses.map((expense) => {
             const supplier = props.suppliers.find((item) => item.id === expense.supplierId);
             const category = props.categories.find((item) => item.id === expense.categoryId);
@@ -1862,6 +1879,16 @@ function Timeline(props: {
               </div>
             );
           })}
+          {props.expenses.length > 0 && (
+            <>
+              <div className="timelineSubtotal stickyCol">Summa återkommande</div>
+              {props.months.map((month) => (
+                <div className="timelineSubtotal" key={`recurring-total-${month.key}`}>
+                  {formatMoney(recurringTotalsByMonth[month.key] ?? 0, props.contextCurrency)}
+                </div>
+              ))}
+            </>
+          )}
           {placeholderRows.map((_, index) => (
             <div className="timelineRow placeholder" key={`empty-${index}`} style={{ display: "contents" }}>
               <div className="expenseLabel stickyCol emptyCell" aria-hidden="true">
@@ -1874,7 +1901,7 @@ function Timeline(props: {
             </div>
           ))}
           {purchaseRows.length > 0 && (
-            <div className="purchaseSectionDivider" style={{ gridColumn: "1 / -1" }}>
+            <div className="timelineSectionDivider purchaseSectionDivider" style={{ gridColumn: "1 / -1" }}>
               <span>Enskilda köp</span>
               <small>Grupperat per kategori. Klicka på ett månadsbelopp för detaljer.</small>
             </div>
@@ -1943,7 +1970,17 @@ function Timeline(props: {
               </Fragment>
             );
           })}
-          <div className="timelineTotal stickyCol">Summa per månad</div>
+          {purchaseRows.length > 0 && (
+            <>
+              <div className="timelineSubtotal purchaseSubtotal stickyCol">Summa enskilda köp</div>
+              {props.months.map((month) => (
+                <div className="timelineSubtotal purchaseSubtotal" key={`purchase-total-${month.key}`}>
+                  {formatMoney(purchaseTotalsByMonth[month.key] ?? 0, props.contextCurrency)}
+                </div>
+              ))}
+            </>
+          )}
+          <div className="timelineTotal stickyCol">Totalt per månad</div>
           {props.months.map((month) => (
             <div className="timelineTotal" key={month.key}>
               {formatMoney(props.totals[month.key] ?? 0, props.contextCurrency)}
@@ -1952,7 +1989,14 @@ function Timeline(props: {
         </div>
       </div>
       <div className="mobileTimeline">
-        {props.expenses.length === 0 && <p className="note">Inga utgifter ännu.</p>}
+        <div className="mobileSectionHeader">
+          <span>
+            <strong>Återkommande utgifter</strong>
+            <small>Fasta och planerade kostnader</small>
+          </span>
+          <b>{formatMoney(recurringPeriodTotal, props.contextCurrency)}</b>
+        </div>
+        {props.expenses.length === 0 && <p className="note mobileSectionNote">Inga återkommande utgifter ännu.</p>}
         {props.expenses.map((expense) => {
           const supplier = props.suppliers.find((item) => item.id === expense.supplierId);
           const category = props.categories.find((item) => item.id === expense.categoryId);
@@ -1981,6 +2025,21 @@ function Timeline(props: {
             </button>
           );
         })}
+        {props.expenses.length > 0 && (
+          <div className="mobileSectionTotal">
+            <span>Summa återkommande</span>
+            <strong>{formatMoney(recurringPeriodTotal, props.contextCurrency)}</strong>
+          </div>
+        )}
+        {purchaseRows.length > 0 && (
+          <div className="mobileSectionHeader purchaseSectionHeader">
+            <span>
+              <strong>Enskilda köp</strong>
+              <small>Grupperat per kategori</small>
+            </span>
+            <b>{formatMoney(purchasePeriodTotal, props.contextCurrency)}</b>
+          </div>
+        )}
         {purchaseRows.map((row) => {
           const periodValue = purchaseRowTotal(row);
           const expanded = expandedMobilePurchaseKey === row.key;
@@ -2028,7 +2087,14 @@ function Timeline(props: {
             </Fragment>
           );
         })}
+        {purchaseRows.length > 0 && (
+          <div className="mobileSectionTotal purchaseSectionTotal">
+            <span>Summa enskilda köp</span>
+            <strong>{formatMoney(purchasePeriodTotal, props.contextCurrency)}</strong>
+          </div>
+        )}
         <div className="mobileTotals">
+          <div className="mobileTotalsHeading">Totalt per månad</div>
           {mobileMonths.map((month) => (
             <span key={`mobile-total-${month.key}`}>
               <small>{month.label}</small>

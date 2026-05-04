@@ -363,13 +363,27 @@ describe("App", () => {
     localStorage.setItem(storageKey, JSON.stringify(stateWithPurchaseCategoryRows()));
     render(<App />);
 
+    expect(screen.getAllByText(/Återkommande utgifter/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Summa återkommande/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText("Enskilda köp")[0]).toBeInTheDocument();
+    expect(screen.getAllByText(/Summa enskilda k.p/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Totalt per m.nad/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText("Transport")[0]).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Transport feb 2026: 125/i }));
     expect(screen.getByText("ICA")).toBeInTheDocument();
     expect(screen.getAllByText(/424/).length).toBeGreaterThan(0);
     fireEvent.click(screen.getAllByRole("button", { name: /Visa köp ICA/i })[0]);
     expect(screen.getByRole("form", { name: /Uppdatera enskilt köp/i })).toBeInTheDocument();
+  });
+
+  it("visar tom aterkommande sektion nar oversikten bara har kop", () => {
+    const state = stateWithPurchaseCategoryRows();
+    localStorage.setItem(storageKey, JSON.stringify({ ...state, expenses: [], costPeriods: [] }));
+    render(<App />);
+
+    expect(screen.getAllByText(/Inga .terkommande utgifter .nnu/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Enskilda köp").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Totalt per m.nad/i).length).toBeGreaterThan(0);
   });
 
   it("visar alla kop nar en kategorirad expanderas i mobiloversikten", () => {

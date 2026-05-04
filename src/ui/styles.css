@@ -2640,7 +2640,8 @@ button.radarCard.green.active {
 }
 
 .timelineHead,
-.timelineTotal {
+.timelineTotal,
+.timelineSubtotal {
   padding: 8px 9px;
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
@@ -2681,7 +2682,7 @@ button.radarCard.green.active {
   background: #fbfcff;
 }
 
-.purchaseSectionDivider {
+.timelineSectionDivider {
   min-height: 38px;
   padding: 8px 10px;
   border-top: 1px solid #d7dee8;
@@ -2693,7 +2694,12 @@ button.radarCard.green.active {
   color: #667085;
 }
 
-.purchaseSectionDivider span {
+.recurringSectionDivider {
+  border-top: 0;
+  background: linear-gradient(90deg, #fbfcff, #fff);
+}
+
+.timelineSectionDivider span {
   color: #1f2937;
   font-size: 11px;
   font-weight: 780;
@@ -2701,8 +2707,37 @@ button.radarCard.green.active {
   text-transform: uppercase;
 }
 
-.purchaseSectionDivider small {
+.timelineSectionDivider small {
   font-size: 11px;
+}
+
+.timelineEmptySection {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-bottom: 1px solid #e5ebef;
+  background: #fff;
+  color: var(--muted);
+}
+
+.timelineSubtotal {
+  background: #f7f9fc;
+  color: #263244;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.timelineSubtotal.stickyCol {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  color: #1f2937;
+  font-weight: 720;
+}
+
+.purchaseSubtotal {
+  background: #f4f8fd;
 }
 
 .purchaseAggregateLabel strong,
@@ -3360,6 +3395,7 @@ body {
 }
 
 .timelineHead,
+.timelineSubtotal,
 .timelineTotal {
   background: #fbfbfc;
   color: #1f2937;
@@ -4047,6 +4083,7 @@ body {
 }
 
 .overviewGrid .timelineHead,
+.overviewGrid .timelineSubtotal,
 .overviewGrid .timelineTotal {
   padding-top: 10px;
   padding-bottom: 10px;
@@ -4305,6 +4342,7 @@ textarea {
 }
 
 .timelineHead,
+.timelineSubtotal,
 .timelineTotal {
   text-align: center;
   background: #fafafa;
@@ -4427,6 +4465,7 @@ textarea {
 }
 
 .timelineHead,
+.timelineSubtotal,
 .timelineTotal,
 .expenseLabel,
 .monthCell {
@@ -4446,6 +4485,7 @@ textarea {
 }
 
 .monthCell,
+.timelineSubtotal:not(.stickyCol),
 .timelineTotal:not(.stickyCol) {
   display: flex;
   align-items: center;
@@ -4460,6 +4500,14 @@ textarea {
 
 .monthCell.locked .lockIcon {
   right: 6px;
+}
+
+.overviewGrid .timelineSubtotal {
+  background: #f7f9fc;
+}
+
+.overviewGrid .purchaseSubtotal {
+  background: #f4f8fd;
 }
 
 .mobileTimeline {
@@ -5567,6 +5615,80 @@ textarea {
     gap: 8px;
   }
 
+  .mobileSectionHeader,
+  .mobileSectionTotal {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 34px;
+    padding: 6px 3px 5px;
+    border-bottom: 1px solid #e5e9ef;
+    color: #263244;
+  }
+
+  .mobileSectionHeader {
+    margin-top: 2px;
+    text-transform: uppercase;
+  }
+
+  .mobileSectionHeader span,
+  .mobileSectionTotal span {
+    min-width: 0;
+    display: grid;
+    gap: 1px;
+  }
+
+  .mobileSectionHeader strong {
+    overflow: hidden;
+    color: #111827;
+    font-size: 10.5px;
+    font-weight: 760;
+    letter-spacing: 0.08em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobileSectionHeader small {
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 560;
+    letter-spacing: 0;
+    text-overflow: ellipsis;
+    text-transform: none;
+    white-space: nowrap;
+  }
+
+  .mobileSectionHeader b,
+  .mobileSectionTotal strong {
+    flex: 0 0 auto;
+    color: #111827;
+    font-size: 12px;
+    font-weight: 680;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .mobileSectionTotal {
+    min-height: 32px;
+    margin-bottom: 2px;
+    padding: 5px 8px;
+    border: 1px solid #e5e9ef;
+    border-radius: 8px;
+    background: #fbfcfd;
+  }
+
+  .mobileSectionTotal span {
+    color: var(--muted);
+    font-size: 10.5px;
+    font-weight: 650;
+  }
+
+  .mobileSectionNote {
+    margin: 2px 3px 6px;
+  }
+
   .mobileExpenseCard {
     width: 100%;
     min-height: 0;
@@ -5678,6 +5800,15 @@ textarea {
     border: 1px solid #e0e5ec;
     border-radius: 12px;
     background: #fff;
+  }
+
+  .mobileTotalsHeading {
+    grid-column: 1 / -1;
+    color: #263244;
+    font-size: 10.5px;
+    font-weight: 760;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   .drawer {
