@@ -5505,7 +5505,7 @@ textarea {
 
   .necessitySummaryGrid {
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 5px;
+    gap: 6px;
   }
 
   .overviewGrid .actionPanel {
@@ -6072,18 +6072,21 @@ textarea {
   .necessitySummary {
     min-height: 50px;
     padding: 7px 3px;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    align-content: center;
-    justify-items: center;
+    justify-content: center;
     gap: 4px;
     text-align: center;
   }
 
   .summaryTop {
-    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    display: flex;
     gap: 0;
+    align-items: center;
     justify-content: center;
-    justify-items: center;
+    text-align: center;
   }
 
   .summaryTop svg {
@@ -6093,7 +6096,7 @@ textarea {
   .summaryTop span,
   .necessitySummary strong,
   .necessitySummary small {
-    justify-self: center;
+    width: 100%;
     text-align: center;
   }
 
@@ -6363,6 +6366,7 @@ textarea {
 
   .mobileTransactionActions {
     display: flex;
+    align-self: center;
     justify-content: flex-end;
     gap: 2px;
     grid-column: 2;
@@ -6371,9 +6375,18 @@ textarea {
 
   .mobileTransactionActions button {
     width: 30px;
+    height: 30px;
     min-height: 30px;
+    display: grid;
+    place-items: center;
     padding: 0;
     font-size: 0;
+    line-height: 0;
+  }
+
+  .mobileTransactionActions button svg {
+    display: block;
+    margin: auto;
   }
 
   .importPreviewList span {
@@ -7003,14 +7016,12 @@ textarea {
 
   .necessitySummaryGrid {
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 3px;
+    gap: 5px;
   }
 
   .necessitySummary {
     min-height: 42px;
     padding: 5px 3px;
-    align-content: center;
-    justify-items: center;
   }
 
   .summaryTop span {
