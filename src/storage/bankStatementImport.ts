@@ -280,7 +280,7 @@ function transactionsFromRows(rows: SheetRow[], fileName: string): BankStatement
       continue;
     }
     const date = normalizeDate(row[header.datum]);
-    const merchantRaw = (row[header.specifikation] ?? "").trim();
+    const merchantRaw = normalizeImportText(row[header.specifikation]);
     const amount = parseAmount(row[header.belopp]);
     if (!date || !merchantRaw || amount === undefined || amount <= 0 || isSummaryRow(merchantRaw)) {
       ignoredRows += 1;
@@ -293,8 +293,8 @@ function transactionsFromRows(rows: SheetRow[], fileName: string): BankStatement
       merchantRaw,
       merchantNormalized: normalizeMerchant(merchantRaw),
       description: merchantRaw,
-      location: row[header.ort] || undefined,
-      currency: row[header.valuta] || "SEK",
+      location: normalizeImportText(row[header.ort]),
+      currency: normalizeImportText(row[header.valuta]) || "SEK",
       amount,
       source: "import",
       importId,
@@ -378,7 +378,11 @@ function parseAmount(value?: string): number | undefined {
 }
 
 function normalizeMerchant(value: string): string {
-  return value.trim().replace(/\s+/g, " ").replace(/[-_]/g, " ").toUpperCase();
+  return normalizeImportText(value).replace(/[-_]/g, " ").toUpperCase();
+}
+
+function normalizeImportText(value?: string): string {
+  return value?.normalize("NFC").trim().replace(/\s+/g, " ") ?? "";
 }
 
 function isSummaryRow(value: string): boolean {

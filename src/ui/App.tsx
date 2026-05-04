@@ -175,6 +175,9 @@ function purchaseBusinessLabel(state: Pick<AppState, "purchaseBusinessLabel">): 
 function purchaseSignalLabel(flag: PurchaseFlag, businessLabel = purchaseFlagMeta.business.label): string {
   return flag === "business" ? businessLabel : purchaseFlagMeta[flag].label;
 }
+function displayText(value?: string): string {
+  return value?.normalize("NFC") ?? "";
+}
 type ExpenseFormInput = Parameters<typeof upsertExpense>[1];
 type PurchaseImportPreview = BankStatementImportResult & {
   fileName: string;
@@ -2745,11 +2748,12 @@ function Purchases({ context, transactions, categories, people, suppliers, busin
             const supplier = suppliers.find((item) => item.id === transaction.supplierId);
             const payer = people.find((item) => item.id === transaction.payerPersonId);
             const subtitle = transactionSecondaryText(transaction, supplier, payer);
+            const merchantLabel = displayText(transaction.merchantRaw);
             return (
               <div className="transactionRow" key={transaction.id} style={{ display: "contents" }}>
                 <button type="button" className="transactionCellButton" onClick={() => onEdit(transaction.id)}>{transaction.date}</button>
                 <button type="button" className="transactionCellButton merchant" onClick={() => onEdit(transaction.id)}>
-                  <strong>{transaction.merchantRaw}</strong>
+                  <strong>{merchantLabel}</strong>
                   {subtitle && <small>{subtitle}</small>}
                 </button>
                 <button type="button" className="transactionCellButton" onClick={() => onEdit(transaction.id)}>{category?.name ?? "Okategoriserat"}</button>
@@ -2765,7 +2769,7 @@ function Purchases({ context, transactions, categories, people, suppliers, busin
                         key={flag}
                         onClick={() => onToggleFlag(transaction.id, flag)}
                         title={label}
-                        aria-label={`${label}: ${transaction.merchantRaw}`}
+                        aria-label={`${label}: ${merchantLabel}`}
                         aria-pressed={active}
                       >
                         <Icon size={13} />
@@ -2789,11 +2793,12 @@ function Purchases({ context, transactions, categories, people, suppliers, busin
             const supplier = suppliers.find((item) => item.id === transaction.supplierId);
             const payer = people.find((item) => item.id === transaction.payerPersonId);
             const subtitle = transactionSecondaryText(transaction, supplier, payer);
+            const merchantLabel = displayText(transaction.merchantRaw);
             return (
               <article className="mobileTransactionCard" key={`mobile-${transaction.id}`}>
                 <button type="button" className="mobileTransactionMain" onClick={() => onEdit(transaction.id)}>
                   <span>
-                    <strong>{transaction.merchantRaw}</strong>
+                    <strong>{merchantLabel}</strong>
                     <small>{transaction.date} · {category?.name ?? "Okategoriserat"}</small>
                   </span>
                   <b>{formatMoney(transaction.amount, transaction.currency)}</b>
@@ -2812,7 +2817,7 @@ function Purchases({ context, transactions, categories, people, suppliers, busin
                           key={flag}
                           onClick={() => onToggleFlag(transaction.id, flag)}
                           title={label}
-                          aria-label={`${label.toLowerCase()} ${transaction.merchantRaw}`}
+                          aria-label={`${label.toLowerCase()} ${merchantLabel}`}
                           aria-pressed={active}
                         >
                           <Icon size={13} />
@@ -2822,10 +2827,10 @@ function Purchases({ context, transactions, categories, people, suppliers, busin
                   </span>
                 </div>
                 <div className="mobileTransactionActions">
-                  <button type="button" className="iconBtn ghostBtn" onClick={() => onEdit(transaction.id)} title="Redigera" aria-label={`Redigera ${transaction.merchantRaw}`}>
+                  <button type="button" className="iconBtn ghostBtn" onClick={() => onEdit(transaction.id)} title="Redigera" aria-label={`Redigera ${merchantLabel}`}>
                     <Pencil size={14} /> Redigera
                   </button>
-                  <button type="button" className="iconBtn ghostBtn dangerText" onClick={() => onDelete(transaction.id)} title="Ta bort" aria-label={`Ta bort ${transaction.merchantRaw}`}>
+                  <button type="button" className="iconBtn ghostBtn dangerText" onClick={() => onDelete(transaction.id)} title="Ta bort" aria-label={`Ta bort ${merchantLabel}`}>
                     <Trash2 size={14} /> Ta bort
                   </button>
                 </div>

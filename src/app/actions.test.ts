@@ -136,6 +136,14 @@ describe("importTransactions", () => {
     expect(next.transactions[0].payerPersonId).toBe("person-1");
   });
 
+  it("normaliserar importerad handlartext med svenska tecken", () => {
+    const next = importTransactions(state, [
+      { date: "2026-02-01", bookedDate: "2026-02-02", merchantRaw: "RO\u0308DA KORSET KUP", amount: 125, currency: "SEK" }
+    ]);
+
+    expect(next.transactions[0].merchantRaw).toBe("R\u00d6DA KORSET KUP");
+  });
+
   it("expanderar tidsfönstret när importerade köp ligger i äldre kontoutdrag", () => {
     const next = importTransactions(state, [
       { date: "2025-12-28", bookedDate: "2025-12-29", statementMonth: "2025-12", merchantRaw: "APOTEK", amount: 187, currency: "SEK" }

@@ -66,8 +66,14 @@ function normalizeDateInput(value?: string): string | undefined {
   return match ? `${match[1]}-${match[2]}-${match[3] ?? "01"}` : value;
 }
 
+function normalizeStoredText(value?: string): string | undefined {
+  const normalized = value?.normalize("NFC").trim().replace(/\s+/g, " ");
+  return normalized || undefined;
+}
+
 function normalizeMerchant(value: string): string {
   return value
+    .normalize("NFC")
     .trim()
     .replace(/\s+/g, " ")
     .replace(/\s+(AB|HB)$/i, "")
@@ -329,7 +335,7 @@ export function transactionFingerprint(transaction: Pick<PurchaseTransaction, "d
 export function upsertTransaction(state: AppState, input: UpsertTransactionInput): AppState {
   const contextId = state.activeContextId;
   const existing = input.id ? state.transactions.find((transaction) => transaction.id === input.id) : undefined;
-  const merchantRaw = input.merchantRaw.trim() || input.description?.trim() || "Okänt köp";
+  const merchantRaw = normalizeStoredText(input.merchantRaw) ?? normalizeStoredText(input.description) ?? "Okänt köp";
   const next: PurchaseTransaction = {
     id: input.id ?? id("txn"),
     contextId,
@@ -339,9 +345,9 @@ export function upsertTransaction(state: AppState, input: UpsertTransactionInput
     amount: Number(input.amount),
     currency: input.currency ?? "SEK",
     merchantRaw,
-    merchantNormalized: input.merchantNormalized?.trim() || normalizeMerchant(merchantRaw),
-    description: input.description,
-    location: input.location,
+    merchantNormalized: normalizeStoredText(input.merchantNormalized) ?? normalizeMerchant(merchantRaw),
+    description: normalizeStoredText(input.description),
+    location: normalizeStoredText(input.location),
     categoryId: input.categoryId,
     supplierId: input.supplierId,
     payerPersonId: input.payerPersonId,
@@ -350,7 +356,7 @@ export function upsertTransaction(state: AppState, input: UpsertTransactionInput
     importId: input.importId,
     type: input.recurringExpenseId && !input.type ? "recurring-payment" : input.type ?? "one-off",
     flags: normalizePurchaseFlags(input.flags ?? existing?.flags ?? []),
-    notes: input.notes,
+    notes: normalizeStoredText(input.notes),
     createdAt: existing?.createdAt ?? stamp(),
     updatedAt: stamp()
   };
@@ -380,7 +386,7 @@ export function importTransactions(state: AppState, transactions: UpsertTransact
     const fingerprint = transactionFingerprint(candidate);
     if (existingFingerprints.has(fingerprint)) continue;
     existingFingerprints.add(fingerprint);
-    const merchantRaw = input.merchantRaw.trim() || input.description?.trim() || "Okänt köp";
+    const merchantRaw = normalizeStoredText(input.merchantRaw) ?? normalizeStoredText(input.description) ?? "Okänt köp";
     const transactionType = input.recurringExpenseId && !input.type ? "recurring-payment" : input.type ?? "one-off";
     const flags = input.flags && input.flags.length > 0 ? normalizePurchaseFlags(input.flags) : transactionType === "one-off" ? (["review"] as PurchaseFlag[]) : [];
     nextTransactions.push({
@@ -392,9 +398,9 @@ export function importTransactions(state: AppState, transactions: UpsertTransact
       amount: candidate.amount,
       currency: input.currency ?? "SEK",
       merchantRaw,
-      merchantNormalized: input.merchantNormalized?.trim() || normalizeMerchant(merchantRaw),
-      description: input.description,
-      location: input.location,
+      merchantNormalized: normalizeStoredText(input.merchantNormalized) ?? normalizeMerchant(merchantRaw),
+      description: normalizeStoredText(input.description),
+      location: normalizeStoredText(input.location),
       categoryId: input.categoryId,
       supplierId: input.supplierId,
       payerPersonId: input.payerPersonId ?? defaultPayerPersonId,
@@ -403,7 +409,7 @@ export function importTransactions(state: AppState, transactions: UpsertTransact
       importId: input.importId,
       type: transactionType,
       flags,
-      notes: input.notes,
+      notes: normalizeStoredText(input.notes),
       createdAt: stamp(),
       updatedAt: stamp()
     });
