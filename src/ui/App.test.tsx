@@ -510,6 +510,24 @@ describe("App", () => {
     });
   });
 
+  it("visar hela importforhandsgranskningen innan importbeslut", async () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithCarWash()));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^Inköp$/i }));
+    const rows = Array.from({ length: 12 }, (_, index) => `2026-03-${String(index + 1).padStart(2, "0")};HANDLARE ${index + 1};${index + 10}`);
+    const csv = `Datum;Specifikation;Belopp\n${rows.join("\n")}`;
+    const file = new File([csv], "many.csv", { type: "text/csv" });
+    Object.defineProperty(file, "text", { value: () => Promise.resolve(csv) });
+    const input = document.querySelector(".quickImportInput") as HTMLInputElement;
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(await screen.findByText("Visar 12 av 12 rader")).toBeInTheDocument();
+    expect(screen.getByText("HANDLARE 1")).toBeInTheDocument();
+    expect(screen.getByText("HANDLARE 12")).toBeInTheDocument();
+  });
+
   it("fragar innan aktiv kontext raderas", () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
     localStorage.setItem(storageKey, JSON.stringify({

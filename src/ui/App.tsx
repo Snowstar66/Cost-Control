@@ -2529,10 +2529,12 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
             <h2>Importförhandsgranskning</h2>
             <span>{importPreview.fileName}</span>
           </div>
-          <p className="note">Hittade {importPreview.transactions.length} enskilda köp på totalt {formatMoney(importPreviewTotal, context.currency)}. Ignorerade {importPreview.ignoredRows} rubriker, summeringar eller ej relevanta rader.</p>
-          <div className="importPreviewList">
-            {importPreview.transactions.slice(0, 8).map((transaction, index) => (
+          <p className="note">Hittade {importPreview.transactions.length} enskilda köp på totalt {formatMoney(importPreviewTotal, context.currency)}. Ignorerade {importPreview.ignoredRows} rubriker, summeringar eller ej relevanta rader. Alla rader visas här innan du importerar.</p>
+          <div className="importPreviewCount">Visar {importPreview.transactions.length} av {importPreview.transactions.length} rader</div>
+          <div className="importPreviewList" aria-label="Alla importerade köp">
+            {importPreview.transactions.map((transaction, index) => (
               <span key={`${transaction.date}-${transaction.merchantRaw}-${index}`}>
+                <em>{index + 1}</em>
                 <b>{transaction.date}</b>
                 {transaction.merchantRaw}
                 <strong>{formatMoney(transaction.amount, transaction.currency)}</strong>
