@@ -538,6 +538,13 @@ small {
   padding: 0;
 }
 
+.iconBtn svg,
+.signalToggle svg,
+.purchaseSignalBadge svg {
+  display: block;
+  flex: 0 0 auto;
+}
+
 .overviewGrid,
 .registerGrid,
 .insightGrid,
@@ -897,6 +904,7 @@ button.radarCard.green.active {
   width: 28px;
   min-height: 28px;
   padding: 0;
+  line-height: 0;
 }
 
 .signalToggle.active,
@@ -2753,33 +2761,29 @@ button.radarCard.green.active {
 }
 
 .purchaseSignalBadge {
-  width: 20px;
-  height: 20px;
-  display: inline-grid;
-  place-items: center;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
-  border: 1px solid #d7e0ea;
-  border-radius: 999px;
+  border: 0;
+  border-radius: 0;
   color: #1f4a8a;
-  background: #fff;
+  background: transparent;
+  line-height: 0;
 }
 
 .purchaseSignalBadge.red {
   color: #b4232d;
-  border-color: #f2c5cb;
-  background: #fff5f6;
 }
 
 .purchaseSignalBadge.amber {
   color: #99610a;
-  border-color: #ead5a7;
-  background: #fff8e8;
 }
 
 .purchaseSignalBadge.green {
   color: #167468;
-  border-color: #b9ded8;
-  background: #edf9f6;
 }
 
 .purchaseDetailCell {
@@ -7148,13 +7152,19 @@ textarea {
   }
 
   .mobilePurchaseDetails .purchaseSignalBadges {
+    display: flex;
+    align-items: center;
     justify-content: flex-start;
-    margin-top: 4px;
+    gap: 5px;
+    margin-top: 3px;
   }
 
   .mobilePurchaseDetails .purchaseSignalBadge {
     width: 18px;
     height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .mobilePurchaseDetails b {
