@@ -1,0 +1,319 @@
+{
+  "document_type": "Traceability Pack",
+  "product_name": "Mina Utgifter / Cost Control",
+  "generated_at": "2026-05-04",
+  "purpose": "Visa spårbarhet från ursprungligt framingmaterial till nuvarande implementation, tester och senare förändringar.",
+  "source_of_truth": {
+    "primary": "docs/utgiftskoll-aas-framing-import.json",
+    "handoff": "docs/out-001-discovery-loop-accelerated-framing-handoff.json",
+    "human_readable_handoff": "docs/out-001-discovery-loop-accelerated-framing-handoff.md",
+    "implementation_notes": "docs/implementation-notes.md"
+  },
+  "source_summary": {
+    "outcome": {
+      "id": "OUT-001",
+      "title": "Kontroll över privata återkommande kostnader",
+      "intent": "Användaren ska kunna förstå, registrera, följa och flytta privata återkommande och tidsbundna kostnader i en vald lokal kontext."
+    },
+    "mvp_scope": [
+      "Skapa och växla mellan separata kontexter.",
+      "Personregister med namn och frivillig tillgänglig inkomst.",
+      "Leverantörsregister med namn, logga och basinformation.",
+      "Kategoriregister.",
+      "Registrering av utgifter med leverantör, kategori, betalare, period, belopp och nödvändighetsflagga.",
+      "Tidslinje med 3 månader bakåt och 9 månader framåt.",
+      "Summering per månad.",
+      "Uppsägningstid och tidigaste möjliga kostnadsfria månad.",
+      "Lokal lagring.",
+      "Export/import av kontext.",
+      "Grundläggande filbilagor."
+    ],
+    "original_out_of_scope": [
+      "Bankkoppling.",
+      "Molnsynk.",
+      "Flera användarkonton.",
+      "Betalplattform.",
+      "AI-baserad automatisk fakturatolkning.",
+      "Avancerade simuleringar.",
+      "Full mobilapp i app store."
+    ],
+    "governance": [
+      "Finansiella beräkningar, kontextisolering och export/import ska ha automatiserade tester innan release.",
+      "Kryptering får inte marknadsföras som säker utan separat säkerhetsgranskning.",
+      "Människa ansvarar för prioritering, riskacceptans, AI-nivå, releasebeslut och verkliga användardata."
+    ]
+  },
+  "traceability_matrix": [
+    {
+      "trace_id": "TR-OUT-001",
+      "source_refs": ["OUT-001", "PS-001"],
+      "source_intent": "Lokal-first översikt över återkommande kostnader, historik, kommande månader, uppsägningar och dataseparering.",
+      "implementation_artifacts": [
+        "src/ui/App.tsx: App, Overview, Timeline, Statistics, Admin, HelpGuide",
+        "src/domain/calculations.ts",
+        "src/domain/date.ts",
+        "src/app/useAppState.ts",
+        "src/storage/localStore.ts"
+      ],
+      "verification": [
+        "src/domain/calculations.test.ts",
+        "src/ui/App.test.tsx",
+        "src/storage/localStore.test.ts"
+      ],
+      "status": "implemented",
+      "notes": "Nuvarande appen har även enskilda köp och signaler som senare produktutökning."
+    },
+    {
+      "trace_id": "TR-EP-001",
+      "source_refs": ["EP-001", "EPC-001", "AD-001", "AD-002", "AD-003", "AD-004", "SC-001", "SC-002", "SC-003", "SC-004"],
+      "source_intent": "Separata ekonomiska sammanhang ska kunna skapas, växlas, konfigureras och hållas isolerade.",
+      "implementation_artifacts": [
+        "src/app/actions.ts: addContext, updateContext, removeContext, duplicateCurrentContext",
+        "src/domain/seed.ts: createContext, cloneContextTemplate",
+        "src/domain/calculations.ts: byContext, currentContext",
+        "src/ui/App.tsx: EmptyContextStart, ContextSwitcher",
+        "src/storage/exportImport.ts: importAsNewContext"
+      ],
+      "verification": [
+        "src/app/actions.test.ts: removeContext",
+        "src/ui/App.test.tsx: frågar om ny plånbok, rensar data, skapar plånbok",
+        "src/storage/exportImport.test.ts: importerar som ny isolerad kontext"
+      ],
+      "commits": [
+        "c52acd6 Handle startup without contexts",
+        "e4c3f81 Rename contexts to wallets in UI",
+        "4dce104 Add payer to purchase transactions"
+      ],
+      "status": "implemented",
+      "terminology_note": "Ursprungligt 'kontext' heter nu 'plånbok' i UI, men interna typer heter fortfarande Context."
+    },
+    {
+      "trace_id": "TR-EP-002",
+      "source_refs": ["EP-002", "EPC-002", "AD-010", "AD-011", "AD-012", "AD-013", "AD-014", "SC-005", "SC-006", "SC-007", "SC-008"],
+      "source_intent": "Snabbregistrering av återkommande utgift med leverantör, belopp, periodicitet, kategori, betalare och signal.",
+      "implementation_artifacts": [
+        "src/ui/App.tsx: ExpenseModal, ExpenseComposer",
+        "src/app/actions.ts: upsertExpense",
+        "src/domain/types.ts: Expense, ExpenseCostPeriod",
+        "src/domain/seed.ts: createDefaultSuppliers"
+      ],
+      "verification": [
+        "src/app/actions.test.ts: upsertExpense",
+        "src/ui/App.test.tsx: förvaljer enda personen, startdatum påverkar översikt"
+      ],
+      "commits": [
+        "cec41a8 Refine recurring defaults and autocomplete",
+        "4d31a48 Use shared signals for recurring expenses",
+        "4dce104 Add payer to purchase transactions"
+      ],
+      "status": "implemented",
+      "notes": "Dragningsdag defaultar till 27 enligt senare användarbeslut."
+    },
+    {
+      "trace_id": "TR-EP-003",
+      "source_refs": ["EP-003", "EPC-003"],
+      "source_intent": "Tidslinje med utgifter som rader, månader som kolumner, 3 månader bakåt och 9 månader framåt, detaljexpansion och månadssummering.",
+      "implementation_artifacts": [
+        "src/ui/App.tsx: Timeline, TimelineToolbar",
+        "src/domain/date.ts: buildTimelineMonths",
+        "src/domain/calculations.ts: getVisibleTimelineMonths, monthlyTotals, cashflowTotals"
+      ],
+      "verification": [
+        "src/domain/calculations.test.ts: periodisering, kontodragning, summering",
+        "src/ui/App.test.tsx: översikt, expandera kategorirad, mobilöversikt"
+      ],
+      "commits": [
+        "9db2976 Separate overview expense sections",
+        "d723275 Expand purchase categories across months",
+        "4ec1f1a Left align overview total labels"
+      ],
+      "status": "implemented",
+      "notes": "Översikten har numera separata sektioner och totalsummor för återkommande och enskilda köp."
+    },
+    {
+      "trace_id": "TR-EP-004",
+      "source_refs": ["EP-004", "EPC-004"],
+      "source_intent": "Uppsägningstid, låst period och tidigaste möjliga kostnadsfria månad.",
+      "implementation_artifacts": [
+        "src/domain/calculations.ts: addNotice, isMonthLocked, earliestFreeMonth, simulatedExpenseAmountForMonth",
+        "src/app/actions.ts: createReminderForExpense",
+        "src/ui/App.tsx: detailpanel och simulering"
+      ],
+      "verification": [
+        "src/domain/calculations.test.ts: tidigaste utgiftsfria månad, simulering från möjlig månad"
+      ],
+      "status": "implemented",
+      "notes": "Simulering av uppsägning går utöver enklaste MVP men bygger på samma ursprungskrav."
+    },
+    {
+      "trace_id": "TR-EP-005",
+      "source_refs": ["EP-005", "EPC-005"],
+      "source_intent": "Grunddataregister för personer, leverantörer, kategorier, logga/filer och uppsägningsinstruktioner.",
+      "implementation_artifacts": [
+        "src/ui/App.tsx: Registers",
+        "src/domain/seed.ts: createDefaultCategories, createDefaultSuppliers",
+        "src/app/actions.ts: add/update/remove person, supplier, category",
+        "src/domain/types.ts: Person, Supplier, Category, Attachment"
+      ],
+      "verification": [
+        "src/ui/App.test.tsx: sparar ikon och färg på leverantör, väljer kategorifärg med namn"
+      ],
+      "commits": [
+        "43b7169 Add supplier icon selection",
+        "f6f7e5c Polish mobile purchases and register lists",
+        "f8a89b7 Restore default suppliers prompt for empty start"
+      ],
+      "status": "implemented",
+      "notes": "Kategori 'Nöje' och business-signalnamn är senare produktjusteringar ovanpå ursprungligt registerkrav."
+    },
+    {
+      "trace_id": "TR-EP-006",
+      "source_refs": ["EP-006", "EPC-006"],
+      "source_intent": "Export/import av kontext, flyttbar data, filval, CSV och valideringsfel.",
+      "implementation_artifacts": [
+        "src/storage/exportImport.ts: buildExportPayload, exportJson, exportZip, exportCsv, exportPdf, importAsNewContext, validateImportPayload",
+        "src/storage/dataFile.ts",
+        "src/ui/App.tsx: Admin/Data view"
+      ],
+      "verification": [
+        "src/storage/exportImport.test.ts",
+        "src/ui/App.test.tsx: datafilfallback och dataflöden"
+      ],
+      "commits": [
+        "bb76992 Clarify data storage actions",
+        "7eeb409 Polish data view and mobile filters"
+      ],
+      "status": "implemented",
+      "notes": "Datafil och handoff-fil är praktiska utökningar av flyttbarhetskravet."
+    },
+    {
+      "trace_id": "TR-EP-007",
+      "source_refs": ["EP-007", "MVP scope: Lokal lagring", "MVP out of scope: Molnsynk"],
+      "source_intent": "Lokal lagring utan konto, med tydlig risk kring privat data och utan ogrundade säkerhetslöften.",
+      "implementation_artifacts": [
+        "src/storage/localStore.ts",
+        "src/storage/dataFile.ts",
+        "src/storage/cloudStore.ts",
+        "src/app/useAppState.ts"
+      ],
+      "verification": [
+        "src/storage/localStore.test.ts",
+        "src/ui/App.test.tsx: rensa data och börja om"
+      ],
+      "status": "implemented_with_extension",
+      "notes": "Molnsync var uttryckligen out-of-scope i originalmaterialet men finns nu som avancerad egen endpoint. Den bör betraktas som experimentell/egen drift och inte som full fleranvändarsync."
+    },
+    {
+      "trace_id": "TR-EP-008",
+      "source_refs": ["EP-008"],
+      "source_intent": "Insikter kring månadssumma, kategori, betalare, disponibel inkomst och potentiell besparing.",
+      "implementation_artifacts": [
+        "src/ui/App.tsx: Statistics, BarList, PieChart, SpendRanking, PurchaseSignalPanel",
+        "src/domain/calculations.ts: totalsByCategory, totalsByPerson, potentialSavings"
+      ],
+      "verification": [
+        "src/domain/calculations.test.ts",
+        "src/ui/App.test.tsx: finansiell köpstatistik, köpradar, signalfilter"
+      ],
+      "commits": [
+        "fd4e1af Clarify purchase radar and date month totals",
+        "072dd32 Show purchase category period totals",
+        "25fbc36 Remove KPI box grid background"
+      ],
+      "status": "implemented",
+      "notes": "Köpradar och signalbaserad köpstatistik är senare fördjupning."
+    },
+    {
+      "trace_id": "TR-EP-009",
+      "source_refs": ["EP-009", "Journey J-001", "Journey J-002", "Journey J-003"],
+      "source_intent": "Guidat första flöde, mobil layout, tomlägen, primär ny-utgift och filter.",
+      "implementation_artifacts": [
+        "src/ui/App.tsx: EmptyContextStart, Mobile navigation, TimelineToolbar, HelpGuide",
+        "src/ui/styles.css"
+      ],
+      "verification": [
+        "src/ui/App.test.tsx: ny plånbok, mobilöversikt, filter, hjälpvy"
+      ],
+      "commits": [
+        "55dd694 Polish mobile standalone layout",
+        "0299e8b Refine mobile overview filters",
+        "0f8351d Polish mobile filter sheet",
+        "bd85972 Normalize purchase text for mobile rendering"
+      ],
+      "status": "implemented",
+      "notes": "UI-ordet 'Plånbok' ersätter 'Kontext' för begriplighet."
+    },
+    {
+      "trace_id": "TR-EP-010",
+      "source_refs": ["EP-010"],
+      "source_intent": "Premium/tillväxt: simulering, PDF, mallar, obegränsade kontexter via planflagga och lokala besparingsförslag.",
+      "implementation_artifacts": [
+        "src/ui/App.tsx: SimulationPanel",
+        "src/storage/exportImport.ts: exportPdf",
+        "src/domain/seed.ts: context templates"
+      ],
+      "verification": [
+        "src/domain/calculations.test.ts: simulerar uppsägning",
+        "src/storage/exportImport.test.ts"
+      ],
+      "status": "partial",
+      "notes": "Simulering och PDF finns. Verklig betalvägg/premiumaffär är inte implementerad och var inte kärna i MVP."
+    },
+    {
+      "trace_id": "TR-EXT-001",
+      "source_refs": ["Later user change requests", "Original out of scope: Bankkoppling"],
+      "source_intent": "Importera kontoutdrag från Excel/PDF utan bankkoppling och visa enskilda köp i översikt/statistik.",
+      "implementation_artifacts": [
+        "src/storage/bankStatementImport.ts",
+        "src/app/actions.ts: importTransactions, upsertTransaction, toggleTransactionFlag",
+        "src/ui/App.tsx: Purchases, PurchaseModal, PurchaseSignalBadges"
+      ],
+      "verification": [
+        "src/storage/bankStatementImport.test.ts",
+        "src/app/actions.test.ts: importTransactions, toggleTransactionFlag",
+        "src/ui/App.test.tsx: importförhandsgranskning, köpsignaler, översikt"
+      ],
+      "commits": [
+        "637f322 Fix Excel bank statement import",
+        "8398efc Add PDF bank statement import",
+        "d02a1ac Show full purchase import preview",
+        "bd85972 Normalize purchase text for mobile rendering"
+      ],
+      "status": "post_framing_extension",
+      "notes": "Detta är inte bankkoppling. Det är filimport och ligger därför nära export/import- och lokal-first-spåret, men bör ses som senare scope-tillägg."
+    },
+    {
+      "trace_id": "TR-EXT-002",
+      "source_refs": ["Later user change requests", "AD-013 / SC-008: nödvändighetsflagga"],
+      "source_intent": "Samma signalidé ska kunna användas för återkommande och enskilda köp, med granska som importläge för köp.",
+      "implementation_artifacts": [
+        "src/domain/types.ts: PurchaseFlag",
+        "src/ui/App.tsx: purchaseFlagMeta, PurchaseSignalBadges, PurchaseSignalPanel",
+        "src/app/actions.ts: normalizePurchaseFlags, toggleTransactionFlag"
+      ],
+      "verification": [
+        "src/app/actions.test.ts: exklusiva köpsignaler",
+        "src/ui/App.test.tsx: business, granska, köpradar, hjälp"
+      ],
+      "commits": [
+        "65d8417 Add business purchase signal",
+        "1f173d5 Treat business as purchase signal",
+        "9338743 Make purchase signals exclusive",
+        "d91e760 Explain purchase signals in help"
+      ],
+      "status": "post_framing_extension",
+      "notes": "Granska är endast för enskilda köp/importgranskning. Återkommande använder signalerna utan granska."
+    }
+  ],
+  "coverage_summary": {
+    "implemented": ["OUT-001", "EP-001", "EP-002", "EP-003", "EP-004", "EP-005", "EP-006", "EP-008", "EP-009"],
+    "implemented_with_extension": ["EP-007"],
+    "partial": ["EP-010"],
+    "post_framing_extensions": ["Kontoutdragsimport Excel/PDF", "Enskilda köp", "Köpsignaler", "Molnsync egen endpoint"],
+    "known_traceability_risks": [
+      "Senare användarstyrda UI-ändringar är spårade via Git-commits snarare än ursprungliga story-id:n.",
+      "Molnsync var out-of-scope i originalmaterialet och behöver separat beslut om den ska bli produktionsscope.",
+      "Bank-/PDF-import bör dokumenteras som scope-tillägg om detta pack ska användas som formell kravbas."
+    ]
+  }
+}
