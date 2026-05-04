@@ -254,6 +254,7 @@ describe("App", () => {
     expect(within(signal).getByRole("option", { name: "Business" })).toBeInTheDocument();
     expect(within(signal).getByRole("option", { name: "Onödigt" })).toBeInTheDocument();
     expect(within(signal).queryByRole("option", { name: "Granska" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Dras dag/i)).toHaveValue(27);
   });
 
   it("fragar om ny kontext nar ingen kontext finns", () => {
@@ -467,11 +468,12 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: /Enskilt köp/i }));
 
     const merchant = screen.getByLabelText(/^Handlare$/i);
-    expect(merchant).toHaveAttribute("list", "merchant-suggestions");
+    expect(merchant).not.toHaveAttribute("list");
     expect(document.querySelector('datalist#merchant-suggestions option[value="ICA"]')).not.toBeNull();
     expect(document.querySelector('datalist#merchant-suggestions option[value="OK Q8"]')).not.toBeNull();
 
     fireEvent.change(merchant, { target: { value: "okq8" } });
+    expect(merchant).toHaveAttribute("list", "merchant-suggestions");
     fireEvent.blur(merchant);
     expect(merchant).toHaveValue("OK Q8");
     fireEvent.change(merchant, { target: { value: "ica" } });

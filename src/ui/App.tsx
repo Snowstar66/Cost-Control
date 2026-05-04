@@ -1182,7 +1182,7 @@ function ExpenseModal({ expense, costPeriod, categories, people, suppliers, onSa
     recurrence: "monthly" as Recurrence,
     necessityLevel: "comfortable" as NecessityLevel,
     startDate: toIsoDate(new Date()),
-    chargeDay: "1",
+    chargeDay: "27",
     noticePeriodValue: "",
     noticePeriodUnit: "months" as "days" | "months",
     notes: ""
@@ -1200,7 +1200,7 @@ function ExpenseModal({ expense, costPeriod, categories, people, suppliers, onSa
         recurrence: "monthly",
         necessityLevel: "comfortable",
         startDate: toIsoDate(new Date()),
-        chargeDay: "1",
+        chargeDay: "27",
         noticePeriodValue: "",
         noticePeriodUnit: "months",
         notes: ""
@@ -1217,7 +1217,7 @@ function ExpenseModal({ expense, costPeriod, categories, people, suppliers, onSa
       recurrence: costPeriod?.recurrence ?? "monthly",
       necessityLevel: expense.necessityLevel,
       startDate: expense.startDate ?? costPeriod?.startDate ?? toIsoDate(new Date()),
-      chargeDay: costPeriod?.chargeDay ? String(costPeriod.chargeDay) : "1",
+      chargeDay: costPeriod?.chargeDay ? String(costPeriod.chargeDay) : "27",
       noticePeriodValue: expense.noticePeriodValue ? String(expense.noticePeriodValue) : "",
       noticePeriodUnit: expense.noticePeriodUnit ?? "months",
       notes: expense.notes ?? ""
@@ -1330,7 +1330,7 @@ function ExpenseModal({ expense, costPeriod, categories, people, suppliers, onSa
         <div className="formSection three">
           <label>
             <span>Dras dag</span>
-            <input type="number" min="1" max="31" value={form.chargeDay} onChange={(event) => setForm({ ...form, chargeDay: event.target.value })} placeholder="1" />
+            <input type="number" min="1" max="31" value={form.chargeDay} onChange={(event) => setForm({ ...form, chargeDay: event.target.value })} placeholder="27" />
           </label>
           <label>
             <span>Uppsägningstid</span>
@@ -1402,8 +1402,10 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, transacti
     applyCategoryToSameMerchant: false,
     notes: ""
   });
+  const [merchantSuggestionsEnabled, setMerchantSuggestionsEnabled] = useState(false);
 
   useEffect(() => {
+    setMerchantSuggestionsEnabled(false);
     if (!transaction) {
       setForm({ date: toIsoDate(new Date()), bookedDate: "", merchantRaw: "", amount: "", categoryId: "", categorySuggestedFromMerchantKey: "", supplierId: "", recurringExpenseId: "", type: "one-off", flags: [], applyCategoryToSameMerchant: false, notes: "" });
       return;
@@ -1490,7 +1492,17 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, transacti
         <div className="formSection split">
           <label>
             <span>Handlare</span>
-            <input value={form.merchantRaw} onChange={(event) => applyMerchantDefaults(event.target.value)} onBlur={() => applyMerchantDefaults(form.merchantRaw, true)} placeholder="ICA, Apple, OKQ8..." list="merchant-suggestions" autoFocus />
+            <input
+              value={form.merchantRaw}
+              onChange={(event) => {
+                setMerchantSuggestionsEnabled(event.target.value.trim().length > 0);
+                applyMerchantDefaults(event.target.value);
+              }}
+              onBlur={() => applyMerchantDefaults(form.merchantRaw, true)}
+              placeholder="ICA, Apple, OKQ8..."
+              list={merchantSuggestionsEnabled ? "merchant-suggestions" : undefined}
+              autoFocus
+            />
             <datalist id="merchant-suggestions">
               {merchantSuggestions.map((merchant) => <option key={merchant} value={merchant} />)}
             </datalist>
@@ -1589,7 +1601,7 @@ function ExpenseComposer({ categories, people, suppliers, onSave, compact = fals
     recurrence: "monthly" as Recurrence,
     necessityLevel: "comfortable" as NecessityLevel,
     startDate: toIsoDate(new Date()),
-    chargeDay: "1",
+    chargeDay: "27",
     noticePeriodValue: "",
     noticePeriodUnit: "months" as "days" | "months",
     notes: ""
