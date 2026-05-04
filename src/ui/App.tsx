@@ -2249,13 +2249,13 @@ const helpViewCards: Array<{ icon: typeof Wallet; title: string; text: string; i
     icon: BarChart3,
     title: "Översikt",
     text: "Här ser du återkommande kostnader och enskilda köp i samma månadsbild.",
-    items: ["Sök, filtrera och göm historik i verktygsraden.", "Tryck på en utgift för detaljer, filer och åtgärder.", "Summeringskorten visar köpsignaler som granska, onödigt, återkommande, värt det och business."]
+    items: ["Återkommande utgifter och enskilda köp har egna sektioner, delsummor och en totalsumma.", "Klicka på en köpkategori för alla köp, eller på ett månadsbelopp för bara den månaden.", "Summeringskorten visar köpsignaler som granska, onödigt, återkommande, värt det och business."]
   },
   {
     icon: ShoppingBag,
     title: "Enskilda köp",
     text: "Kassaboken för bankrader och manuella köp. Den hjälper dig se mönster utan att dubbelräkna abonnemang.",
-    items: ["Importera kontoutdrag eller lägg till köp manuellt.", "Flagga köp som granska, onödigt, kandidat, värt det eller business.", "Matchade återkommande betalningar räknas inte som vanliga enskilda köp."]
+    items: ["Importera kontoutdrag eller lägg till köp manuellt.", "Flagga köp som granska, onödigt, återkommande, värt det eller business.", "Matchade återkommande betalningar räknas inte som vanliga enskilda köp."]
   },
   {
     icon: LineChart,
