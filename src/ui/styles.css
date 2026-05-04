@@ -2728,11 +2728,18 @@ button.radarCard.green.active {
   font-variant-numeric: tabular-nums;
 }
 
-.timelineSubtotal.stickyCol {
+.timelineHead.stickyCol,
+.timelineSubtotal.stickyCol,
+.timelineTotal.stickyCol {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   color: #1f2937;
+  text-align: left;
+}
+
+.timelineSubtotal.stickyCol,
+.timelineTotal.stickyCol {
   font-weight: 720;
 }
 
