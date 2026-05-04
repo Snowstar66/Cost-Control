@@ -10,7 +10,6 @@
   ChevronsRight,
   CircleAlert,
   Cloud,
-  CreditCard,
   Download,
   FileArchive,
   FileJson,
@@ -28,6 +27,7 @@
   Phone,
   Play,
   Plus,
+  Radar,
   ReceiptText,
   RefreshCcw,
   Search,
@@ -2518,9 +2518,6 @@ function Purchases({ context, transactions, categories, suppliers, businessSigna
     }
     return b.date.localeCompare(a.date);
   });
-  const total = summaryTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
-  const merchantRows = topTransactionRows(summaryTransactions, (transaction) => transaction.merchantNormalized || transaction.merchantRaw).slice(0, 6);
-  const categoryRows = topTransactionRows(summaryTransactions, (transaction) => categories.find((category) => category.id === transaction.categoryId)?.name ?? "Okategoriserat").slice(0, 6);
   const activeRadarLabel = activeRadarFlag === "recurringCandidate" ? "Vanor" : activeRadarFlag ? purchaseSignalLabel(activeRadarFlag, businessSignalLabel) : undefined;
   const activeRadarCount = activeRadarFlag ? visible.filter(isRadarMatch).length : 0;
   const importPreviewTotal = importPreview?.transactions.reduce((sum, transaction) => sum + transaction.amount, 0) ?? 0;
@@ -2561,33 +2558,9 @@ function Purchases({ context, transactions, categories, suppliers, businessSigna
         </div>
       )}
 
-      <div className="purchaseSummary">
-        <div className="purchaseMetric">
-          <CreditCard size={17} />
-          <span className="desktopMetricLabel">Enskilda köp</span>
-          <span className="mobileMetricLabel">Köp</span>
-          <strong>{formatMoney(total, context.currency)}</strong>
-          <small>{summaryTransactions.length} poster</small>
-        </div>
-        <div className="purchaseMetric">
-          <Store size={17} />
-          <span className="desktopMetricLabel">Största handlare</span>
-          <span className="mobileMetricLabel">Handlare</span>
-          <strong>{merchantRows[0]?.label ?? "-"}</strong>
-          <small>{merchantRows[0] ? formatMoney(merchantRows[0].value, context.currency) : "Ingen data"}</small>
-        </div>
-        <div className="purchaseMetric">
-          <Tag size={17} />
-          <span className="desktopMetricLabel">Största kategori</span>
-          <span className="mobileMetricLabel">Kategori</span>
-          <strong>{categoryRows[0]?.label ?? "-"}</strong>
-          <small>{categoryRows[0] ? formatMoney(categoryRows[0].value, context.currency) : "Ingen data"}</small>
-        </div>
-      </div>
-
       <div className="panel purchaseRadarPanel">
-        <div className="panelHeader">
-          <h2>Köpradar</h2>
+        <div className="panelHeader iconPanelHeader">
+          <h2><Radar size={16} /> Köpradar</h2>
           <span>Flaggor · vanor · signaler</span>
         </div>
         <div className="radarGrid">
@@ -2611,27 +2584,11 @@ function Purchases({ context, transactions, categories, suppliers, businessSigna
             );
           })}
         </div>
-        <div className="radarList">
-          <div className="miniPanelHeader">
-            <strong>Återkommande handlare</strong>
-            <span>Flera köp · hitta vanor och småläckage</span>
-          </div>
-          {radar.habits.length === 0 && <p className="note">Inga återkommande handlare ännu. Importera fler månader eller flagga köp som kandidater.</p>}
-          {radar.habits.map((habit) => (
-            <div className="radarHabit" key={habit.label}>
-              <span>
-                <strong>{habit.label}</strong>
-                <small>{habit.count} köp · snitt {formatMoney(habit.average, context.currency)}</small>
-              </span>
-              <b>{formatMoney(habit.total, context.currency)}</b>
-            </div>
-          ))}
-        </div>
       </div>
 
       <div className="panel purchaseLedger">
-        <div className="panelHeader">
-          <h2>Köplista</h2>
+        <div className="panelHeader iconPanelHeader">
+          <h2><ReceiptText size={16} /> Köplista</h2>
           <span>{activeRadarLabel ? `${activeRadarLabel} · ${activeRadarCount} träffar` : `${visible.length} köp`}</span>
         </div>
         <div className="transactionTable" role="table" aria-label="Köplista">

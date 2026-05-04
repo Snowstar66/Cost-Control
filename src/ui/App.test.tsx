@@ -453,6 +453,12 @@ describe("App", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /^Ink.p$/i }));
 
+    expect(screen.getByRole("heading", { name: /K.pradar/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /K.plista/i })).toBeInTheDocument();
+    expect(screen.queryByText(/St.rsta handlare/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/St.rsta kategori/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/.terkommande handlare/i)).not.toBeInTheDocument();
+
     const habitCard = screen.getByRole("button", { name: /Vanor7.*2 handlare/i });
     expect(habitCard).toBeInTheDocument();
     expect(screen.getAllByText("PRESSBYRAN").length).toBeGreaterThan(0);

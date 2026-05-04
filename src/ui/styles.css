@@ -1103,6 +1103,17 @@ button.radarCard.green.active {
   font-weight: 650;
 }
 
+.iconPanelHeader h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.iconPanelHeader h2 svg {
+  flex: 0 0 auto;
+  color: #174a8b;
+}
+
 .panelHeader span {
   color: var(--muted);
   font-size: 13px;
