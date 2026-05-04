@@ -51,6 +51,14 @@ function stateWithCarWash(): AppState {
   };
 }
 
+function stateWithSinglePerson(): AppState {
+  const state = stateWithCarWash();
+  return {
+    ...state,
+    people: [{ id: "person-1", contextId: "ctx-1", firstName: "Pontus", lastName: "Hellgren", active: true }]
+  };
+}
+
 function stateWithMixedNecessity(): AppState {
   const state = stateWithCarWash();
   return {
@@ -255,6 +263,34 @@ describe("App", () => {
     expect(within(signal).getByRole("option", { name: "Onödigt" })).toBeInTheDocument();
     expect(within(signal).queryByRole("option", { name: "Granska" })).not.toBeInTheDocument();
     expect(screen.getByLabelText(/Dras dag/i)).toHaveValue(27);
+  });
+
+  it("forvaljer enda personen pa nya utgifter och enskilda kop", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithSinglePerson()));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Ny utgift/i }));
+    const expenseForm = screen.getByRole("form", { name: /L.gg till utgift/i });
+    expect(within(expenseForm).getByLabelText("Betalas av")).toHaveValue("person-1");
+    fireEvent.change(within(expenseForm).getByLabelText(/Tj.nst\/utgift/i), { target: { value: "Netflix" } });
+    fireEvent.change(within(expenseForm).getByLabelText(/^Belopp$/i), { target: { value: "179" } });
+    fireEvent.change(within(expenseForm).getByLabelText(/Leverant.r/i), { target: { value: "sup-1" } });
+    fireEvent.change(within(expenseForm).getByLabelText(/^Kategori$/i), { target: { value: "cat-1" } });
+    fireEvent.click(within(expenseForm).getByRole("button", { name: /Spara/i }));
+
+    fireEvent.click(screen.getByRole("button", { name: /^Ink.p$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Fler nya val/i }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /Enskilt k.p/i }));
+    const purchaseForm = screen.getByRole("form", { name: /L.gg till enskilt k.p/i });
+    expect(within(purchaseForm).getByLabelText("Betalas av")).toHaveValue("person-1");
+
+    fireEvent.change(within(purchaseForm).getByLabelText(/^Handlare$/i), { target: { value: "ICA" } });
+    fireEvent.change(within(purchaseForm).getByLabelText(/^Belopp$/i), { target: { value: "89" } });
+    fireEvent.click(within(purchaseForm).getByRole("button", { name: /Spara/i }));
+
+    const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
+    expect(saved.expenses.at(-1)?.payerPersonId).toBe("person-1");
+    expect(saved.transactions.at(-1)?.payerPersonId).toBe("person-1");
   });
 
   it("fragar om ny planbok nar ingen planbok finns", () => {
@@ -600,6 +636,23 @@ describe("App", () => {
     expect(await screen.findByText("Visar 12 av 12 rader")).toBeInTheDocument();
     expect(screen.getByText("HANDLARE 1")).toBeInTheDocument();
     expect(screen.getByText("HANDLARE 12")).toBeInTheDocument();
+  });
+
+  it("kopplar importerade kop till enda personen i planboken", async () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithSinglePerson()));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^Ink.p$/i }));
+    const csv = "Datum;Specifikation;Belopp\n2026-03-01;ICA;125";
+    const file = new File([csv], "one.csv", { type: "text/csv" });
+    Object.defineProperty(file, "text", { value: () => Promise.resolve(csv) });
+    const input = document.querySelector(".quickImportInput") as HTMLInputElement;
+
+    fireEvent.change(input, { target: { files: [file] } });
+    fireEvent.click(await screen.findByRole("button", { name: /Importera enskilda k.p/i }));
+
+    const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
+    expect(saved.transactions.at(-1)?.payerPersonId).toBe("person-1");
   });
 
   it("fragar innan aktiv planbok raderas", () => {

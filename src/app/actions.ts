@@ -33,6 +33,7 @@ export type UpsertTransactionInput = {
   location?: string;
   categoryId?: string;
   supplierId?: string;
+  payerPersonId?: string;
   recurringExpenseId?: string;
   source?: "manual" | "import";
   importId?: string;
@@ -228,7 +229,8 @@ export function removePerson(state: AppState, personId: string): AppState {
   return {
     ...state,
     people: state.people.filter((person) => person.id !== personId),
-    expenses: state.expenses.map((expense) => (expense.payerPersonId === personId ? { ...expense, payerPersonId: undefined, updatedAt: stamp() } : expense))
+    expenses: state.expenses.map((expense) => (expense.payerPersonId === personId ? { ...expense, payerPersonId: undefined, updatedAt: stamp() } : expense)),
+    transactions: state.transactions.map((transaction) => (transaction.payerPersonId === personId ? { ...transaction, payerPersonId: undefined, updatedAt: stamp() } : transaction))
   };
 }
 
@@ -342,6 +344,7 @@ export function upsertTransaction(state: AppState, input: UpsertTransactionInput
     location: input.location,
     categoryId: input.categoryId,
     supplierId: input.supplierId,
+    payerPersonId: input.payerPersonId,
     recurringExpenseId: input.recurringExpenseId,
     source: input.source ?? "manual",
     importId: input.importId,
@@ -364,6 +367,8 @@ export function removeTransaction(state: AppState, transactionId: string): AppSt
 export function importTransactions(state: AppState, transactions: UpsertTransactionInput[]): AppState {
   const existingFingerprints = new Set(state.transactions.map(transactionFingerprint));
   const nextTransactions: PurchaseTransaction[] = [];
+  const contextPeople = state.people.filter((person) => person.contextId === state.activeContextId);
+  const defaultPayerPersonId = contextPeople.length === 1 ? contextPeople[0].id : undefined;
   for (const input of transactions) {
     const candidate = {
       date: normalizeDateInput(input.date) ?? new Date().toISOString().slice(0, 10),
@@ -392,6 +397,7 @@ export function importTransactions(state: AppState, transactions: UpsertTransact
       location: input.location,
       categoryId: input.categoryId,
       supplierId: input.supplierId,
+      payerPersonId: input.payerPersonId ?? defaultPayerPersonId,
       recurringExpenseId: input.recurringExpenseId,
       source: input.source ?? "import",
       importId: input.importId,

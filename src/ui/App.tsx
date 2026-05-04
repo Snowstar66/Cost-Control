@@ -388,10 +388,11 @@ export function App() {
   };
   const importPurchaseFile = async (file: File) => {
     const parsed = await parseBankStatementFile(file);
+    const defaultPayerPersonId = people.length === 1 ? people[0].id : undefined;
     setPurchaseImportPreview({
       ...parsed,
       fileName: file.name,
-      transactions: parsed.transactions.map((transaction) => enrichImportedTransaction(transaction, categories, suppliers, contextExpenses, state.costPeriods))
+      transactions: parsed.transactions.map((transaction) => enrichImportedTransaction({ ...transaction, payerPersonId: transaction.payerPersonId ?? defaultPayerPersonId }, categories, suppliers, contextExpenses, state.costPeriods))
     });
   };
 
@@ -556,6 +557,7 @@ export function App() {
               context={context}
               transactions={transactions}
               categories={categories}
+              people={people}
               suppliers={suppliers}
               businessSignalLabel={purchaseBusinessLabel(state)}
               importPreview={purchaseImportPreview}
@@ -660,6 +662,7 @@ export function App() {
         <PurchaseModal
           transaction={editingTransaction}
           categories={categories}
+          people={people}
           suppliers={suppliers}
           expenses={contextExpenses}
           transactions={transactions}
@@ -1185,12 +1188,13 @@ function CategoryPickerSheet({
 }
 
 function ExpenseModal({ expense, costPeriod, categories, people, suppliers, onSave, onClose }: { expense?: Expense; costPeriod?: ExpenseCostPeriod; categories: Category[]; people: Array<{ id: string; firstName: string; lastName: string }>; suppliers: Supplier[]; onSave: (input: ExpenseFormInput) => void; onClose: () => void }) {
+  const defaultPayerPersonId = people.length === 1 ? people[0].id : "";
   const [form, setForm] = useState({
     name: "",
     supplierId: "",
     newSupplierName: "",
     categoryId: "",
-    payerPersonId: "",
+    payerPersonId: defaultPayerPersonId,
     amount: "",
     recurrence: "monthly" as Recurrence,
     necessityLevel: "comfortable" as NecessityLevel,
@@ -1208,7 +1212,7 @@ function ExpenseModal({ expense, costPeriod, categories, people, suppliers, onSa
         supplierId: "",
         newSupplierName: "",
         categoryId: "",
-        payerPersonId: "",
+        payerPersonId: defaultPayerPersonId,
         amount: "",
         recurrence: "monthly",
         necessityLevel: "comfortable",
@@ -1235,7 +1239,7 @@ function ExpenseModal({ expense, costPeriod, categories, people, suppliers, onSa
       noticePeriodUnit: expense.noticePeriodUnit ?? "months",
       notes: expense.notes ?? ""
     });
-  }, [expense, costPeriod]);
+  }, [expense, costPeriod, defaultPayerPersonId]);
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -1376,7 +1380,8 @@ function ExpenseModal({ expense, costPeriod, categories, people, suppliers, onSa
   );
 }
 
-function PurchaseModal({ transaction, categories, suppliers, expenses, transactions, currency, businessSignalLabel, onSave, onClose }: { transaction?: PurchaseTransaction; categories: Category[]; suppliers: Supplier[]; expenses: Expense[]; transactions: PurchaseTransaction[]; currency: string; businessSignalLabel: string; onSave: (input: UpsertTransactionInput, options?: PurchaseSaveOptions) => void; onClose: () => void }) {
+function PurchaseModal({ transaction, categories, people, suppliers, expenses, transactions, currency, businessSignalLabel, onSave, onClose }: { transaction?: PurchaseTransaction; categories: Category[]; people: Array<{ id: string; firstName: string; lastName: string }>; suppliers: Supplier[]; expenses: Expense[]; transactions: PurchaseTransaction[]; currency: string; businessSignalLabel: string; onSave: (input: UpsertTransactionInput, options?: PurchaseSaveOptions) => void; onClose: () => void }) {
+  const defaultPayerPersonId = people.length === 1 ? people[0].id : "";
   const merchantSuggestions = useMemo(() => {
     const labels = new Map<string, string>();
     for (const transaction of transactions) {
@@ -1408,6 +1413,7 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, transacti
     amount: "",
     categoryId: "",
     categorySuggestedFromMerchantKey: "",
+    payerPersonId: defaultPayerPersonId,
     supplierId: "",
     recurringExpenseId: "",
     type: "one-off" as PurchaseTransaction["type"],
@@ -1420,7 +1426,7 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, transacti
   useEffect(() => {
     setMerchantSuggestionsEnabled(false);
     if (!transaction) {
-      setForm({ date: toIsoDate(new Date()), bookedDate: "", merchantRaw: "", amount: "", categoryId: "", categorySuggestedFromMerchantKey: "", supplierId: "", recurringExpenseId: "", type: "one-off", flags: [], applyCategoryToSameMerchant: false, notes: "" });
+      setForm({ date: toIsoDate(new Date()), bookedDate: "", merchantRaw: "", amount: "", categoryId: "", categorySuggestedFromMerchantKey: "", payerPersonId: defaultPayerPersonId, supplierId: "", recurringExpenseId: "", type: "one-off", flags: [], applyCategoryToSameMerchant: false, notes: "" });
       return;
     }
     setForm({
@@ -1430,6 +1436,7 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, transacti
       amount: String(transaction.amount),
       categoryId: transaction.categoryId ?? "",
       categorySuggestedFromMerchantKey: "",
+      payerPersonId: transaction.payerPersonId ?? "",
       supplierId: transaction.supplierId ?? "",
       recurringExpenseId: transaction.recurringExpenseId ?? "",
       type: transaction.type,
@@ -1437,7 +1444,7 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, transacti
       applyCategoryToSameMerchant: true,
       notes: transaction.notes ?? ""
     });
-  }, [transaction]);
+  }, [transaction, defaultPayerPersonId]);
 
   const toggleFlag = (flag: PurchaseFlag) => {
     setForm((current) => ({
@@ -1473,6 +1480,7 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, transacti
       amount: Number(form.amount),
       currency,
       categoryId: form.categoryId || undefined,
+      payerPersonId: form.payerPersonId || undefined,
       supplierId: form.supplierId || undefined,
       recurringExpenseId: form.recurringExpenseId || undefined,
       type: form.recurringExpenseId && form.type === "one-off" ? "recurring-payment" : form.type,
@@ -1525,8 +1533,19 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, transacti
             <input type="number" min="0" step="0.01" value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} placeholder="0" />
           </label>
         </div>
-        <div className="formSection single">
+        <div className="formSection split">
           <CategoryField categories={categories} value={form.categoryId} onChange={(categoryId) => setForm({ ...form, categoryId, categorySuggestedFromMerchantKey: "" })} />
+          <label>
+            <span>Betalas av</span>
+            <select value={form.payerPersonId} onChange={(event) => setForm({ ...form, payerPersonId: event.target.value })}>
+              <option value="">Ingen vald</option>
+              {people.map((person) => (
+                <option key={person.id} value={person.id}>
+                  {person.firstName} {person.lastName}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
         {transaction && (
           <label className="inlineCheck purchaseApplyRule">
@@ -1605,12 +1624,13 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, transacti
 }
 
 function ExpenseComposer({ categories, people, suppliers, onSave, compact = false }: { categories: Category[]; people: Array<{ id: string; firstName: string; lastName: string }>; suppliers: Supplier[]; compact?: boolean; onSave: Parameters<typeof upsertExpense>[1] extends infer T ? (input: T) => void : never }) {
+  const defaultPayerPersonId = people.length === 1 ? people[0].id : "";
   const [form, setForm] = useState({
     name: "",
     supplierId: "",
     newSupplierName: "",
     categoryId: "",
-    payerPersonId: "",
+    payerPersonId: defaultPayerPersonId,
     amount: "",
     recurrence: "monthly" as Recurrence,
     necessityLevel: "comfortable" as NecessityLevel,
@@ -1620,6 +1640,9 @@ function ExpenseComposer({ categories, people, suppliers, onSave, compact = fals
     noticePeriodUnit: "months" as "days" | "months",
     notes: ""
   });
+  useEffect(() => {
+    if (defaultPayerPersonId) setForm((current) => ({ ...current, payerPersonId: current.payerPersonId || defaultPayerPersonId }));
+  }, [defaultPayerPersonId]);
   const submit = (event: FormEvent) => {
     event.preventDefault();
     onSave({
@@ -1632,7 +1655,7 @@ function ExpenseComposer({ categories, people, suppliers, onSave, compact = fals
       chargeDay: form.chargeDay ? Number(form.chargeDay) : undefined,
       noticePeriodValue: form.noticePeriodValue ? Number(form.noticePeriodValue) : undefined
     });
-    setForm((current) => ({ ...current, name: "", newSupplierName: "", amount: "", notes: "" }));
+    setForm((current) => ({ ...current, name: "", newSupplierName: "", payerPersonId: defaultPayerPersonId, amount: "", notes: "" }));
   };
   return (
     <form className={`composer ${compact ? "compact" : ""}`} onSubmit={submit}>
@@ -1955,7 +1978,8 @@ function Timeline(props: {
                   })}
                 </div>
                 {expandedEntries.map(({ monthKey, transaction }) => {
-                  const subtitle = transactionSecondaryText(transaction);
+                  const payer = props.people.find((item) => item.id === transaction.payerPersonId);
+                  const subtitle = transactionSecondaryText(transaction, undefined, payer);
                   return (
                     <div className="timelineRow purchaseDetail" key={`${row.key}-${monthKey}-${transaction.id}`} style={{ display: "contents" }}>
                       <button
@@ -2612,7 +2636,7 @@ function buildPurchaseRadar(transactions: PurchaseTransaction[], currency: strin
   };
 }
 
-function Purchases({ context, transactions, categories, suppliers, businessSignalLabel, importPreview, onCommitImport, onCancelImport, onEdit, onDelete, onToggleFlag }: { context: ReturnType<typeof useAppState>["context"]; transactions: PurchaseTransaction[]; categories: Category[]; suppliers: Supplier[]; businessSignalLabel: string; importPreview?: PurchaseImportPreview; onCommitImport: () => void; onCancelImport: () => void; onEdit: (id?: string) => void; onDelete: (id: string) => void; onToggleFlag: (id: string, flag: PurchaseFlag) => void }) {
+function Purchases({ context, transactions, categories, people, suppliers, businessSignalLabel, importPreview, onCommitImport, onCancelImport, onEdit, onDelete, onToggleFlag }: { context: ReturnType<typeof useAppState>["context"]; transactions: PurchaseTransaction[]; categories: Category[]; people: Person[]; suppliers: Supplier[]; businessSignalLabel: string; importPreview?: PurchaseImportPreview; onCommitImport: () => void; onCancelImport: () => void; onEdit: (id?: string) => void; onDelete: (id: string) => void; onToggleFlag: (id: string, flag: PurchaseFlag) => void }) {
   const [search, setSearch] = useState("");
   const [activeRadarFlag, setActiveRadarFlag] = useState<PurchaseFlag | undefined>();
   const baseVisible = transactions
@@ -2719,7 +2743,8 @@ function Purchases({ context, transactions, categories, suppliers, businessSigna
           {visible.map((transaction) => {
             const category = categories.find((item) => item.id === transaction.categoryId);
             const supplier = suppliers.find((item) => item.id === transaction.supplierId);
-            const subtitle = transactionSecondaryText(transaction, supplier);
+            const payer = people.find((item) => item.id === transaction.payerPersonId);
+            const subtitle = transactionSecondaryText(transaction, supplier, payer);
             return (
               <div className="transactionRow" key={transaction.id} style={{ display: "contents" }}>
                 <button type="button" className="transactionCellButton" onClick={() => onEdit(transaction.id)}>{transaction.date}</button>
@@ -2762,7 +2787,8 @@ function Purchases({ context, transactions, categories, suppliers, businessSigna
           {visible.map((transaction) => {
             const category = categories.find((item) => item.id === transaction.categoryId);
             const supplier = suppliers.find((item) => item.id === transaction.supplierId);
-            const subtitle = transactionSecondaryText(transaction, supplier);
+            const payer = people.find((item) => item.id === transaction.payerPersonId);
+            const subtitle = transactionSecondaryText(transaction, supplier, payer);
             return (
               <article className="mobileTransactionCard" key={`mobile-${transaction.id}`}>
                 <button type="button" className="mobileTransactionMain" onClick={() => onEdit(transaction.id)}>
@@ -2887,8 +2913,12 @@ function compareTransactionRecency(a: PurchaseTransaction, b: PurchaseTransactio
   return a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt);
 }
 
-function transactionSecondaryText(transaction: PurchaseTransaction, supplier?: Supplier): string {
-  return transaction.notes?.trim() || supplier?.name || transaction.location || "";
+function personDisplayName(person: Pick<Person, "firstName" | "lastName">): string {
+  return `${person.firstName} ${person.lastName}`.trim();
+}
+
+function transactionSecondaryText(transaction: PurchaseTransaction, supplier?: Supplier, payer?: Pick<Person, "firstName" | "lastName">): string {
+  return transaction.notes?.trim() || supplier?.name || (payer ? personDisplayName(payer) : "") || transaction.location || "";
 }
 
 function buildMerchantInsightRows(transactions: PurchaseTransaction[], months: TimelineMonth[]): MerchantInsightRow[] {
@@ -2978,10 +3008,11 @@ function average(values: number[]): number {
 }
 
 function buildPurchaseCategoryRows(transactions: PurchaseTransaction[], categories: Category[], months: TimelineMonth[], state: ReturnType<typeof useAppState>["state"]): PurchaseCategoryRow[] {
-  if (!state.purchasesEnabled || state.filters.payerIds.length > 0) return [];
+  if (!state.purchasesEnabled) return [];
   const monthKeys = new Set(months.map((month) => month.key));
   const search = state.filters.search.trim().toLowerCase();
   const categoryIds = new Set(state.filters.categoryIds);
+  const payerIds = new Set(state.filters.payerIds);
   const purchaseFlags = new Set(state.filters.purchaseFlags);
   const groups = new Map<string, PurchaseCategoryRow>();
 
@@ -2995,6 +3026,7 @@ function buildPurchaseCategoryRows(transactions: PurchaseTransaction[], categori
     const categoryLabel = category?.name ?? "Okategoriserat";
     const categoryColor = category?.color ?? "#7c8a9c";
     if (categoryIds.size > 0 && (!transaction.categoryId || !categoryIds.has(transaction.categoryId))) continue;
+    if (payerIds.size > 0 && (!transaction.payerPersonId || !payerIds.has(transaction.payerPersonId))) continue;
     if (search && ![transaction.merchantRaw, transaction.merchantNormalized, transaction.location, categoryLabel].join(" ").toLowerCase().includes(search)) continue;
 
     const current = groups.get(categoryKey) ?? {
@@ -3032,6 +3064,7 @@ function enrichImportedTransaction(input: UpsertTransactionInput, categories: Ca
     ...input,
     categoryId: input.categoryId ?? category?.id,
     supplierId: input.supplierId ?? supplier?.id,
+    payerPersonId: input.payerPersonId ?? recurringExpense?.payerPersonId,
     recurringExpenseId: input.recurringExpenseId ?? recurringExpense?.id,
     type: recurringExpense ? "recurring-payment" : input.type ?? "one-off"
   };

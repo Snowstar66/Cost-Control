@@ -127,6 +127,15 @@ describe("importTransactions", () => {
     expect(next.transactions.map((transaction) => transaction.flags)).toEqual([["review"], ["business"]]);
   });
 
+  it("kopplar importerade kop till enda personen i aktiv kontext", () => {
+    const next = importTransactions(
+      { ...state, people: [{ id: "person-1", contextId: "ctx-1", firstName: "Pontus", lastName: "Hellgren", active: true }] },
+      [{ date: "2026-02-01", bookedDate: "2026-02-02", merchantRaw: "ICA", amount: 125, currency: "SEK" }]
+    );
+
+    expect(next.transactions[0].payerPersonId).toBe("person-1");
+  });
+
   it("expanderar tidsfönstret när importerade köp ligger i äldre kontoutdrag", () => {
     const next = importTransactions(state, [
       { date: "2025-12-28", bookedDate: "2025-12-29", statementMonth: "2025-12", merchantRaw: "APOTEK", amount: 187, currency: "SEK" }

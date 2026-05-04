@@ -98,6 +98,7 @@ export function importAsNewContext(state: AppState, payload: ExportPayload): App
         contextId,
         categoryId: item.categoryId ? categoryMap.get(item.categoryId) : undefined,
         supplierId: item.supplierId ? supplierMap.get(item.supplierId) : undefined,
+        payerPersonId: item.payerPersonId ? personMap.get(item.payerPersonId) : undefined,
         recurringExpenseId: item.recurringExpenseId ? expenseMap.get(item.recurringExpenseId) : undefined
       }))
     ],
@@ -241,12 +242,13 @@ export function exportCsv(state: AppState): void {
           period.chargeDay ? String(period.chargeDay) : ""
         ])
     ),
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["Köp", "Handlare", "Kategori", "Datum", "Bokfört", "Belopp", "Valuta", "Källa", "Typ", "Ort"],
+    ["", "", "", "", "", "", "", "", "", "", ""],
+    ["Köp", "Handlare", "Kategori", "Betalas av", "Datum", "Bokfört", "Belopp", "Valuta", "Källa", "Typ", "Ort"],
     ...byContext(state.transactions, context.id).map((transaction) => [
       context.name,
       transaction.merchantRaw,
       categories.find((category) => category.id === transaction.categoryId)?.name ?? "",
+      people.find((person) => person.id === transaction.payerPersonId) ? `${people.find((person) => person.id === transaction.payerPersonId)?.firstName} ${people.find((person) => person.id === transaction.payerPersonId)?.lastName}` : "",
       transaction.date,
       transaction.bookedDate ?? "",
       String(transaction.amount),

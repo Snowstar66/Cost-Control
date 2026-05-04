@@ -115,6 +115,7 @@ export type PurchaseTransaction = {
   location?: string;
   categoryId?: string;
   supplierId?: string;
+  payerPersonId?: string;
   recurringExpenseId?: string;
   source: TransactionSource;
   importId?: string;
