@@ -196,10 +196,10 @@ export type ExpenseMonthValue = {
 };
 
 export const necessityLabels: Record<NecessityLevel, string> = {
-  necessary: "Nödvändig",
-  comfortable: "Bekväm",
-  luxury: "Lyxig",
-  unnecessary: "Onödig"
+  necessary: "Värt det",
+  comfortable: "Vana",
+  luxury: "Business",
+  unnecessary: "Onödigt"
 };
 
 export const recurrenceLabels: Record<Recurrence, string> = {

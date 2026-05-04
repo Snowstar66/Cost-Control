@@ -243,6 +243,19 @@ describe("App", () => {
     expect(screen.getByRole("form", { name: /L.gg till utgift/i })).toBeInTheDocument();
   });
 
+  it("anvander kopssignaler for aterkommande utgifter utan granska", () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Ny utgift/i }));
+
+    const signal = screen.getByLabelText(/^Signal$/i);
+    expect(within(signal).getByRole("option", { name: "Värt det" })).toBeInTheDocument();
+    expect(within(signal).getByRole("option", { name: "Vana" })).toBeInTheDocument();
+    expect(within(signal).getByRole("option", { name: "Business" })).toBeInTheDocument();
+    expect(within(signal).getByRole("option", { name: "Onödigt" })).toBeInTheDocument();
+    expect(within(signal).queryByRole("option", { name: "Granska" })).not.toBeInTheDocument();
+  });
+
   it("fragar om ny kontext nar ingen kontext finns", () => {
     localStorage.setItem(storageKey, JSON.stringify(stateWithoutContext()));
     render(<App />);

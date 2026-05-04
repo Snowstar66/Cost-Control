@@ -153,11 +153,11 @@ const emptyContextFallback: Context = {
 };
 const allowedFileTypes = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
 const maxFileSize = 10 * 1024 * 1024;
-const overviewNecessityOrder: NecessityLevel[] = ["luxury", "necessary", "comfortable", "unnecessary"];
+const overviewNecessityOrder: NecessityLevel[] = ["necessary", "comfortable", "luxury", "unnecessary"];
 const overviewNecessityLabels: Record<NecessityLevel, string> = {
-  luxury: "Lyxigt",
-  necessary: "Nödvändigt",
-  comfortable: "Bekvämt",
+  necessary: "Värt det",
+  comfortable: "Vana",
+  luxury: "Business",
   unnecessary: "Onödigt"
 };
 const purchaseFlagMeta: Record<PurchaseFlag, { label: string; shortLabel: string; tone: "blue" | "green" | "amber" | "red"; icon: typeof Wallet }> = {
@@ -1312,7 +1312,7 @@ function ExpenseModal({ expense, costPeriod, categories, people, suppliers, onSa
 
         <div className="formSection split">
           <label>
-            <span>Prioritet</span>
+            <span>Signal</span>
             <select value={form.necessityLevel} onChange={(event) => setForm({ ...form, necessityLevel: event.target.value as NecessityLevel })}>
               {Object.entries(necessityLabels).map(([value, label]) => (
                 <option key={value} value={value}>
@@ -1648,7 +1648,7 @@ function ExpenseComposer({ categories, people, suppliers, onSave, compact = fals
           </option>
         ))}
       </select>
-      <select value={form.necessityLevel} onChange={(event) => setForm({ ...form, necessityLevel: event.target.value as NecessityLevel })}>
+      <select aria-label="Signal" value={form.necessityLevel} onChange={(event) => setForm({ ...form, necessityLevel: event.target.value as NecessityLevel })}>
         {Object.entries(necessityLabels).map(([value, label]) => (
           <option key={value} value={value}>
             {label}
@@ -3137,7 +3137,7 @@ function Statistics({ state, setState, expenses, allExpenses, categories, people
       color: level === "necessary" ? "#b75159" : level === "comfortable" ? "#9c7439" : level === "luxury" ? "#4f7b5b" : "#52787d"
     }))
     .filter((row) => row.value > 0);
-  const discretionaryPeriodTotal = recurringNecessityRows.filter((row) => row.label === "Lyxigt" || row.label === "Onödigt").reduce((sum, row) => sum + row.value, 0);
+  const discretionaryPeriodTotal = recurringNecessityRows.filter((row) => row.label === "Onödigt").reduce((sum, row) => sum + row.value, 0);
   const purchaseMonthTotals = Object.fromEntries(months.map((month) => [month.key, periodTransactions.filter((transaction) => transactionPeriodMonth(transaction) === month.key).reduce((sum, transaction) => sum + transaction.amount, 0)]));
   const currentMonthKey = toMonthKey(new Date());
   const budgetContributors: BudgetContributor[] = people
@@ -3341,7 +3341,7 @@ function Statistics({ state, setState, expenses, allExpenses, categories, people
             <strong>{formatMoney(recurringAnnualRunRate, currency)}</strong>
           </span>
           <span>
-            <small>Lyxigt/onödigt</small>
+            <small>Onödigt</small>
             <strong>{formatMoney(discretionaryPeriodTotal / monthsCount, currency)}</strong>
           </span>
         </div>
@@ -3565,7 +3565,7 @@ function buildDecisionInsights({
     insights.push({
       title: "Påverkbar nivå",
       value: formatMoney(discretionaryMonthly, currency),
-      detail: "Lyxiga och onödiga återkommande utgifter per månad.",
+      detail: "Återkommande utgifter markerade som onödiga per månad.",
       tone: discretionaryMonthly > recurringMonthlyAverage * 0.25 ? "amber" : "green",
       icon: Sparkles
     });
