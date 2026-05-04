@@ -1813,6 +1813,7 @@ function Timeline(props: {
 }) {
   const purchaseRows = props.purchaseRows ?? [];
   const [expandedPurchaseKey, setExpandedPurchaseKey] = useState<string | undefined>();
+  const [expandedPurchaseAllKey, setExpandedPurchaseAllKey] = useState<string | undefined>();
   const [expandedMobilePurchaseKey, setExpandedMobilePurchaseKey] = useState<string | undefined>();
   const placeholderRows = Array.from({ length: purchaseRows.length > 0 ? 0 : Math.max(0, (props.minRows ?? 0) - props.expenses.length) });
   const mobileMonths = props.months.slice(0, 4);
@@ -1828,7 +1829,12 @@ function Timeline(props: {
   const purchasePeriodTotal = props.months.reduce((sum, month) => sum + (purchaseTotalsByMonth[month.key] ?? 0), 0);
   const togglePurchaseMonth = (rowKey: string, monthKey: string) => {
     const key = `${rowKey}:${monthKey}`;
+    setExpandedPurchaseAllKey(undefined);
     setExpandedPurchaseKey((current) => (current === key ? undefined : key));
+  };
+  const toggleAllPurchases = (rowKey: string) => {
+    setExpandedPurchaseKey(undefined);
+    setExpandedPurchaseAllKey((current) => (current === rowKey ? undefined : rowKey));
   };
   const mobilePurchaseTransactions = (row: PurchaseCategoryRow) =>
     Object.values(row.transactionsByMonth)
@@ -1908,15 +1914,28 @@ function Timeline(props: {
           )}
           {purchaseRows.map((row) => {
             const expandedMonthKey = expandedPurchaseKey?.startsWith(`${row.key}:`) ? expandedPurchaseKey.split(":")[1] : undefined;
-            const expandedTransactions = expandedMonthKey ? row.transactionsByMonth[expandedMonthKey] ?? [] : [];
+            const expandedAll = expandedPurchaseAllKey === row.key;
+            const expandedEntries = expandedAll
+              ? Object.entries(row.transactionsByMonth)
+                .flatMap(([monthKey, transactions]) => transactions.map((transaction) => ({ monthKey, transaction })))
+                .sort((a, b) => b.transaction.date.localeCompare(a.transaction.date) || b.transaction.amount - a.transaction.amount)
+              : expandedMonthKey
+                ? (row.transactionsByMonth[expandedMonthKey] ?? []).map((transaction) => ({ monthKey: expandedMonthKey, transaction }))
+                : [];
             return (
               <Fragment key={row.key}>
                 <div className="timelineRow purchaseAggregate" style={{ display: "contents" }}>
-                  <div className="expenseLabel stickyCol purchaseAggregateLabel">
+                  <button
+                    type="button"
+                    className={`expenseLabel stickyCol purchaseAggregateLabel ${expandedAll ? "expanded" : ""}`}
+                    onClick={() => toggleAllPurchases(row.key)}
+                    aria-expanded={expandedAll}
+                    aria-label={`${expandedAll ? "Dölj" : "Visa alla"} köp i ${row.label}`}
+                  >
                     <span className="dot" style={{ background: row.color }} />
                     <strong>{row.label}</strong>
-                    <small>{row.count} enskilda köp</small>
-                  </div>
+                    <small>{row.count} enskilda köp · klicka för alla</small>
+                  </button>
                   {props.months.map((month) => {
                     const amount = row.totals[month.key] ?? 0;
                     const expanded = expandedPurchaseKey === `${row.key}:${month.key}`;
@@ -1935,10 +1954,10 @@ function Timeline(props: {
                     );
                   })}
                 </div>
-                {expandedTransactions.map((transaction) => {
+                {expandedEntries.map(({ monthKey, transaction }) => {
                   const subtitle = transactionSecondaryText(transaction);
                   return (
-                    <div className="timelineRow purchaseDetail" key={`${row.key}-${expandedMonthKey}-${transaction.id}`} style={{ display: "contents" }}>
+                    <div className="timelineRow purchaseDetail" key={`${row.key}-${monthKey}-${transaction.id}`} style={{ display: "contents" }}>
                       <button
                         type="button"
                         className="expenseLabel stickyCol purchaseDetailLabel"
@@ -1957,11 +1976,11 @@ function Timeline(props: {
                           type="button"
                           className="monthCell purchaseDetailCell"
                           key={`${transaction.id}-${month.key}`}
-                          onClick={() => month.key === expandedMonthKey && props.onSelectPurchase?.(transaction.id)}
-                          disabled={month.key !== expandedMonthKey}
-                          aria-label={month.key === expandedMonthKey ? `Visa köp ${transaction.merchantRaw} ${formatMoney(transaction.amount, props.contextCurrency)}` : undefined}
+                          onClick={() => month.key === monthKey && props.onSelectPurchase?.(transaction.id)}
+                          disabled={month.key !== monthKey}
+                          aria-label={month.key === monthKey ? `Visa köp ${transaction.merchantRaw} ${formatMoney(transaction.amount, props.contextCurrency)}` : undefined}
                         >
-                          {month.key === expandedMonthKey ? formatMoney(transaction.amount, props.contextCurrency) : ""}
+                          {month.key === monthKey ? formatMoney(transaction.amount, props.contextCurrency) : ""}
                         </button>
                       ))}
                     </div>

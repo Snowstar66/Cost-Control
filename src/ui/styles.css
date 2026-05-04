@@ -2730,6 +2730,15 @@ button.radarCard.green.active {
   background: #fbfcff;
 }
 
+.purchaseAggregateLabel:hover,
+.purchaseAggregateLabel.expanded {
+  background: #f3f8ff;
+}
+
+.purchaseAggregateLabel.expanded {
+  box-shadow: inset 3px 0 0 #1f4a8a;
+}
+
 .timelineSectionDivider {
   min-height: 38px;
   padding: 8px 10px;

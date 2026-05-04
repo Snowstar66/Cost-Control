@@ -376,6 +376,44 @@ describe("App", () => {
     expect(screen.getByRole("form", { name: /Uppdatera enskilt köp/i })).toBeInTheDocument();
   });
 
+  it("kan expandera alla kop i en kategori och fortfarande valja en enskild manad", () => {
+    const state = stateWithPurchaseCategoryRows();
+    localStorage.setItem(storageKey, JSON.stringify({
+      ...state,
+      transactions: [
+        {
+          ...state.transactions[0],
+          id: "txn-feb",
+          merchantRaw: "ICA FEB",
+          merchantNormalized: "ICA FEB",
+          date: "2026-02-10",
+          bookedDate: "2026-02-11",
+          amount: 125
+        },
+        {
+          ...state.transactions[0],
+          id: "txn-mar",
+          merchantRaw: "ICA MARS",
+          merchantNormalized: "ICA MARS",
+          date: "2026-03-12",
+          bookedDate: "2026-03-13",
+          amount: 225
+        }
+      ]
+    }));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Visa alla köp i Transport/i }));
+
+    expect(screen.getByText("ICA FEB")).toBeInTheDocument();
+    expect(screen.getByText("ICA MARS")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /Transport feb 2026: 125/i }));
+
+    expect(screen.getByText("ICA FEB")).toBeInTheDocument();
+    expect(screen.queryByText("ICA MARS")).not.toBeInTheDocument();
+  });
+
   it("visar tom aterkommande sektion nar oversikten bara har kop", () => {
     const state = stateWithPurchaseCategoryRows();
     localStorage.setItem(storageKey, JSON.stringify({ ...state, expenses: [], costPeriods: [] }));
