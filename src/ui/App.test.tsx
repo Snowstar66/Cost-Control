@@ -293,6 +293,18 @@ describe("App", () => {
     });
   });
 
+  it("visar tydlig fallback for datafil nar ansluten fil inte stods", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithCarWash()));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Data/i }));
+
+    expect(screen.getByText("Aktivt nu")).toBeInTheDocument();
+    expect(screen.getByText("Sparas automatiskt i webbläsaren")).toBeInTheDocument();
+    expect(screen.getByText("Klickbara åtgärder")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Ladda ner backupfil/i })).toBeEnabled();
+  });
+
   it("visar hjalpvyn fran navigationen", () => {
     render(<App />);
 

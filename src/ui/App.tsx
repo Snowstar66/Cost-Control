@@ -4248,27 +4248,43 @@ function Admin({
   importFile: (event: ChangeEvent<HTMLInputElement>) => void;
   reset: () => void;
 }) {
+  const [dataNotice, setDataNotice] = useState<string>();
   const resetLocalData = () => {
     if (!window.confirm("Rensa all lokal data och börja om utan någon kontext? En ansluten datafil kopplas loss och det här går inte att ångra.")) return;
     if (window.confirm("Sista kontrollen: rensa alla kontexter, utgifter, register och köp från den här enheten?")) void reset();
   };
-  const dataFileTitle = dataFile.fileName ?? "Lokal webbläsarlagring";
+  const handlePrimaryDataAction = async () => {
+    setDataNotice(undefined);
+    if (dataFile.supported) {
+      await saveDataFileNow();
+      return;
+    }
+    await exportJson(state, true);
+    setDataNotice("Backupfilen laddades ner. Importera den här om du vill återställa eller flytta datan senare.");
+  };
+  const dataFileTitle = dataFile.fileName ? `Ansluten datafil: ${dataFile.fileName}` : "Sparas automatiskt i webbläsaren";
   const dataFileDetail = dataFile.supported
     ? dataFile.savedAt
       ? `Senast sparad ${new Date(dataFile.savedAt).toLocaleString("sv-SE")}`
       : dataFile.fileName
         ? "Autosparar när filen är ansluten."
-        : "Skapa en datafil om du vill kunna flytta eller säkerhetskopiera datan."
-    : "Din webbläsare stödjer inte automatisk lokal datafil. Använd Dela datafil.";
+        : "Du behöver inte välja något. Skapa en ansluten datafil bara om du vill ha en backup som uppdateras automatiskt."
+    : "Du behöver inte välja något. Den här webbläsaren kan inte ansluta en levande datafil, men du kan ladda ner en backup.";
+  const primaryDataActionLabel = dataFile.fileName ? "Spara ansluten datafil" : dataFile.supported ? "Skapa ansluten datafil" : "Ladda ner backupfil";
+  const primaryDataActionDetail = dataFile.fileName
+    ? "Skriv senaste ändringarna till den valda filen."
+    : dataFile.supported
+      ? "Välj en JSON-fil som appen kan autospara till."
+      : "Skapar en vanlig JSON-fil som du kan importera senare.";
   return (
     <div className="adminGrid dataWorkspace">
       <section className="dataMainColumn">
         <div className="panel stack dataFilePanel dataHomePanel">
           <div className="panelHeader">
             <h2>Din data</h2>
-            <span>{dataFile.fileName ? "Datafil" : "Lokalt"}</span>
+            <span>{dataFile.fileName ? "Datafil ansluten" : "Lokalt sparad"}</span>
           </div>
-          <div className="dataSectionLabel">Status</div>
+          <div className="dataSectionLabel">Aktivt nu</div>
           <div className={`dataFileStatus ${dataFile.status}`} aria-label="Aktuell datalagring">
             <FileJson size={18} />
             <span>
@@ -4276,41 +4292,43 @@ function Admin({
               <small>{dataFileDetail}</small>
             </span>
           </div>
-          <div className="dataSectionLabel">Åtgärder</div>
+          <div className="dataSectionLabel">Klickbara åtgärder</div>
           <div className="dataPrimaryActions" aria-label="Dataåtgärder">
-              <button className="dataAction primaryDataAction" onClick={() => void saveDataFileNow()} disabled={!dataFile.supported || dataFile.status === "saving"}>
-                <Download size={18} />
-                <span>
-                  <strong>{dataFile.fileName ? "Spara datafil" : "Skapa datafil"}</strong>
-                  <small>{dataFile.fileName ? "Skriv senaste ändringarna till filen." : "Bästa valet för backup på den här enheten."}</small>
-                </span>
-                <em>{dataFile.status === "saving" ? "Sparar" : "Åtgärd"}</em>
-              </button>
-              <button className="dataAction" onClick={() => void shareDataFile(state)}>
-                <Upload size={18} />
+            <button className="dataAction primaryDataAction" onClick={() => void handlePrimaryDataAction()} disabled={dataFile.status === "saving"}>
+              <Download size={18} />
               <span>
-                  <strong>Dela till annan enhet</strong>
-                  <small>Skicka en öppningsfil som läser in datan i webbappen.</small>
-                </span>
-                <em>Åtgärd</em>
-              </button>
-              <label className="fileButton dataAction">
-                <Import size={18} />
+                <strong>{primaryDataActionLabel}</strong>
+                <small>{primaryDataActionDetail}</small>
+              </span>
+              <em>{dataFile.status === "saving" ? "Sparar" : "Knapp"}</em>
+            </button>
+            <button className="dataAction" onClick={() => void shareDataFile(state)}>
+              <Upload size={18} />
               <span>
-                  <strong>Importera från fil</strong>
-                  <small>Läs in datafil, kontext-export eller kontoutdrag.</small>
-                </span>
-                <em>Välj fil</em>
-                <input type="file" accept="application/json,.json,.csv,.xlsx,.pdf,text/csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={importFile} />
-              </label>
-            </div>
+                <strong>Dela till annan enhet</strong>
+                <small>Skicka en öppningsfil som läser in datan i webbappen.</small>
+              </span>
+              <em>Knapp</em>
+            </button>
+            <label className="fileButton dataAction">
+              <Import size={18} />
+              <span>
+                <strong>Importera från fil</strong>
+                <small>Läs in datafil, kontext-export eller kontoutdrag.</small>
+              </span>
+              <em>Välj fil</em>
+              <input type="file" accept="application/json,.json,.csv,.xlsx,.pdf,text/csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={importFile} />
+            </label>
+          </div>
+          {dataNotice && <p className="successNote">{dataNotice}</p>}
           <details className="inlineAdvanced">
             <summary>Fler filval</summary>
             <div>
-              <button onClick={() => void connectDataFile()} disabled={!dataFile.supported}>
+              {!dataFile.supported && <p className="note">Ansluten datafil fungerar främst i Chromium-baserade desktopwebbläsare. Backupfil och import fungerar ändå.</p>}
+              <button onClick={() => void connectDataFile()} disabled={!dataFile.supported} title={dataFile.supported ? "Öppna en datafil" : "Stöds inte i den här webbläsaren"}>
                 <Import size={17} /> Öppna annan datafil
               </button>
-              <button onClick={() => void saveAsDataFile()} disabled={!dataFile.supported}>
+              <button onClick={() => void saveAsDataFile()} disabled={!dataFile.supported} title={dataFile.supported ? "Spara som ansluten datafil" : "Stöds inte i den här webbläsaren"}>
                 <FileJson size={17} /> Spara som ny datafil
               </button>
               <button onClick={() => downloadVercelHandoffFile(state)}>
