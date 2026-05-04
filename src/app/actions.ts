@@ -349,6 +349,58 @@ export function convertTransactionToRecurring(state: AppState, input: ConvertTra
   };
 }
 
+export function convertRecurringExpenseToPurchase(state: AppState, expenseId: string): AppState {
+  const expense = state.expenses.find((item) => item.id === expenseId);
+  if (!expense) return state;
+
+  const period = state.costPeriods.find((item) => item.expenseId === expenseId);
+  const supplier = expense.supplierId ? state.suppliers.find((item) => item.id === expense.supplierId) : undefined;
+  const linkedTransactions = state.transactions.filter((transaction) => transaction.recurringExpenseId === expenseId);
+  const context = state.contexts.find((item) => item.id === expense.contextId);
+  const convertedTransactions =
+    linkedTransactions.length > 0
+      ? state.transactions.map((transaction) =>
+          transaction.recurringExpenseId === expenseId
+            ? {
+                ...transaction,
+                recurringExpenseId: undefined,
+                type: "one-off" as const,
+                updatedAt: stamp()
+              }
+            : transaction
+        )
+      : [
+          ...state.transactions,
+          {
+            id: id("txn"),
+            contextId: expense.contextId,
+            date: expense.startDate ?? period?.startDate ?? new Date().toISOString().slice(0, 10),
+            amount: period?.amount ?? 0,
+            currency: context?.currency ?? "SEK",
+            merchantRaw: supplier?.name ?? expense.name,
+            merchantNormalized: normalizeMerchant(supplier?.name ?? expense.name),
+            categoryId: expense.categoryId,
+            supplierId: expense.supplierId,
+            payerPersonId: expense.payerPersonId,
+            source: "manual" as const,
+            type: "one-off" as const,
+            flags: [],
+            notes: expense.notes,
+            createdAt: stamp(),
+            updatedAt: stamp()
+          }
+        ];
+
+  return {
+    ...state,
+    expenses: state.expenses.filter((item) => item.id !== expenseId),
+    costPeriods: state.costPeriods.filter((item) => item.expenseId !== expenseId),
+    attachments: state.attachments.filter((attachment) => attachment.expenseId !== expenseId),
+    reminders: state.reminders.filter((reminder) => reminder.expenseId !== expenseId),
+    transactions: convertedTransactions
+  };
+}
+
 export function removeExpense(state: AppState, expenseId: string): AppState {
   return {
     ...state,

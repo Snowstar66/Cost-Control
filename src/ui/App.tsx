@@ -52,6 +52,7 @@ import {
   addAttachment,
   addContext,
   cancelExpense,
+  convertRecurringExpenseToPurchase,
   convertTransactionToRecurring,
   duplicateCurrentContext,
   removeCategory,
@@ -653,6 +654,10 @@ export function App() {
           onClose={() => setSelectedExpenseId(undefined)}
           onEdit={() => openExpenseForm(selectedExpense.id)}
           onCancel={() => setState((current) => cancelExpense(current, selectedExpense.id))}
+          onConvertToPurchase={() => {
+            setState((current) => convertRecurringExpenseToPurchase(current, selectedExpense.id));
+            setSelectedExpenseId(undefined);
+          }}
           onDelete={() => {
             setState((current) => removeExpense(current, selectedExpense.id));
             setSelectedExpenseId(undefined);
@@ -4791,6 +4796,7 @@ function ExpenseDrawer(props: {
   onClose: () => void;
   onEdit: () => void;
   onCancel: () => void;
+  onConvertToPurchase: () => void;
   onDelete: () => void;
   onAttach: (file: File) => void;
   onRemoveAttachment: (attachmentId: string) => void;
@@ -4832,6 +4838,9 @@ function ExpenseDrawer(props: {
       <div className="drawerActions">
         <button onClick={props.onEdit}>
           <Pencil size={16} /> Redigera
+        </button>
+        <button onClick={props.onConvertToPurchase}>
+          <ShoppingBag size={16} /> Gör till enskilt köp
         </button>
         <button onClick={props.onCancel}>Markera avslutad</button>
         <button className="danger" onClick={props.onDelete}>

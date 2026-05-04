@@ -388,6 +388,26 @@ describe("App", () => {
     expect(screen.queryByRole("button", { name: /Redigera/i })).not.toBeInTheDocument();
   });
 
+  it("kan gora en aterkommande utgift till ett enskilt kop", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithCarWash()));
+    render(<App />);
+
+    fireEvent.click(screen.getAllByRole("button", { name: /BiltvattOK Q8/i })[0]);
+    fireEvent.click(screen.getByRole("button", { name: /G.r till enskilt k.p/i }));
+
+    const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
+    expect(saved.expenses).toHaveLength(0);
+    expect(saved.costPeriods).toHaveLength(0);
+    expect(saved.transactions.at(-1)).toMatchObject({
+      merchantRaw: "OK Q8",
+      amount: 299,
+      categoryId: "cat-1",
+      supplierId: "sup-1",
+      type: "one-off"
+    });
+    expect(screen.queryByRole("button", { name: /Redigera/i })).not.toBeInTheDocument();
+  });
+
   it("filtrerar oversikten nar en kopssignal valjs", () => {
     localStorage.setItem(storageKey, JSON.stringify(stateWithBusinessPurchaseRows()));
     render(<App />);

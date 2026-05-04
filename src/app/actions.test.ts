@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { expenseAmountForMonth } from "../domain/calculations";
 import { buildTimelineMonths } from "../domain/date";
 import type { AppState } from "../domain/types";
-import { convertTransactionToRecurring, importTransactions, removeContext, toggleTransactionFlag, upsertExpense } from "./actions";
+import { convertRecurringExpenseToPurchase, convertTransactionToRecurring, importTransactions, removeContext, toggleTransactionFlag, upsertExpense } from "./actions";
 
 const state: AppState = {
   version: 1,
@@ -156,6 +156,59 @@ describe("convertTransactionToRecurring", () => {
       recurringExpenseId: createdExpense?.id,
       type: "recurring-payment",
       flags: []
+    });
+  });
+});
+
+describe("convertRecurringExpenseToPurchase", () => {
+  it("unlinks existing recurring payments and removes the recurring expense", () => {
+    const next = convertRecurringExpenseToPurchase(
+      {
+        ...state,
+        transactions: [
+          {
+            id: "txn-1",
+            contextId: "ctx-1",
+            date: "2026-02-25",
+            amount: 299,
+            currency: "SEK",
+            merchantRaw: "OK Q8",
+            merchantNormalized: "OK Q8",
+            categoryId: "cat-1",
+            supplierId: "sup-1",
+            recurringExpenseId: "exp-1",
+            source: "manual",
+            type: "recurring-payment",
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z"
+          }
+        ]
+      },
+      "exp-1"
+    );
+
+    expect(next.expenses.some((expense) => expense.id === "exp-1")).toBe(false);
+    expect(next.costPeriods.some((period) => period.expenseId === "exp-1")).toBe(false);
+    expect(next.transactions[0]).toMatchObject({
+      recurringExpenseId: undefined,
+      type: "one-off"
+    });
+  });
+
+  it("creates a one-off purchase when the recurring expense has no linked payment", () => {
+    const next = convertRecurringExpenseToPurchase(state, "exp-1");
+
+    expect(next.expenses.some((expense) => expense.id === "exp-1")).toBe(false);
+    expect(next.transactions.at(-1)).toMatchObject({
+      contextId: "ctx-1",
+      date: "2026-02-01",
+      amount: 299,
+      currency: "SEK",
+      merchantRaw: "OK Q8",
+      categoryId: "cat-1",
+      supplierId: "sup-1",
+      type: "one-off",
+      source: "manual"
     });
   });
 });
