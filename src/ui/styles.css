@@ -904,6 +904,7 @@ button.radarCard.green.active {
 }
 
 .signalToggle {
+  position: relative;
   width: 30px;
   min-height: 30px;
   border: 1px solid transparent;
@@ -925,7 +926,22 @@ button.radarCard.green.active {
 .signalToggle.active {
   color: #174a8b;
   border-color: transparent;
-  background: transparent;
+  background: #eaf2ff;
+}
+
+.signalToggle.active::after {
+  content: "";
+  position: absolute;
+  right: 9px;
+  bottom: 3px;
+  left: 9px;
+  height: 3px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.signalToggle.active svg {
+  stroke-width: 2.6;
 }
 
 .flagChip.active {
@@ -936,6 +952,7 @@ button.radarCard.green.active {
 
 .signalToggle.red.active {
   color: #b4232d;
+  background: #fff1f1;
 }
 
 .flagChip.red.active {
@@ -945,6 +962,7 @@ button.radarCard.green.active {
 
 .signalToggle.amber.active {
   color: #99610a;
+  background: #fff7e8;
 }
 
 .flagChip.amber.active {
@@ -954,6 +972,7 @@ button.radarCard.green.active {
 
 .signalToggle.green.active {
   color: #0f766e;
+  background: #ecf8f4;
 }
 
 .flagChip.green.active {
