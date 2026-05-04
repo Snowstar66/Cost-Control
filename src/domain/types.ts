@@ -153,6 +153,7 @@ export type AppState = {
   onboardingComplete: boolean;
   hidePastMonths: boolean;
   purchasesEnabled: boolean;
+  purchaseBusinessLabel?: string;
   filters: {
     categoryIds: string[];
     payerIds: string[];

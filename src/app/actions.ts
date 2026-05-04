@@ -346,7 +346,7 @@ export function upsertTransaction(state: AppState, input: UpsertTransactionInput
     source: input.source ?? "manual",
     importId: input.importId,
     type: input.recurringExpenseId && !input.type ? "recurring-payment" : input.type ?? "one-off",
-    flags: input.flags ?? existing?.flags ?? [],
+    flags: normalizePurchaseFlags(input.flags ?? existing?.flags ?? []),
     notes: input.notes,
     createdAt: existing?.createdAt ?? stamp(),
     updatedAt: stamp()
@@ -377,7 +377,7 @@ export function importTransactions(state: AppState, transactions: UpsertTransact
     existingFingerprints.add(fingerprint);
     const merchantRaw = input.merchantRaw.trim() || input.description?.trim() || "Okänt köp";
     const transactionType = input.recurringExpenseId && !input.type ? "recurring-payment" : input.type ?? "one-off";
-    const flags = input.flags && input.flags.length > 0 ? input.flags : transactionType === "one-off" ? (["review"] as PurchaseFlag[]) : [];
+    const flags = input.flags && input.flags.length > 0 ? normalizePurchaseFlags(input.flags) : transactionType === "one-off" ? (["review"] as PurchaseFlag[]) : [];
     nextTransactions.push({
       id: id("txn"),
       contextId: state.activeContextId,
@@ -419,12 +419,14 @@ export function toggleTransactionFlag(state: AppState, transactionId: string, fl
     ...state,
     transactions: state.transactions.map((transaction) => {
       if (transaction.id !== transactionId) return transaction;
-      const current = new Set(transaction.flags ?? []);
-      if (current.has(flag)) current.delete(flag);
-      else current.add(flag);
-      return { ...transaction, flags: [...current], updatedAt: stamp() };
+      const current = normalizePurchaseFlags(transaction.flags ?? []);
+      return { ...transaction, flags: current.includes(flag) ? [] : [flag], updatedAt: stamp() };
     })
   };
+}
+
+function normalizePurchaseFlags(flags: PurchaseFlag[]): PurchaseFlag[] {
+  return flags.length > 0 ? [flags[flags.length - 1]] : [];
 }
 
 export function cancelExpense(state: AppState, expenseId: string): AppState {

@@ -200,7 +200,7 @@ function stateWithBusinessPurchaseRows(): AppState {
         merchantRaw: "PRESSBYRAN",
         merchantNormalized: "PRESSBYRAN",
         amount: 49,
-        flags: [] as PurchaseFlag[]
+        flags: ["review" as PurchaseFlag]
       }
     ]
   };
@@ -419,6 +419,18 @@ describe("App", () => {
 
     expect(screen.getAllByText("Business").length).toBeGreaterThan(0);
     expect(screen.getAllByText("125 kr").length).toBeGreaterThan(0);
+  });
+
+  it("kan dopa om business-signalen for enskilda kop", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithBusinessPurchaseRows()));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^Data$/i }));
+    fireEvent.change(screen.getByLabelText("Köpsignal business"), { target: { value: "Utlägg" } });
+    fireEvent.click(screen.getByRole("button", { name: /^Inköp$/i }));
+
+    expect(screen.getAllByText("Utlägg").length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: /Utlägg: ICA/i })).toBeInTheDocument();
   });
 
   it("visar finansiell kopstatistik per handlare", () => {

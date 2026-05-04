@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { expenseAmountForMonth } from "../domain/calculations";
 import { buildTimelineMonths } from "../domain/date";
 import type { AppState } from "../domain/types";
-import { importTransactions, removeContext, upsertExpense } from "./actions";
+import { importTransactions, removeContext, toggleTransactionFlag, upsertExpense } from "./actions";
 
 const state: AppState = {
   version: 1,
@@ -175,6 +175,64 @@ describe("importTransactions", () => {
       purchaseFlags: [],
       search: ""
     });
+  });
+});
+
+describe("toggleTransactionFlag", () => {
+  it("ersatter tidigare kopssignal nar en ny signal valjs", () => {
+    const next = toggleTransactionFlag(
+      {
+        ...state,
+        transactions: [
+          {
+            id: "txn-1",
+            contextId: "ctx-1",
+            date: "2026-02-01",
+            amount: 125,
+            currency: "SEK",
+            merchantRaw: "ICA",
+            merchantNormalized: "ICA",
+            source: "import",
+            type: "one-off",
+            flags: ["review"],
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z"
+          }
+        ]
+      },
+      "txn-1",
+      "business"
+    );
+
+    expect(next.transactions[0].flags).toEqual(["business"]);
+  });
+
+  it("slacker signalen nar samma signal valjs igen", () => {
+    const next = toggleTransactionFlag(
+      {
+        ...state,
+        transactions: [
+          {
+            id: "txn-1",
+            contextId: "ctx-1",
+            date: "2026-02-01",
+            amount: 125,
+            currency: "SEK",
+            merchantRaw: "ICA",
+            merchantNormalized: "ICA",
+            source: "import",
+            type: "one-off",
+            flags: ["business"],
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z"
+          }
+        ]
+      },
+      "txn-1",
+      "business"
+    );
+
+    expect(next.transactions[0].flags).toEqual([]);
   });
 });
 

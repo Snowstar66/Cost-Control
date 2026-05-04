@@ -5,17 +5,16 @@
   BookOpen,
   BriefcaseBusiness,
   CalendarDays,
-  CheckCircle2,
   ChevronDown,
   ChevronsLeft,
   ChevronsRight,
+  CircleAlert,
   Cloud,
   CreditCard,
   Download,
   FileArchive,
   FileJson,
   FileText,
-  Flag,
   FolderPlus,
   Gauge,
   Home,
@@ -38,6 +37,8 @@
   Sparkles,
   Store,
   Tag,
+  ThumbsDown,
+  ThumbsUp,
   Trash2,
   Upload,
   Users,
@@ -88,7 +89,7 @@ import {
   simulatedRemovalMonth,
 } from "../domain/calculations";
 import { toIsoDate, toMonthKey } from "../domain/date";
-import type { Attachment, Category, Context, Expense, ExpenseCostPeriod, NecessityLevel, Person, PurchaseFlag, PurchaseTransaction, Recurrence, Supplier, TimelineMonth } from "../domain/types";
+import type { AppState, Attachment, Category, Context, Expense, ExpenseCostPeriod, NecessityLevel, Person, PurchaseFlag, PurchaseTransaction, Recurrence, Supplier, TimelineMonth } from "../domain/types";
 import { necessityLabels, recurrenceLabels } from "../domain/types";
 import { parseBankStatementFile, type BankStatementImportResult } from "../storage/bankStatementImport";
 import { parseDataFile } from "../storage/dataFile";
@@ -161,13 +162,19 @@ const overviewNecessityLabels: Record<NecessityLevel, string> = {
   unnecessary: "Onödigt"
 };
 const purchaseFlagMeta: Record<PurchaseFlag, { label: string; shortLabel: string; tone: "blue" | "green" | "amber" | "red"; icon: typeof Wallet }> = {
-  review: { label: "Granska", shortLabel: "Granska", tone: "blue", icon: ShieldCheck },
-  unnecessary: { label: "Onödigt", shortLabel: "Onödigt", tone: "red", icon: Flag },
+  review: { label: "Granska", shortLabel: "Granska", tone: "blue", icon: CircleAlert },
+  unnecessary: { label: "Onödigt", shortLabel: "Onödigt", tone: "red", icon: ThumbsDown },
   recurringCandidate: { label: "Återkommande kandidat", shortLabel: "Kandidat", tone: "amber", icon: RefreshCcw },
-  worthIt: { label: "Värt det", shortLabel: "Värt", tone: "green", icon: CheckCircle2 },
+  worthIt: { label: "Värt det", shortLabel: "Värt", tone: "green", icon: ThumbsUp },
   business: { label: "Business", shortLabel: "Business", tone: "blue", icon: BriefcaseBusiness }
 };
 const overviewPurchaseSignalOrder: PurchaseFlag[] = ["review", "unnecessary", "recurringCandidate", "worthIt", "business"];
+function purchaseBusinessLabel(state: Pick<AppState, "purchaseBusinessLabel">): string {
+  return state.purchaseBusinessLabel?.trim() || purchaseFlagMeta.business.label;
+}
+function purchaseSignalLabel(flag: PurchaseFlag, businessLabel = purchaseFlagMeta.business.label): string {
+  return flag === "business" ? businessLabel : purchaseFlagMeta[flag].label;
+}
 type ExpenseFormInput = Parameters<typeof upsertExpense>[1];
 type PurchaseImportPreview = BankStatementImportResult & {
   fileName: string;
@@ -550,6 +557,7 @@ export function App() {
               transactions={transactions}
               categories={categories}
               suppliers={suppliers}
+              businessSignalLabel={purchaseBusinessLabel(state)}
               importPreview={purchaseImportPreview}
               onCommitImport={() => {
                 if (!purchaseImportPreview) return;
@@ -656,6 +664,7 @@ export function App() {
           expenses={contextExpenses}
           transactions={transactions}
           currency={context.currency}
+          businessSignalLabel={purchaseBusinessLabel(state)}
           onClose={closePurchaseForm}
           onSave={saveTransaction}
         />
@@ -930,6 +939,7 @@ function Overview(props: {
   state: ReturnType<typeof useAppState>["state"];
 }) {
   const activePurchaseFlag = props.state.filters.purchaseFlags.length === 1 ? props.state.filters.purchaseFlags[0] : undefined;
+  const businessLabel = purchaseBusinessLabel(props.state);
   const signalSummaries = overviewPurchaseSignalOrder.map((flag) => {
     const transactions = purchaseRowsTransactions(props.summaryPurchaseRows).filter((transaction) => transactionMatchesPurchaseFlag(transaction, flag));
     return {
@@ -954,19 +964,21 @@ function Overview(props: {
           minRows={10}
           onSelect={props.onSelect}
           onSelectPurchase={props.onSelectPurchase}
+          purchaseBusinessLabel={businessLabel}
         />
       </div>
       <div className="necessitySummaryGrid" aria-label="Summering per köpsignal">
         {signalSummaries.map((summary) => {
           const selected = activePurchaseFlag === summary.flag;
           const meta = purchaseFlagMeta[summary.flag];
+          const label = purchaseSignalLabel(summary.flag, businessLabel);
           const Icon = meta.icon;
           return (
             <button
               key={summary.flag}
               type="button"
               className={`necessitySummary ${summary.flag} ${selected ? "selected" : ""}`}
-              aria-label={`${meta.label}: ${formatMoney(summary.total, props.currency)} under vald period, ${summary.count} köp`}
+              aria-label={`${label}: ${formatMoney(summary.total, props.currency)} under vald period, ${summary.count} köp`}
               aria-pressed={selected}
               onClick={() =>
                 props.setState((current) => ({
@@ -981,7 +993,7 @@ function Overview(props: {
             >
               <span className="summaryTop">
                 <Icon size={15} />
-                <span>{meta.label}</span>
+                <span>{label}</span>
                 <em>Köp</em>
               </span>
               <strong>{formatMoney(summary.total, props.currency)}</strong>
@@ -1012,17 +1024,16 @@ function Metric({ title, value, icon: Icon, hint, onClick }: { title: string; va
   );
 }
 
-function PurchaseSignalBadges({ flags }: { flags?: PurchaseFlag[] }) {
-  const effectiveFlags = flags && flags.length > 0 ? flags : (["review"] as PurchaseFlag[]);
-  const activeFlags = (Object.keys(purchaseFlagMeta) as PurchaseFlag[]).filter((flag) => effectiveFlags.includes(flag));
+function PurchaseSignalBadges({ flags, businessLabel }: { flags?: PurchaseFlag[]; businessLabel?: string }) {
+  const activeFlags = (Object.keys(purchaseFlagMeta) as PurchaseFlag[]).filter((flag) => flags?.includes(flag));
   if (activeFlags.length === 0) return null;
   return (
-    <span className="purchaseSignalBadges" aria-label={`Signaler: ${activeFlags.map((flag) => purchaseFlagMeta[flag].label).join(", ")}`}>
+    <span className="purchaseSignalBadges" aria-label={`Signaler: ${activeFlags.map((flag) => purchaseSignalLabel(flag, businessLabel)).join(", ")}`}>
       {activeFlags.map((flag) => {
         const meta = purchaseFlagMeta[flag];
         const Icon = meta.icon;
         return (
-          <span className={`purchaseSignalBadge ${meta.tone}`} key={flag} title={meta.label}>
+          <span className={`purchaseSignalBadge ${meta.tone}`} key={flag} title={purchaseSignalLabel(flag, businessLabel)}>
             <Icon size={12} aria-hidden="true" />
           </span>
         );
@@ -1033,7 +1044,6 @@ function PurchaseSignalBadges({ flags }: { flags?: PurchaseFlag[] }) {
 
 function transactionMatchesPurchaseFlag(transaction: PurchaseTransaction, flag: PurchaseFlag): boolean {
   const flags = transaction.flags ?? [];
-  if (flag === "review") return flags.length === 0 || flags.includes("review");
   return flags.includes(flag);
 }
 
@@ -1367,7 +1377,7 @@ function ExpenseModal({ expense, costPeriod, categories, people, suppliers, onSa
   );
 }
 
-function PurchaseModal({ transaction, categories, suppliers, expenses, transactions, currency, onSave, onClose }: { transaction?: PurchaseTransaction; categories: Category[]; suppliers: Supplier[]; expenses: Expense[]; transactions: PurchaseTransaction[]; currency: string; onSave: (input: UpsertTransactionInput, options?: PurchaseSaveOptions) => void; onClose: () => void }) {
+function PurchaseModal({ transaction, categories, suppliers, expenses, transactions, currency, businessSignalLabel, onSave, onClose }: { transaction?: PurchaseTransaction; categories: Category[]; suppliers: Supplier[]; expenses: Expense[]; transactions: PurchaseTransaction[]; currency: string; businessSignalLabel: string; onSave: (input: UpsertTransactionInput, options?: PurchaseSaveOptions) => void; onClose: () => void }) {
   const merchantSuggestions = useMemo(() => {
     const labels = new Map<string, string>();
     for (const transaction of transactions) {
@@ -1433,7 +1443,7 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, transacti
   const toggleFlag = (flag: PurchaseFlag) => {
     setForm((current) => ({
       ...current,
-      flags: current.flags.includes(flag) ? current.flags.filter((item) => item !== flag) : [...current.flags, flag]
+      flags: current.flags.includes(flag) ? [] : [flag]
     }));
   };
 
@@ -1534,11 +1544,12 @@ function PurchaseModal({ transaction, categories, suppliers, expenses, transacti
           <div>
             {(Object.keys(purchaseFlagMeta) as PurchaseFlag[]).map((flag) => {
               const meta = purchaseFlagMeta[flag];
+              const label = purchaseSignalLabel(flag, businessSignalLabel);
               const Icon = meta.icon;
               const active = form.flags.includes(flag);
               return (
                 <button type="button" key={flag} className={`flagChip ${meta.tone} ${active ? "active" : ""}`} onClick={() => toggleFlag(flag)} aria-pressed={active}>
-                  <Icon size={14} /> {meta.label}
+                  <Icon size={14} /> {label}
                 </button>
               );
             })}
@@ -1799,6 +1810,7 @@ function Timeline(props: {
   minRows?: number;
   onSelect: (id: string) => void;
   onSelectPurchase?: (id: string) => void;
+  purchaseBusinessLabel?: string;
 }) {
   const purchaseRows = props.purchaseRows ?? [];
   const [expandedPurchaseKey, setExpandedPurchaseKey] = useState<string | undefined>();
@@ -1912,7 +1924,7 @@ function Timeline(props: {
                           <strong>{transaction.merchantRaw}</strong>
                           {subtitle && <small>{subtitle}</small>}
                         </span>
-                        <PurchaseSignalBadges flags={transaction.flags} />
+                        <PurchaseSignalBadges flags={transaction.flags} businessLabel={props.purchaseBusinessLabel} />
                       </button>
                       {props.months.map((month) => (
                         <button
@@ -2007,7 +2019,7 @@ function Timeline(props: {
                       <span>
                         <strong>{transaction.merchantRaw}</strong>
                         <small>{transaction.date}</small>
-                        <PurchaseSignalBadges flags={transaction.flags} />
+                        <PurchaseSignalBadges flags={transaction.flags} businessLabel={props.purchaseBusinessLabel} />
                       </span>
                       <b>{formatMoney(transaction.amount, transaction.currency)}</b>
                     </button>
@@ -2424,7 +2436,7 @@ function categoryColorName(color: string): string {
   return categoryColorOptions.find((option) => option.value.toLowerCase() === color.toLowerCase())?.label ?? "Egen färg";
 }
 
-function buildPurchaseRadar(transactions: PurchaseTransaction[], currency: string) {
+function buildPurchaseRadar(transactions: PurchaseTransaction[], currency: string, businessLabel = purchaseFlagMeta.business.label) {
   const byFlag = (flag: PurchaseFlag) => transactions.filter((transaction) => transactionMatchesPurchaseFlag(transaction, flag));
   const totalFor = (rows: PurchaseTransaction[]) => rows.reduce((sum, transaction) => sum + transaction.amount, 0);
   const recurringGroups = topTransactionCountRows(transactions, transactionMerchantLabel)
@@ -2440,11 +2452,11 @@ function buildPurchaseRadar(transactions: PurchaseTransaction[], currency: strin
     cards: [
       {
         flag: "review" as const,
-        title: "Att granska",
+        title: "Granska",
         value: String(reviewRows.length),
         detail: `${formatMoney(totalFor(reviewRows), currency)} markerat för koll.`,
         tone: "blue" as const,
-        icon: ShieldCheck
+        icon: CircleAlert
       },
       {
         flag: "unnecessary" as const,
@@ -2452,7 +2464,7 @@ function buildPurchaseRadar(transactions: PurchaseTransaction[], currency: strin
         value: formatMoney(totalFor(unnecessaryRows), currency),
         detail: `${unnecessaryRows.length} köp du kan lära dig av.`,
         tone: "red" as const,
-        icon: Flag
+        icon: ThumbsDown
       },
       {
         flag: "recurringCandidate" as const,
@@ -2468,11 +2480,11 @@ function buildPurchaseRadar(transactions: PurchaseTransaction[], currency: strin
         value: formatMoney(totalFor(worthRows), currency),
         detail: `${worthRows.length} köp markerade som bra värde.`,
         tone: "green" as const,
-        icon: CheckCircle2
+        icon: ThumbsUp
       },
       {
         flag: "business" as const,
-        title: "Business",
+        title: businessLabel,
         value: formatMoney(totalFor(businessRows), currency),
         detail: `${businessRows.length} köp markerade som arbete.`,
         tone: "blue" as const,
@@ -2483,14 +2495,14 @@ function buildPurchaseRadar(transactions: PurchaseTransaction[], currency: strin
   };
 }
 
-function Purchases({ context, transactions, categories, suppliers, importPreview, onCommitImport, onCancelImport, onEdit, onDelete, onToggleFlag }: { context: ReturnType<typeof useAppState>["context"]; transactions: PurchaseTransaction[]; categories: Category[]; suppliers: Supplier[]; importPreview?: PurchaseImportPreview; onCommitImport: () => void; onCancelImport: () => void; onEdit: (id?: string) => void; onDelete: (id: string) => void; onToggleFlag: (id: string, flag: PurchaseFlag) => void }) {
+function Purchases({ context, transactions, categories, suppliers, businessSignalLabel, importPreview, onCommitImport, onCancelImport, onEdit, onDelete, onToggleFlag }: { context: ReturnType<typeof useAppState>["context"]; transactions: PurchaseTransaction[]; categories: Category[]; suppliers: Supplier[]; businessSignalLabel: string; importPreview?: PurchaseImportPreview; onCommitImport: () => void; onCancelImport: () => void; onEdit: (id?: string) => void; onDelete: (id: string) => void; onToggleFlag: (id: string, flag: PurchaseFlag) => void }) {
   const [search, setSearch] = useState("");
   const [activeRadarFlag, setActiveRadarFlag] = useState<PurchaseFlag | undefined>();
   const baseVisible = transactions
     .filter((transaction) => transaction.type !== "ignored")
     .filter((transaction) => [transaction.merchantRaw, transaction.merchantNormalized, transaction.location].join(" ").toLowerCase().includes(search.toLowerCase()));
   const summaryTransactions = baseVisible.filter((transaction) => transaction.type === "one-off");
-  const radar = buildPurchaseRadar(summaryTransactions, context.currency);
+  const radar = buildPurchaseRadar(summaryTransactions, context.currency, businessSignalLabel);
   const candidateMerchants = new Set(radar.habits.map((habit) => habit.label));
   const isRadarMatch = (transaction: PurchaseTransaction) =>
     activeRadarFlag === "recurringCandidate"
@@ -2510,7 +2522,7 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
   const total = summaryTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
   const merchantRows = topTransactionRows(summaryTransactions, (transaction) => transaction.merchantNormalized || transaction.merchantRaw).slice(0, 6);
   const categoryRows = topTransactionRows(summaryTransactions, (transaction) => categories.find((category) => category.id === transaction.categoryId)?.name ?? "Okategoriserat").slice(0, 6);
-  const activeRadarLabel = activeRadarFlag === "recurringCandidate" ? "Vanor" : activeRadarFlag ? purchaseFlagMeta[activeRadarFlag].label : undefined;
+  const activeRadarLabel = activeRadarFlag === "recurringCandidate" ? "Vanor" : activeRadarFlag ? purchaseSignalLabel(activeRadarFlag, businessSignalLabel) : undefined;
   const activeRadarCount = activeRadarFlag ? visible.filter(isRadarMatch).length : 0;
   const importPreviewTotal = importPreview?.transactions.reduce((sum, transaction) => sum + transaction.amount, 0) ?? 0;
 
@@ -2645,6 +2657,7 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
                 <span className="transactionSignals">
                   {(Object.keys(purchaseFlagMeta) as PurchaseFlag[]).map((flag) => {
                     const meta = purchaseFlagMeta[flag];
+                    const label = purchaseSignalLabel(flag, businessSignalLabel);
                     const Icon = meta.icon;
                     const active = transactionMatchesPurchaseFlag(transaction, flag);
                     return (
@@ -2652,8 +2665,8 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
                         className={`signalToggle ${meta.tone} ${active ? "active" : ""}`}
                         key={flag}
                         onClick={() => onToggleFlag(transaction.id, flag)}
-                        title={meta.label}
-                        aria-label={`${meta.label}: ${transaction.merchantRaw}`}
+                        title={label}
+                        aria-label={`${label}: ${transaction.merchantRaw}`}
                         aria-pressed={active}
                       >
                         <Icon size={13} />
@@ -2690,6 +2703,7 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
                   <span className="transactionSignals">
                     {(Object.keys(purchaseFlagMeta) as PurchaseFlag[]).map((flag) => {
                       const meta = purchaseFlagMeta[flag];
+                      const label = purchaseSignalLabel(flag, businessSignalLabel);
                       const Icon = meta.icon;
                       const active = transactionMatchesPurchaseFlag(transaction, flag);
                       return (
@@ -2697,8 +2711,8 @@ function Purchases({ context, transactions, categories, suppliers, importPreview
                           className={`signalToggle ${meta.tone} ${active ? "active" : ""}`}
                           key={flag}
                           onClick={() => onToggleFlag(transaction.id, flag)}
-                          title={meta.label}
-                          aria-label={`${meta.label.toLowerCase()} ${transaction.merchantRaw}`}
+                          title={label}
+                          aria-label={`${label.toLowerCase()} ${transaction.merchantRaw}`}
                           aria-pressed={active}
                         >
                           <Icon size={13} />
@@ -4389,6 +4403,14 @@ function Admin({
             <input type="checkbox" checked={state.purchasesEnabled} onChange={(event) => setState((current) => ({ ...current, purchasesEnabled: event.target.checked }))} />
             <span>Visa köp och kassabok</span>
           </label>
+          <label>Köpsignal business</label>
+          <input
+            aria-label="Köpsignal business"
+            value={state.purchaseBusinessLabel ?? "Business"}
+            onChange={(event) => setState((current) => ({ ...current, purchaseBusinessLabel: event.target.value }))}
+            placeholder="Business, Utlägg eller företagsnamn"
+          />
+          <p className="note">Byter bara namnet på köpsignalen. Symbolen och själva signalen är fortfarande business.</p>
         </div>
 
         <CloudSyncPanel

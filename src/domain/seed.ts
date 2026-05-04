@@ -137,6 +137,7 @@ export function createInitialState(): AppState {
     onboardingComplete: true,
     hidePastMonths: false,
     purchasesEnabled: true,
+    purchaseBusinessLabel: "Business",
     filters: {
       categoryIds: [],
       payerIds: [],
@@ -166,6 +167,7 @@ export function createEmptyState(): AppState {
     onboardingComplete: false,
     hidePastMonths: false,
     purchasesEnabled: true,
+    purchaseBusinessLabel: "Business",
     filters: {
       categoryIds: [],
       payerIds: [],
@@ -200,9 +202,13 @@ export function enrichStateWithBaselineData(state: AppState): AppState {
     ...state,
     suppliers,
     categories,
-    transactions: state.transactions ?? [],
+    transactions: (state.transactions ?? []).map((transaction) => ({
+      ...transaction,
+      flags: transaction.flags && transaction.flags.length > 0 ? [transaction.flags[transaction.flags.length - 1]] : transaction.flags
+    })),
     merchantRules: state.merchantRules ?? [],
     purchasesEnabled: state.purchasesEnabled ?? true,
+    purchaseBusinessLabel: state.purchaseBusinessLabel ?? "Business",
     filters: {
       categoryIds: state.filters?.categoryIds ?? [],
       payerIds: state.filters?.payerIds ?? [],
