@@ -3484,11 +3484,9 @@ function Statistics({ state, setState, expenses, allExpenses, categories, people
   const monthKeys = new Set(months.map((month) => month.key));
   const periodTransactions = transactions.filter((transaction) => transaction.type === "one-off" && monthKeys.has(transactionPeriodMonth(transaction)));
   const purchaseMerchantRows = topTransactionCountRows(periodTransactions, transactionMerchantLabel)
-    .map((row, index) => ({ ...row, color: analyticsColors[index % analyticsColors.length] }))
-    .slice(0, 10);
+    .map((row, index) => ({ ...row, color: analyticsColors[index % analyticsColors.length] }));
   const purchaseCategoryRows = topTransactionCountRows(periodTransactions, (transaction) => categories.find((category) => category.id === transaction.categoryId)?.name ?? "Okategoriserat")
-    .map((row) => ({ ...row, color: categories.find((category) => category.name === row.label)?.color ?? "#0f766e" }))
-    .slice(0, 10);
+    .map((row) => ({ ...row, color: categories.find((category) => category.name === row.label)?.color ?? "#0f766e" }));
   const recurringPeriodTotal = Object.values(accrued).reduce((sum, value) => sum + value, 0);
   const purchasePeriodTotal = periodTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
   const purchaseRadar = buildPurchaseRadar(periodTransactions, currency);

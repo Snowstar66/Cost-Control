@@ -109,6 +109,36 @@ function stateWithPurchaseCategoryRows(): AppState {
   };
 }
 
+function stateWithPurchaseRankingRows(): AppState {
+  const state = stateWithPurchaseCategoryRows();
+  const baseTransaction = state.transactions[0];
+  return {
+    ...state,
+    transactions: [
+      ...Array.from({ length: 11 }, (_, merchantIndex) =>
+        Array.from({ length: 2 }, (_, index) => ({
+          ...baseTransaction,
+          id: `txn-frequent-${merchantIndex + 1}-${index + 1}`,
+          merchantRaw: `FREQUENT ${merchantIndex + 1}`,
+          merchantNormalized: `FREQUENT ${merchantIndex + 1}`,
+          amount: 20 + merchantIndex,
+          date: `2026-02-${String(1 + merchantIndex * 2 + index).padStart(2, "0")}`,
+          bookedDate: `2026-02-${String(2 + merchantIndex * 2 + index).padStart(2, "0")}`
+        }))
+      ).flat(),
+      {
+        ...baseTransaction,
+        id: "txn-big-single",
+        merchantRaw: "BIG SINGLE",
+        merchantNormalized: "BIG SINGLE",
+        amount: 500,
+        date: "2026-02-28",
+        bookedDate: "2026-02-28"
+      }
+    ]
+  };
+}
+
 function stateWithManyPurchaseRows(): AppState {
   const state = stateWithPurchaseCategoryRows();
   return {
@@ -579,6 +609,22 @@ describe("App", () => {
     expect(screen.getByText("Köpintelligens")).toBeInTheDocument();
     expect(screen.getAllByText("ICA").length).toBeGreaterThan(0);
     expect(screen.getByText(/Medelköp/i)).toBeInTheDocument();
+  });
+
+  it("rankar mest pengar pa totalbelopp for kopstatistik", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithPurchaseRankingRows()));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Statistik/i }));
+
+    const columns = [...document.querySelectorAll<HTMLElement>(".whereMoneyPanel .whereColumn")];
+    expect(columns).toHaveLength(4);
+    const merchantAmountRows = [...columns[0].querySelectorAll<HTMLElement>(".whereRow")].map((row) => row.textContent ?? "");
+    const merchantCountRows = [...columns[1].querySelectorAll<HTMLElement>(".whereRow")].map((row) => row.textContent ?? "");
+
+    expect(merchantAmountRows[0]).toContain("BIG SINGLE");
+    expect(merchantAmountRows[0]).toContain("500");
+    expect(merchantCountRows[0]).not.toContain("BIG SINGLE");
   });
 
   it("visar aterkommande radarkort som signal och filtrerar pa signalen", () => {
