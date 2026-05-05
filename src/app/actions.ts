@@ -46,6 +46,11 @@ export type ConvertTransactionToRecurringInput = UpsertExpenseInput & {
   transactionId: string;
 };
 
+export type InitialContextPersonInput = {
+  firstName: string;
+  lastName?: string;
+};
+
 const stamp = () => new Date().toISOString();
 const id = (prefix: string) => `${prefix}-${crypto.randomUUID()}`;
 
@@ -129,10 +134,19 @@ function expandContextWindowForTransactions(state: AppState, transactions: Upser
   };
 }
 
-export function addContext(state: AppState, name: string, currency = "SEK", template?: "family" | "travel" | "cohabiting", includeDefaultSuppliers = false): AppState {
+export function addContext(state: AppState, name: string, currency = "SEK", template?: "family" | "travel" | "cohabiting", includeDefaultSuppliers = false, initialPeople: InitialContextPersonInput[] = []): AppState {
   const context = makeContext(name, currency, state.contexts.length >= 2 ? "premium" : "free");
   const categories = createDefaultCategories(context.id);
   const suppliers = includeDefaultSuppliers ? createDefaultSuppliers(context.id) : [];
+  const people: Person[] = initialPeople
+    .map((person) => ({
+      id: id("per"),
+      contextId: context.id,
+      firstName: normalizeStoredText(person.firstName) ?? "",
+      lastName: normalizeStoredText(person.lastName) ?? "",
+      active: true
+    }))
+    .filter((person) => person.firstName || person.lastName);
   const templatedCategories: Category[] =
     template === "travel"
       ? ["Boende resa", "Transport resa", "Mat", "Aktiviteter"].map((name, index) => ({ id: id("cat"), contextId: context.id, name, color: ["#7db7ee", "#f7c86b", "#a2dba6", "#b58df1"][index], icon: "tag" }))
@@ -143,6 +157,7 @@ export function addContext(state: AppState, name: string, currency = "SEK", temp
     ...state,
     activeContextId: context.id,
     contexts: [...state.contexts, context],
+    people: [...state.people, ...people],
     suppliers: [...state.suppliers, ...suppliers],
     categories: [...state.categories, ...templatedCategories],
     onboardingComplete: true

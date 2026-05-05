@@ -302,12 +302,18 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: /Vill du starta en ny plånbok/i })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText(/Namn på ny plånbok/i), { target: { value: "Tom start" } });
     fireEvent.click(screen.getByRole("button", { name: /Starta ny plånbok/i }));
+    expect(screen.getByText(/minst en användare/i)).toBeInTheDocument();
+    expect(confirm).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText(/Första användare/i), { target: { value: "Pontus Hellgren" } });
+    fireEvent.click(screen.getByRole("button", { name: /Starta ny plånbok/i }));
 
     expect(confirm).toHaveBeenCalledWith(expect.stringContaining("standardföretag"));
     const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as AppState;
     expect(saved.contexts).toHaveLength(1);
     expect(saved.contexts[0].name).toBe("Tom start");
     expect(saved.activeContextId).toBe(saved.contexts[0].id);
+    expect(saved.people).toMatchObject([{ contextId: saved.contexts[0].id, firstName: "Pontus", lastName: "Hellgren", active: true }]);
     expect(saved.suppliers.some((supplier) => supplier.name === "Netflix")).toBe(true);
     expect(saved.categories.some((category) => category.name === "Nöje")).toBe(true);
   });

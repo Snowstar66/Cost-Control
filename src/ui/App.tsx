@@ -71,6 +71,7 @@ import {
   upsertSupplier,
   upsertTransaction,
   importTransactions,
+  type InitialContextPersonInput,
   type ConvertTransactionToRecurringInput,
   type UpsertTransactionInput
 } from "../app/actions";
@@ -180,6 +181,13 @@ function purchaseSignalLabel(flag: PurchaseFlag, businessLabel = purchaseFlagMet
 }
 function displayText(value?: string): string {
   return value?.normalize("NFC") ?? "";
+}
+function firstPersonFromName(value: string): InitialContextPersonInput {
+  const parts = value.trim().split(/\s+/).filter(Boolean);
+  return {
+    firstName: parts[0] ?? "",
+    lastName: parts.slice(1).join(" ")
+  };
 }
 type ExpenseFormInput = Parameters<typeof upsertExpense>[1];
 type RecurringConversionFormInput = Omit<ConvertTransactionToRecurringInput, "transactionId" | "amount" | "chargeDay" | "noticePeriodValue"> & {
@@ -477,7 +485,7 @@ export function App() {
   if (!hasContexts) {
     return (
       <EmptyContextStart
-        onCreate={(name, includeDefaultSuppliers) => setState((current) => addContext(current, name.trim() || "Min ekonomi", "SEK", undefined, includeDefaultSuppliers))}
+        onCreate={(name, includeDefaultSuppliers, firstPersonName) => setState((current) => addContext(current, name.trim() || "Min ekonomi", "SEK", undefined, includeDefaultSuppliers, [firstPersonFromName(firstPersonName)]))}
       />
     );
   }
@@ -835,11 +843,17 @@ function QuickAddMenu({
   );
 }
 
-function EmptyContextStart({ onCreate }: { onCreate: (name: string, includeDefaultSuppliers: boolean) => void }) {
+function EmptyContextStart({ onCreate }: { onCreate: (name: string, includeDefaultSuppliers: boolean, firstPersonName: string) => void }) {
   const [name, setName] = useState("Min ekonomi");
+  const [firstPersonName, setFirstPersonName] = useState("");
+  const [error, setError] = useState("");
   const createContext = () => {
+    if (!firstPersonName.trim()) {
+      setError("Lägg till minst en användare för plånboken.");
+      return;
+    }
     const includeDefaultSuppliers = window.confirm("Vill du lägga in vanliga standardföretag som Netflix, Spotify och Vattenfall i den nya plånboken?");
-    onCreate(name, includeDefaultSuppliers);
+    onCreate(name, includeDefaultSuppliers, firstPersonName);
   };
   return (
     <main className="emptyContextPage">
@@ -856,6 +870,18 @@ function EmptyContextStart({ onCreate }: { onCreate: (name: string, includeDefau
           <span>Namn på ny plånbok</span>
           <input value={name} onChange={(event) => setName(event.target.value)} />
         </label>
+        <label>
+          <span>Första användare</span>
+          <input
+            value={firstPersonName}
+            onChange={(event) => {
+              setFirstPersonName(event.target.value);
+              if (error) setError("");
+            }}
+            placeholder="För- och efternamn"
+          />
+        </label>
+        {error && <p className="error">{error}</p>}
         <button className="primary" onClick={createContext}>
           <Plus size={18} /> Starta ny plånbok
         </button>
