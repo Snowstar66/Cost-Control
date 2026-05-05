@@ -641,7 +641,11 @@ button.radarCard {
   cursor: pointer;
 }
 
-button.radarCard:hover,
+button.radarCard:hover {
+  border-color: #d8e3ef;
+  background: #fff;
+}
+
 button.radarCard.active {
   border-color: #9fb4ce;
   background: #f7fbff;

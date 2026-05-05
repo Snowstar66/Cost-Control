@@ -609,6 +609,22 @@ describe("App", () => {
     expect(screen.getAllByText("LIDL").length).toBeGreaterThan(0);
   });
 
+  it("slacker aktivt radarkort nar samma koppsignal klickas igen", () => {
+    localStorage.setItem(storageKey, JSON.stringify(stateWithBusinessPurchaseRows()));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^Ink.p$/i }));
+    const card = [...document.querySelectorAll<HTMLButtonElement>(".radarCard")].find((item) => item.textContent?.includes("Business"));
+    expect(card).toBeDefined();
+
+    fireEvent.click(card!);
+    expect(card!).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.click(card!);
+    expect(card!).toHaveAttribute("aria-pressed", "false");
+    expect(screen.queryByText(/Business .* tr.ffar/i)).not.toBeInTheDocument();
+  });
+
   it("kan flagga ett enstaka kop fran kassaboken", () => {
     localStorage.setItem(storageKey, JSON.stringify(stateWithPurchaseCategoryRows()));
     render(<App />);
