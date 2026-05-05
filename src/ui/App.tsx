@@ -2890,7 +2890,7 @@ function Purchases({ context, transactions, categories, people, suppliers, busin
               <span key={`${transaction.date}-${transaction.merchantRaw}-${index}`}>
                 <em>{index + 1}</em>
                 <b>{transaction.date}</b>
-                {transaction.merchantRaw}
+                <small>{transaction.merchantRaw}</small>
                 <strong>{formatMoney(transaction.amount, transaction.currency)}</strong>
               </span>
             ))}

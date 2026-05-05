@@ -1130,6 +1130,19 @@ button.radarCard.green.active {
   font-size: 13px;
 }
 
+.importPreviewList small {
+  min-width: 0;
+  color: #263447;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.importPreviewList strong {
+  justify-self: end;
+  white-space: nowrap;
+  text-align: right;
+}
+
 .importPreviewList em {
   color: #6a778b;
   font-size: 11px;
@@ -6767,12 +6780,29 @@ textarea {
   }
 
   .importPreviewList span {
-    grid-template-columns: 32px 1fr auto;
-    gap: 4px 8px;
+    grid-template-columns: 32px minmax(0, 1fr) minmax(74px, max-content);
+    gap: 4px 10px;
+    align-items: start;
+  }
+
+  .importPreviewList span em {
+    grid-row: 1 / span 2;
+    padding-top: 1px;
   }
 
   .importPreviewList span b {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .importPreviewList span small {
     grid-column: 2 / -1;
+    grid-row: 2;
+  }
+
+  .importPreviewList span strong {
+    grid-column: 3;
+    grid-row: 1;
   }
 
   .modalOverlay {
